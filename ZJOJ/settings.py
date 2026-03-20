@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "corsheaders",
+
     "apps.ojauth"
 ]
 
@@ -128,3 +129,5 @@ USE_TZ = False
 STATIC_URL = "static/"
 
 CORS_ALLOW_ALL_ORIGINS = True
+
+AUTH_USER_MODEL = "ojauth.OJUser"
