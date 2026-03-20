@@ -13,7 +13,7 @@ TOKEN_EXPIRATION_SECONDS = 60 * 24 * 14
 
 def get_token(user):
     exp_time = time.time() + TOKEN_EXPIRATION_SECONDS
-    return jwt.encode({"userid": user.id, "exp": exp_time}, settings.SECRET_KEY, algorithm="HS256")
+    return jwt.encode({"userid": user.uid, "exp": exp_time}, settings.SECRET_KEY, algorithm="HS256")
 
 class JWTAuthentication(BaseAuthentication):
     """
@@ -65,13 +65,13 @@ class JWTAuthentication(BaseAuthentication):
         with optional request for context.
         """
         try:
-            # 尝试将userid转换为整数以进行验证
-            userid = int(userid)
+            # ShortUUIDField不需要转换为整数
+            pass
         except (ValueError, TypeError):
             raise exceptions.AuthenticationFailed('Invalid user ID in token.')
 
         try:
-            user = get_user_model().objects.get(id=userid)
+            user = get_user_model().objects.get(uid=userid)
         except get_user_model().DoesNotExist:
             raise exceptions.AuthenticationFailed('User not found.')
 
