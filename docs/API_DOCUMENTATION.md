@@ -17,7 +17,124 @@ Authorization: jwt <token>
 
 ## 用户认证接口
 
-### 1. 用户登录
+### 1. 用户登录 ✅
+
+**接口地址：** `POST /api/login/`
+
+**请求参数：**
+```json
+{
+  "username": "string (2-20 字符)",
+  "password": "string (6-20 字符)"
+}
+```
+
+**响应格式：**
+
+**成功 (200)：**
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "user": {
+    "uid": "abc123",
+    "username": "john_doe",
+    "realname": "John Doe",
+    "email": "john@example.com",
+    "telephone": "13800138000",
+    "is_staff": false,
+    "status": 1
+  }
+}
+```
+
+**失败 (400)：**
+```json
+{
+  "messages": "参数错误",
+  "errors": {
+    "username": ["用户名不存在"]
+  }
+}
+```
+
+**错误类型：**
+- `用户名不存在` - 用户不存在
+- `密码错误` - 密码不正确
+- `用户已锁定` - 账户被锁定
+- `必填字段缺失` - 缺少用户名或密码
+
+**实现代码：**
+```python
+from rest_framework.views import APIView
+from MYJWT.myjwt import get_token
+from apps.ojauth.seriallizers import LoginSerializer
+
+class LoginView(APIView):
+    def post(self, request):
+        serializer = LoginSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.validated_data.get('user')
+            user.last_login = datetime.now()
+            user.save()
+            token = get_token(user)
+            return Response({"token": token, "user": UerSerializer(user).data})
+        else:
+            print(serializer.errors)
+            return Response({"messages":"参数错误","errors":serializer.errors}, 
+                          status=status.HTTP_400_BAD_REQUEST)
+```
+
+---
+
+## 待实现接口 ⏳
+
+以下接口尚未实现，计划在未来版本中添加：
+
+### 2. 用户注册
+**接口地址：** `POST /api/register/`
+
+### 3. 用户登出
+**接口地址：** `POST /api/logout/`
+
+### 4. 获取用户信息
+**接口地址：** `GET /api/user/profile/`
+
+### 5. 更新用户信息
+**接口地址：** `PUT /api/user/profile/`
+
+### 6. 修改密码
+**接口地址：** `POST /api/password/change/`
+
+### 7. 重置密码
+**接口地址：** `POST /api/password/reset/`
+
+---
+
+## 通用响应格式
+
+### 成功响应
+```json
+{
+  "token": "...",
+  "user": {...}
+}
+```
+
+### 错误响应
+```json
+{
+  "messages": "错误描述",
+  "errors": {...}
+}
+```
+
+### HTTP 状态码
+- `200` - 成功
+- `400` - 请求参数错误
+- `401` - 未授权（Token 无效或过期）
+- `403` - 禁止访问
+- `404` - 资源不存在
+- `500` - 服务器错误
 
 **接口地址：** `POST /api/login/`
 
@@ -490,7 +607,6 @@ class PasswordResetConfirmView(APIView):
 
 ### HTTP 状态码
 - `200` - 成功
-- `201` - 创建成功
 - `400` - 请求参数错误
 - `401` - 未授权（Token 无效或过期）
 - `403` - 禁止访问
@@ -499,27 +615,44 @@ class PasswordResetConfirmView(APIView):
 
 ---
 
-## 错误码说明
+## 使用示例
 
-| 错误码 | 说明 |
-|--------|------|
-| 400001 | 用户名不存在 |
-| 400002 | 密码错误 |
-| 400003 | 用户已锁定 |
-| 400004 | 必填字段缺失 |
-| 400005 | 用户名已存在 |
-| 400006 | 邮箱已被注册 |
-| 400007 | 原密码错误 |
-| 400008 | 新密码长度不符合要求 |
-| 400009 | 无效的重置令牌 |
-| 401001 | Token 已过期 |
-| 401002 | Token 无效 |
-| 401003 | 用户不存在 |
-| 401004 | 用户非活跃 |
+### Python 示例
+```python
+import requests
+
+# 登录
+login_url = "http://localhost:8000/api/login/"
+login_data = {
+    "username": "john_doe",
+    "password": "password123"
+}
+response = requests.post(login_url, json=login_data)
+token = response.json()['token']
+print(f"Token: {token}")
+```
+
+### JavaScript 示例
+```javascript
+// 登录
+const login = async (username, password) => {
+  const response = await fetch('/api/login/', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ username, password })
+  });
+  
+  const data = await response.json();
+  localStorage.setItem('token', data.token);
+  return data;
+};
+```
 
 ---
 
-## 使用示例
+*最后更新：2026 年 3 月 24 日*
 
 ### Python 示例
 ```python

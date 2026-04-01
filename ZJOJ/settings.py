@@ -40,7 +40,8 @@ INSTALLED_APPS = [
     "rest_framework",
     "corsheaders",
 
-    "apps.ojauth"
+    "apps.ojauth",
+    "apps.problem"
 ]
 
 MIDDLEWARE = [

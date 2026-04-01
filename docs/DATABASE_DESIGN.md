@@ -13,9 +13,9 @@
 
 ---
 
-## 数据表设计
+## 已实现的数据表
 
-### 1. 用户表 (ojauth_ojuser)
+### 1. 用户表 (ojauth_ojuser) ✅
 
 #### 表结构
 
@@ -217,48 +217,58 @@ erDiagram
 
 ---
 
-## 未来扩展表设计
+## 待实现的数据表 ⏳
 
-以下是后续开发中可能需要创建的表：
+以下数据表尚未创建，将在后续开发中逐步实现：
 
 ### 4. 题目表 (problem)
 
 ```sql
-CREATE TABLE `problem` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `title` varchar(200) NOT NULL,
+CREATE TABLE `problem_problem` (
+  `problem_id` varchar(20) NOT NULL,
+  `title` varchar(100) NOT NULL,
   `description` longtext NOT NULL,
-  `input` longtext NOT NULL,
-  `output` longtext NOT NULL,
-  `time_limit` int NOT NULL DEFAULT 1,
-  `memory_limit` int NOT NULL DEFAULT 256,
-  `difficulty` int NOT NULL DEFAULT 1,
-  `tags` varchar(500) DEFAULT NULL,
-  `created_by` varchar(255) NOT NULL,
-  `created_at` datetime(6) NOT NULL,
-  `updated_at` datetime(6) NOT NULL,
-  `is_public` tinyint(1) NOT NULL DEFAULT 0,
-  PRIMARY KEY (`id`),
-  KEY `created_by` (`created_by`),
-  CONSTRAINT `fk_problem_creator` FOREIGN KEY (`created_by`) REFERENCES `ojauth_ojuser` (`uid`)
+  `time_limit` int unsigned NOT NULL,
+  `memory_limit` int unsigned NOT NULL,
+  `upload_time` datetime(6) NOT NULL,
+  `update_time` datetime(6) NOT NULL,
+  `creator_id` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`problem_id`),
+  KEY `fk_problem_creator` (`creator_id`),
+  CONSTRAINT `fk_problem_creator` FOREIGN KEY (`creator_id`) REFERENCES `ojauth_ojuser` (`uid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
 
 **字段说明：**
-- `time_limit`: 时间限制（秒）
-- `memory_limit`: 内存限制（MB）
-- `difficulty`: 难度等级（1-5）
-- `is_public`: 是否公开
+- `problem_id`: 题目编号（如 P1001）
+- `title`: 题目标题
+- `description`: 题面描述（Markdown 格式）
+- `time_limit`: 时间限制（毫秒）
+- `memory_limit`: 空间限制（MB）
+- `creator`: 创建者（外键关联用户）
+- `upload_time`: 上传时间（自动设置）
+- `update_time`: 修改时间（自动更新）
+
+**标签关联表（多对多）：**
+```sql
+CREATE TABLE `problem_problem_tag` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `problem_problem_id` varchar(20) NOT NULL,
+  `tag_id` bigint NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_problem_tag` (`problem_problem_id`, `tag_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+```
 
 ---
 
 ### 5. 提交记录表 (submission)
 
 ```sql
-CREATE TABLE `submission` (
+CREATE TABLE `submission_submission` (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `submitter_id` varchar(255) NOT NULL,
-  `problem_id` bigint NOT NULL,
+  `problem_id` varchar(20) NOT NULL,
   `code` longtext NOT NULL,
   `language` varchar(20) NOT NULL,
   `status` int NOT NULL DEFAULT 0,
@@ -269,9 +279,7 @@ CREATE TABLE `submission` (
   `judged_at` datetime(6) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `submitter_id` (`submitter_id`),
-  KEY `problem_id` (`problem_id`),
-  CONSTRAINT `fk_submission_user` FOREIGN KEY (`submitter_id`) REFERENCES `ojauth_ojuser` (`uid`),
-  CONSTRAINT `fk_submission_problem` FOREIGN KEY (`problem_id`) REFERENCES `problem` (`id`)
+  KEY `problem_id` (`problem_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
 
@@ -286,55 +294,15 @@ CREATE TABLE `submission` (
 ### 6. 比赛表 (contest)
 
 ```sql
-CREATE TABLE `contest` (
+CREATE TABLE `contest_contest` (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `title` varchar(200) NOT NULL,
-  `description` longtext NOT NULL,
   `start_time` datetime(6) NOT NULL,
   `end_time` datetime(6) NOT NULL,
   `created_by` varchar(255) NOT NULL,
   `is_public` tinyint(1) NOT NULL DEFAULT 0,
   `created_at` datetime(6) NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `created_by` (`created_by`),
-  CONSTRAINT `fk_contest_creator` FOREIGN KEY (`created_by`) REFERENCES `ojauth_ojuser` (`uid`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-```
-
----
-
-### 7. 比赛 - 题目关联表 (contest_problem)
-
-```sql
-CREATE TABLE `contest_problem` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `contest_id` bigint NOT NULL,
-  `problem_id` bigint NOT NULL,
-  `order` int NOT NULL DEFAULT 0,
-  `points` int NOT NULL DEFAULT 100,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `contest_problem_unique` (`contest_id`, `problem_id`),
-  KEY `problem_id` (`problem_id`),
-  CONSTRAINT `fk_cp_contest` FOREIGN KEY (`contest_id`) REFERENCES `contest` (`id`),
-  CONSTRAINT `fk_cp_problem` FOREIGN KEY (`problem_id`) REFERENCES `problem` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-```
-
----
-
-### 8. 排行榜表 (ranking)
-
-```sql
-CREATE TABLE `ranking` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `user_id` varchar(255) NOT NULL,
-  `total_solved` int NOT NULL DEFAULT 0,
-  `total_submissions` int NOT NULL DEFAULT 0,
-  `rating` decimal(10,2) DEFAULT 0.00,
-  `last_updated` datetime(6) NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `user_id` (`user_id`),
-  CONSTRAINT `fk_ranking_user` FOREIGN KEY (`user_id`) REFERENCES `ojauth_ojuser` (`uid`)
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
 

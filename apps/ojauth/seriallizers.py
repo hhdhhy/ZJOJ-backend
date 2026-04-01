@@ -24,3 +24,9 @@ class LoginSerializer(serializers.Serializer):
             raise serializers.ValidationError('请传入用户名以及密码')
 
         return data
+
+class UerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OJUser
+        # fields = "__all__"
+        exclude = ['password',"groups","user_permissions"]

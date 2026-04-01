@@ -54,7 +54,7 @@ ZJOJ/
 
 ## 核心功能模块
 
-### 1. 用户认证模块 (ojauth)
+### 1. 用户认证模块 (ojauth) ✅
 
 #### 用户模型 (OJUser)
 继承自 `AbstractBaseUser` 和 `PermissionsMixin`，提供完整的用户认证功能。
@@ -80,13 +80,28 @@ ZJOJ/
 - `create_superuser()` - 创建超级用户
 - `with_perm()` - 按权限查询用户
 
-#### 登录视图
-- **路径**: `/api/login/` (待添加)
-- **方法**: POST
-- **参数**: 
+#### 登录视图 ✅
+**路径**: `/api/login/`
+**方法**: POST
+**参数**: 
   - `username`: 用户名
   - `password`: 密码
-- **功能**: 验证用户凭据，更新最后登录时间
+**功能**: 验证用户凭据，更新最后登录时间，返回 JWT Token
+
+**实现代码：**
+```python
+class LoginView(APIView):
+    def post(self, request):
+        serializer = LoginSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.validated_data.get('user')
+            user.last_login = datetime.now()
+            user.save()
+            token = get_token(user)
+            return Response({"token": token, "user": UerSerializer(user).data})
+        return Response({"messages":"参数错误","errors":serializer.errors}, 
+                       status=status.HTTP_400_BAD_REQUEST)
+```
 
 #### 登录序列化器
 验证用户名和密码，检查用户状态，返回用户对象。
@@ -98,7 +113,9 @@ ZJOJ/
 - 验证密码是否正确
 - 检查用户是否被锁定
 
-### 2. JWT 认证模块 (MYJWT)
+---
+
+### 2. JWT 认证模块 (MYJWT) ✅
 
 #### 令牌生成
 ```python
@@ -190,12 +207,17 @@ DATABASES = {
 
 ## API 接口
 
-### 待实现接口
+### 已实现接口 ✅
+1. **用户登录**: `POST /api/login/`
+   - 验证用户名密码
+   - 返回 JWT Token 和用户信息
+   - 更新最后登录时间
+
+### 待实现接口 ⏳
 1. **用户注册**: `POST /api/register/`
-2. **用户登录**: `POST /api/login/`
-3. **用户登出**: `POST /api/logout/`
-4. **密码重置**: `POST /api/password/reset/`
-5. **用户信息**: `GET/PUT /api/user/profile/`
+2. **用户登出**: `POST /api/logout/`
+3. **密码重置**: `POST /api/password/reset/`
+4. **用户信息**: `GET/PUT /api/user/profile/`
 
 ## 安全性
 
