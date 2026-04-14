@@ -4,7 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="52d331c5-8e4f-4652-a570-624eaeebea14" name="更改" comment="feat(auth): 添加JWT登录验证中间件和用户认证功能&#10;&#10;- 创建LoginCheckMiddleware中间件，实现JWT令牌验证逻辑&#10;- 集成JWT解码和签名验证，支持时间偏差容错处理&#10;- 在settings.py中注册JWT登录验证中间件&#10;- 更新MYJWT认证模块，统一JWT算法和前缀常量&#10;- 实现ResetPasswordView重置密码接口，添加身份验证权限&#10;- 优化登录接口错误处理，返回具体的验证失败详情&#10;- 添加重置密码接口的认证权限控制，确保安全性" />
+    <list default="true" id="52d331c5-8e4f-4652-a570-624eaeebea14" name="更改" comment="feat(auth): 添加JWT登录验证中间件和用户认证功能&#10;&#10;- 创建LoginCheckMiddleware中间件，实现JWT令牌验证逻辑&#10;- 集成JWT解码和签名验证，支持时间偏差容错处理&#10;- 在settings.py中注册JWT登录验证中间件&#10;- 更新MYJWT认证模块，统一JWT算法和前缀常量&#10;- 实现ResetPasswordView重置密码接口，添加身份验证权限&#10;- 优化登录接口错误处理，返回具体的验证失败详情&#10;- 添加重置密码接口的认证权限控制，确保安全性">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/problem/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/apps/problem/models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apps/problem/serializers.py" beforeDir="false" afterPath="$PROJECT_DIR$/apps/problem/serializers.py" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -125,7 +129,7 @@
       <workItem from="1775546228795" duration="5926000" />
       <workItem from="1776007024895" duration="66000" />
       <workItem from="1776176615763" duration="497000" />
-      <workItem from="1776177130930" duration="4179000" />
+      <workItem from="1776177130930" duration="5852000" />
     </task>
     <task id="LOCAL-00001" summary="chore(project): 初始化 Django 项目配置&#10;&#10;- 添加了 .idea 目录下的项目配置文件（misc.xml, modules.xml, profiles_settings.xml, vcs.xml, workspace.xml, ZJOJ.iml）&#10;- 创建了 apps/ojauth 应用的基本文件结构（admin.py, apps.py, models.py, tests.py, views.py）&#10;- 添加了 Django 项目的主配置文件（asgi.py, wsgi.py, settings.py, urls.py）&#10;- 配置了数据库连接（MySQL）和 CORS 设置&#10;- 设置了 Django 管理命令入口文件 manage.py&#10;- 配置了 Django 模板目录和静态文件设置&#10;- 添加了 Python 3.13 运行环境配置">
       <option name="closed" value="true" />

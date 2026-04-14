@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from apps.problem.models import Problem, Tag
+from apps.problem.models import Problem, Tag, Submission, TestCaseResult
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -179,3 +179,86 @@ class CreateProblemSerializer(serializers.ModelSerializer):
             problem.tag.set(tags)
         
         return problem
+  
+
+
+# ==================== 提交相关序列化器 ====================
+
+class SubmitCodeSerializer(serializers.ModelSerializer):
+    """提交代码序列化器"""
+    class Meta:
+        model = Submission
+        fields = ['problem', 'language', 'code']
+    
+    def validate_problem(self, value):
+        if not Problem.objects.filter(problem_id=value.problem_id).exists():
+            raise serializers.ValidationError('题目不存在')
+        return value
+    
+    def validate_language(self, value):
+        valid_languages = ['cpp', 'c', 'java', 'python3', 'python2']
+        if value not in valid_languages:
+            raise serializers.ValidationError(f'不支持的编程语言: {value}')
+        return value
+    
+    def validate_code(self, value):
+        if not value or len(value.strip()) == 0:
+            raise serializers.ValidationError('代码不能为空')
+        if len(value) > 65536:
+            raise serializers.ValidationError('代码长度不能超过64KB')
+        return value
+    
+    def create(self, validated_data):
+        request = self.context.get('request')
+        if request and hasattr(request, 'user'):
+            validated_data['user'] = request.user
+        else:
+            raise serializers.ValidationError('用户未登录')
+        return Submission.objects.create(**validated_data)
+
+
+class TestCaseResultSerializer(serializers.ModelSerializer):
+    """测试点结果序列化器"""
+    class Meta:
+        model = TestCaseResult
+        fields = ['test_case_id', 'status', 'execution_time', 'memory_usage', 'score', 'message']
+
+
+class SubmissionListSerializer(serializers.ModelSerializer):
+    """提交列表序列化器"""
+    problem_title = serializers.CharField(source='problem.title', read_only=True)
+    problem_id = serializers.CharField(source='problem.problem_id', read_only=True)
+    username = serializers.CharField(source='user.username', read_only=True)
+    result_display = serializers.CharField(source='get_result_display', read_only=True)
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    language_display = serializers.CharField(source='get_language_display', read_only=True)
+    
+    class Meta:
+        model = Submission
+        fields = [
+            'id', 'problem_id', 'problem_title', 'username',
+            'language', 'language_display', 'status', 'status_display',
+            'result', 'result_display', 'score', 'execution_time',
+            'memory_usage', 'submit_time'
+        ]
+
+
+class SubmissionDetailSerializer(serializers.ModelSerializer):
+    """提交详情序列化器"""
+    problem_title = serializers.CharField(source='problem.title', read_only=True)
+    problem_id = serializers.CharField(source='problem.problem_id', read_only=True)
+    username = serializers.CharField(source='user.username', read_only=True)
+    result_display = serializers.CharField(source='get_result_display', read_only=True)
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    language_display = serializers.CharField(source='get_language_display', read_only=True)
+    test_case_results = TestCaseResultSerializer(many=True, read_only=True)
+    
+    class Meta:
+        model = Submission
+        fields = [
+            'id', 'problem_id', 'problem_title', 'username',
+            'language', 'language_display', 'code', 'code_length',
+            'status', 'status_display', 'result', 'result_display',
+            'score', 'execution_time', 'memory_usage',
+            'submit_time', 'judge_time', 'test_case_results'
+        ]
