@@ -131,6 +131,10 @@ USE_TZ = False
 
 STATIC_URL = "static/"
 
+# Media files (Uploaded files)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
 CORS_ALLOW_ALL_ORIGINS = True
 
 AUTH_USER_MODEL = "ojauth.OJUser"
