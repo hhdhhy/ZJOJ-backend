@@ -33,11 +33,19 @@ class SubmitCodeView(APIView):
             # 创建提交记录
             submission = serializer.save()
             
-            # 异步执行评测任务
-            judge_submission_task.delay(submission.id)
+            # 异步执行评测任务（如果Celery不可用，会抛出异常）
+            try:
+                judge_submission_task.delay(submission.id)
+                message = '提交成功，正在评测'
+            except Exception as e:
+                # Celery 不可用时，记录日志但仍返回成功
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.warning(f'Celery任务提交失败: {str(e)}')
+                message = '提交成功（评测队列暂时不可用，请稍后手动触发评测）'
             
             return Response({
-                'message': '提交成功，正在评测',
+                'message': message,
                 'submission_id': submission.id,
                 'status': '等待评测'
             }, status=status.HTTP_201_CREATED)
