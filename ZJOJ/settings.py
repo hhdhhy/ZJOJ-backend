@@ -141,8 +141,9 @@ CORS_ALLOW_ALL_ORIGINS = True
 AUTH_USER_MODEL = "ojauth.OJUser"
 
 # Celery Configuration
-CELERY_BROKER_URL = 'redis://localhost:6379/0'  # Redis 作为消息代理
-CELERY_RESULT_BACKEND = 'redis://localhost:6379/1'  # Redis 存储结果
+# 使用数据库作为消息代理和结果后端（开发环境）
+CELERY_BROKER_URL = 'sqla+sqlite:///celerybroker.db'  # SQLite 作为消息代理
+CELERY_RESULT_BACKEND = 'db+sqlite:///celeryresults.db'  # SQLite 存储结果
 CELERY_ACCEPT_CONTENT = ['json']  # 接受的内容类型
 CELERY_TASK_SERIALIZER = 'json'  # 任务序列化方式
 CELERY_RESULT_SERIALIZER = 'json'  # 结果序列化方式
