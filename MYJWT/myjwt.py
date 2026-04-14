@@ -20,16 +20,18 @@ class JWTAuthentication(BaseAuthentication):
     JWT authentication.
     """
     www_authenticate_realm = 'api'
-
+    JWT_ALGORITHM = 'HS256'
+    JWT_PREFIX = b'jwt'
     def authenticate(self, request):
         """
         Returns a `User` if a correct JWT token have been supplied.
         Otherwise returns `None`.
         """
 
+
         auth = get_authorization_header(request).split()
 
-        if not auth or auth[0].lower() != b'jwt':
+        if not auth or auth[0].lower() != self.JWT_PREFIX:
             return None
 
         if len(auth) == 1:
@@ -41,7 +43,16 @@ class JWTAuthentication(BaseAuthentication):
 
         try:
             # 添加leeway参数和binascii异常处理
-            jwt_decoded = jwt.decode(auth[1], settings.SECRET_KEY, algorithms=['HS256'], options={"verify_signature": True}, leeway=10)
+            jwt_decoded = jwt.decode(
+                auth[1],
+                settings.SECRET_KEY,
+                algorithms=[self.JWT_ALGORITHM],
+                options={
+                    "verify_signature": True,
+                    "require": ["exp", "userid"]
+                },
+                leeway=10
+            )
             userid = jwt_decoded.get("userid")
 
             if userid is None:

@@ -8,6 +8,7 @@ from rest_framework.views import APIView
 from MYJWT.myjwt import get_token
 from .seriallizers import LoginSerializer
 from .seriallizers import UerSerializer
+from rest_framework.permissions import IsAuthenticated
 import MYJWT.myjwt
 class LoginView(APIView):
     def post(self,request):
@@ -20,10 +21,14 @@ class LoginView(APIView):
             token=get_token(user)
             return Response({"token":token,"user":UerSerializer(user).data})
         else:
-            print(serializer.errors)
-            return Response({"detail":"参数错误","errors":serializer.errors},status=status.HTTP_400_BAD_REQUEST)
+            detail= list(serializer.errors.values())[0][0]
+            print(detail)
+            return Response({"detail":detail,"errors":serializer.errors},status=status.HTTP_400_BAD_REQUEST)
 
-
+class ResetPasswordView(APIView):
+    permission_classes = [IsAuthenticated]
+    def post(self,request):
+        return Response({"detail":"ok"})
 
 
 

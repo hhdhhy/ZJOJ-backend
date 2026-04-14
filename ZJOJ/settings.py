@@ -53,6 +53,8 @@ MIDDLEWARE = [
     #关闭csrf保护
     # "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    # JWT登录验证中间件
+    "Middleware.LoginCheck.LoginCheckMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
