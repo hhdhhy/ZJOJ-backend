@@ -41,7 +41,8 @@ INSTALLED_APPS = [
     "corsheaders",
 
     "apps.ojauth",
-    "apps.problem"
+    "apps.problem",
+    "apps.judge"  # 评测系统
 ]
 
 MIDDLEWARE = [
@@ -138,6 +139,20 @@ MEDIA_ROOT = BASE_DIR / 'media'
 CORS_ALLOW_ALL_ORIGINS = True
 
 AUTH_USER_MODEL = "ojauth.OJUser"
+
+# Celery Configuration
+CELERY_BROKER_URL = 'redis://localhost:6379/0'  # Redis 作为消息代理
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/1'  # Redis 存储结果
+CELERY_ACCEPT_CONTENT = ['json']  # 接受的内容类型
+CELERY_TASK_SERIALIZER = 'json'  # 任务序列化方式
+CELERY_RESULT_SERIALIZER = 'json'  # 结果序列化方式
+CELERY_TIMEZONE = 'Asia/Shanghai'  # 时区
+CELERY_TASK_TRACK_STARTED = True  # 跟踪任务开始状态
+CELERY_TASK_TIME_LIMIT = 30 * 60  # 任务超时时间（30分钟）
+
+# HydroJudge Configuration
+HYDRO_JUDGE_URL = 'http://localhost:5050'  # HydroJudge 服务地址
+HYDRO_JUDGE_TIMEOUT = 30  # 超时时间（秒）
 
 # DRF Configuration
 REST_FRAMEWORK = {

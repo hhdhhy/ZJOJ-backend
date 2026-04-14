@@ -6,6 +6,11 @@ from apps.problem.views import (
     TagListView,
     TagCreateView
 )
+from apps.problem.submission_views import (
+    SubmitCodeView,
+    SubmissionListView,
+    SubmissionDetailView
+)
 
 app_name = "problem"
 
@@ -18,4 +23,9 @@ urlpatterns = [
     path('problems/', ProblemListView.as_view(), name='problem-list'),
     path('problems/create/', ProblemCreateView.as_view(), name='problem-create'),
     path('problems/<str:problem_id>/', ProblemDetailView.as_view(), name='problem-detail'),
+    
+    # 提交相关接口
+    path('submissions/', SubmissionListView.as_view(), name='submission-list'),
+    path('submissions/submit/', SubmitCodeView.as_view(), name='submit-code'),
+    path('submissions/<int:submission_id>/', SubmissionDetailView.as_view(), name='submission-detail'),
 ]
