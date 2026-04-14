@@ -50,11 +50,11 @@ MIDDLEWARE = [
     #在CommonMiddleware前添加corsheaders
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
+    # JWT登录验证中间件（必须在AuthenticationMiddleware之前）
+    "Middleware.LoginCheck.LoginCheckMiddleware",
     #关闭csrf保护
     # "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
-    # JWT登录验证中间件
-    "Middleware.LoginCheck.LoginCheckMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -138,3 +138,9 @@ MEDIA_ROOT = BASE_DIR / 'media'
 CORS_ALLOW_ALL_ORIGINS = True
 
 AUTH_USER_MODEL = "ojauth.OJUser"
+
+# DRF Configuration
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [],  # 由中间件处理认证
+    'DEFAULT_PERMISSION_CLASSES': [],  # 由视图自己控制权限
+}

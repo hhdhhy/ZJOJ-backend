@@ -46,6 +46,14 @@ class LoginCheckMiddleware(MiddlewareMixin):
                 )
                 # userid已通过require选项验证，直接获取
                 userid = jwt_decoded.get("userid")
+                
+                # 从数据库获取用户并设置到request
+                from apps.ojauth.models import OJUser
+                try:
+                    user = OJUser.objects.get(uid=userid)
+                    request.user = user
+                except OJUser.DoesNotExist:
+                    raise exceptions.AuthenticationFailed('用户不存在')
 
             except jwt.ExpiredSignatureError:
                 raise exceptions.AuthenticationFailed('Token has expired.')
