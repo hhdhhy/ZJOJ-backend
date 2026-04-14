@@ -10,5 +10,12 @@
       <jdbc-url>jdbc:mysql://127.0.0.1:3306/ZJOJ</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
+    <data-source source="LOCAL" name="celerybroker" uuid="3b6f7230-b853-47e2-b38d-8fca5db6c478">
+      <driver-ref>sqlite.xerial</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
+      <jdbc-url>jdbc:sqlite:E:\learning file\ZJOJ\celerybroker.db</jdbc-url>
+      <working-dir>$ProjectFileDir$</working-dir>
+    </data-source>
   </component>
 </project>

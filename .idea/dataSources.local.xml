@@ -15,5 +15,10 @@
       </schema-mapping>
       <load-sources>user_and_system_sources</load-sources>
     </data-source>
+    <data-source name="celerybroker" uuid="3b6f7230-b853-47e2-b38d-8fca5db6c478">
+      <database-info product="" version="" jdbc-version="" driver-name="" driver-version="" dbms="SQLITE" />
+      <auth-provider>no-auth</auth-provider>
+      <schema-mapping />
+    </data-source>
   </component>
 </project>
