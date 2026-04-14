@@ -141,6 +141,10 @@ AUTH_USER_MODEL = "ojauth.OJUser"
 
 # DRF Configuration
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [],  # 由中间件处理认证
-    'DEFAULT_PERMISSION_CLASSES': [],  # 由视图自己控制权限
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'MYJWT.authentication.JWTAuthentication',  # 使用自定义JWT认证
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticatedOrReadOnly',  # 默认权限
+    ],
 }

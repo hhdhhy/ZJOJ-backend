@@ -9,58 +9,22 @@ from django.utils.translation import gettext_lazy as _
 import jwt
 
 class LoginCheckMiddleware(MiddlewareMixin):
-    keyword = 'JWT'
-    JWT_ALGORITHM = 'HS256'
-    JWT_PREFIX = b'jwt'
+    """
+    JWT登录验证中间件
+    注意：实际的认证由DRF的JWTAuthentication类处理
+    这个中间件主要用于豁免某些路径的认证检查
+    """
     # 不需要JWT验证的路径
-    EXEMPT_PATHS = ['/auth/login/']
+    EXEMPT_PATHS = [
+        '/auth/login/',
+        '/auth/register/',
+        '/admin/',
+    ]
     
     def process_view(self, request, view_func, view_args, view_kwargs):
         # 检查是否为豁免路径（支持前缀匹配）
         if any(request.path.startswith(path) for path in self.EXEMPT_PATHS):
             return None
-        try:
-            auth = get_authorization_header(request).split()
-
-            if not auth or auth[0].lower() != self.JWT_PREFIX:
-                raise exceptions.ValidationError("请传入JWT!")
-
-            if len(auth) == 1:
-                msg = _('Invalid JWT header. No credentials provided.')
-                raise exceptions.AuthenticationFailed(msg)
-            elif len(auth) > 2:
-                msg = _('Invalid JWT header. Credentials string should not contain spaces.')
-                raise exceptions.AuthenticationFailed(msg)
-
-            try:
-                # 添加leeway参数容忍时间偏差
-                jwt_decoded = jwt.decode(
-                    auth[1], 
-                    settings.SECRET_KEY, 
-                    algorithms=[self.JWT_ALGORITHM], 
-                    options={
-                        "verify_signature": True,
-                        "require": ["exp", "userid"]
-                    }, 
-                    leeway=10
-                )
-                # userid已通过require选项验证，直接获取
-                userid = jwt_decoded.get("userid")
-                
-                # 从数据库获取用户并设置到request
-                from apps.ojauth.models import OJUser
-                try:
-                    user = OJUser.objects.get(uid=userid)
-                    request.user = user
-                except OJUser.DoesNotExist:
-                    raise exceptions.AuthenticationFailed('用户不存在')
-
-            except jwt.ExpiredSignatureError:
-                raise exceptions.AuthenticationFailed('Token has expired.')
-            except jwt.InvalidSignatureError:
-                raise exceptions.AuthenticationFailed('Invalid token signature.')
-            except jwt.InvalidTokenError:
-                raise exceptions.AuthenticationFailed('Invalid token.')
-
-        except (exceptions.APIException, Exception):
-            return JsonResponse(data={"detail":"请登录!"},status=HTTP_403_FORBIDDEN)
+        
+        # 其他路径交给DRF的认证类处理
+        return None
