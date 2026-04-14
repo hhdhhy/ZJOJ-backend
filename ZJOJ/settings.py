@@ -145,6 +145,6 @@ REST_FRAMEWORK = {
         'MYJWT.authentication.JWTAuthentication',  # 使用自定义JWT认证
     ],
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticatedOrReadOnly',  # 默认权限
+        'rest_framework.permissions.IsAuthenticated',  # 所有操作都需要登录
     ],
 }
