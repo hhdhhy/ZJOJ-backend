@@ -19,7 +19,6 @@ class ProblemListView(generics.ListAPIView):
     GET /api/problems/ - 获取题目列表（支持搜索和过滤）
     """
     serializer_class = ProblemListSerializer
-    permission_classes = [IsAuthenticated]  # 需要登录
     
     def get_queryset(self):
         queryset = Problem.objects.all().order_by('-upload_time')
@@ -47,7 +46,6 @@ class ProblemCreateView(APIView):
     创建题目接口
     POST /api/problems/create/ - 上传新题目
     """
-    permission_classes = [IsAuthenticated]
     
     def post(self, request):
         serializer = CreateProblemSerializer(
@@ -76,7 +74,6 @@ class ProblemDetailView(APIView):
     PUT/PATCH /api/problems/<problem_id>/ - 更新题目
     DELETE /api/problems/<problem_id>/ - 删除题目
     """
-    permission_classes = [IsAuthenticated]  # 需要登录
     
     def get_object(self, problem_id):
         return get_object_or_404(Problem, problem_id=problem_id)
@@ -168,7 +165,6 @@ class TagListView(generics.ListAPIView):
     """
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
-    permission_classes = [IsAuthenticated]  # 需要登录
 
 
 class TagCreateView(APIView):
@@ -176,7 +172,6 @@ class TagCreateView(APIView):
     创建标签接口
     POST /api/problems/tags/create/ - 创建新标签
     """
-    permission_classes = [IsAuthenticated]
     
     def post(self, request):
         name = request.data.get('name')
