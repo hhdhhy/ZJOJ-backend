@@ -1,7 +1,7 @@
 from rest_framework import status, generics
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
+from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
 
 from apps.problem.models import Problem, Tag
@@ -19,7 +19,7 @@ class ProblemListView(generics.ListAPIView):
     GET /api/problems/ - 获取题目列表（支持搜索和过滤）
     """
     serializer_class = ProblemListSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAuthenticated]  # 需要登录
     
     def get_queryset(self):
         queryset = Problem.objects.all().order_by('-upload_time')
@@ -73,10 +73,10 @@ class ProblemDetailView(APIView):
     """
     题目详情接口
     GET /api/problems/<problem_id>/ - 获取题目详情
-    PUT /api/problems/<problem_id>/ - 更新题目
+    PUT/PATCH /api/problems/<problem_id>/ - 更新题目
     DELETE /api/problems/<problem_id>/ - 删除题目
     """
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAuthenticated]  # 需要登录
     
     def get_object(self, problem_id):
         return get_object_or_404(Problem, problem_id=problem_id)
@@ -88,7 +88,7 @@ class ProblemDetailView(APIView):
         return Response(serializer.data)
     
     def put(self, request, problem_id):
-        """更新题目（仅创建者可操作）"""
+        """更新题目（仅创建者可操作）- 完整更新"""
         problem = self.get_object(problem_id)
         
         # 权限检查：只有创建者可以修改
@@ -100,7 +100,36 @@ class ProblemDetailView(APIView):
         serializer = ProblemDetailSerializer(
             problem,
             data=request.data,
-            partial=False
+            partial=False  # 需要完整数据
+        )
+        
+        if serializer.is_valid():
+            updated_problem = serializer.save()
+            response_serializer = ProblemDetailSerializer(updated_problem)
+            return Response({
+                'message': '题目更新成功',
+                'data': response_serializer.data
+            })
+        
+        return Response({
+            'message': '更新失败',
+            'errors': serializer.errors
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    def patch(self, request, problem_id):
+        """部分更新题目（仅创建者可操作）"""
+        problem = self.get_object(problem_id)
+        
+        # 权限检查：只有创建者可以修改
+        if problem.creator != request.user:
+            return Response({
+                'message': '无权限修改此题目'
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        serializer = ProblemDetailSerializer(
+            problem,
+            data=request.data,
+            partial=True  # 支持部分更新
         )
         
         if serializer.is_valid():
@@ -139,7 +168,7 @@ class TagListView(generics.ListAPIView):
     """
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAuthenticated]  # 需要登录
 
 
 class TagCreateView(APIView):
