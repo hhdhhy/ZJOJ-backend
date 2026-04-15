@@ -23,7 +23,8 @@ from django.conf.urls.static import static
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("auth/",include("apps.ojauth.urls")),
-    path("api/", include("apps.problem.urls"))
+    path("api/", include("apps.problem.urls")),
+    path("api/ai/", include("apps.ai_assistant.urls"))  # AI助手
 ]
 
 # 开发环境下提供媒体文件服务
