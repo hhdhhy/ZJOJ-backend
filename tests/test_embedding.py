@@ -22,7 +22,7 @@ def test_embedding_service():
     try:
         # 1. 初始化服务
         print("\n1. 初始化 Embedding 服务...")
-        service = EmbeddingService(model_name='shibing624/text2vec-base-chinese')
+        service = EmbeddingService()  # 使用默认ModelScope模型
         print(f"   ✅ 模型加载成功")
         print(f"   模型: {service.model_name}")
         print(f"   向量维度: {service.dimension}")

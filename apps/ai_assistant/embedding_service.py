@@ -10,12 +10,12 @@ from django.conf import settings
 class EmbeddingService:
     """本地 Embedding 服务"""
     
-    def __init__(self, model_name='shibing624/text2vec-base-chinese', cache_dir=None):
+    def __init__(self, model_name=None, cache_dir=None):
         """
         初始化 Embedding 服务
         
         Args:
-            model_name: 模型名称
+            model_name: 模型名称（默认使用 ModelScope 下载的模型）
             cache_dir: 模型缓存目录（默认存到 E 盘）
         """
         # 设置模型缓存目录到非 C 盘
@@ -29,6 +29,10 @@ class EmbeddingService:
         os.environ['HF_HOME'] = cache_dir
         os.environ['TRANSFORMERS_CACHE'] = cache_dir
         os.environ['HF_ENDPOINT'] = 'https://hf-mirror.com'  # 使用国内镜像
+        
+        # 默认使用 ModelScope 下载的模型
+        if model_name is None:
+            model_name = f'{cache_dir}/damo/nlp_corom_sentence-embedding_chinese-base'
         
         self.model_name = model_name
         self.cache_dir = cache_dir
