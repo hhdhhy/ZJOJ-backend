@@ -1,29 +1,34 @@
 """
 云端 LLM 客户端
-支持智谱AI、通义千问等云端大语言模型
+支持 DeepSeek、智谱AI、通义千问等云端大语言模型
 """
-from zhipuai import ZhipuAI
+from openai import OpenAI
 from django.conf import settings
 
 
 class LLMClient:
-    """云端 LLM 客户端（智谱AI）"""
+    """云端 LLM 客户端（DeepSeek）"""
     
-    def __init__(self, api_key=None, model=None):
+    def __init__(self, api_key=None, model=None, base_url=None):
         """
         初始化 LLM 客户端
         
         Args:
             api_key: API密钥（默认从settings读取）
-            model: 模型名称（默认glm-4）
+            model: 模型名称（默认deepseek-chat）
+            base_url: API基础URL（默认DeepSeek官方地址）
         """
-        self.api_key = api_key or getattr(settings, 'ZHIPU_API_KEY', '')
-        self.model = model or getattr(settings, 'ZHIPU_MODEL', 'glm-4')
+        self.api_key = api_key or getattr(settings, 'DEEPSEEK_API_KEY', '')
+        self.model = model or getattr(settings, 'DEEPSEEK_MODEL', 'deepseek-chat')
+        self.base_url = base_url or getattr(settings, 'DEEPSEEK_BASE_URL', 'https://api.deepseek.com')
         
         if not self.api_key:
-            raise ValueError("请配置 ZHIPU_API_KEY")
+            raise ValueError("请配置 DEEPSEEK_API_KEY")
         
-        self.client = ZhipuAI(api_key=self.api_key)
+        self.client = OpenAI(
+            api_key=self.api_key,
+            base_url=self.base_url
+        )
     
     def chat(self, messages: list, temperature=0.7, max_tokens=2000) -> dict:
         """
@@ -98,14 +103,14 @@ if __name__ == "__main__":
     try:
         # 检查是否配置了API Key
         from django.conf import settings
-        api_key = getattr(settings, 'ZHIPU_API_KEY', '')
+        api_key = getattr(settings, 'DEEPSEEK_API_KEY', '')
         
         if not api_key or api_key == 'your-api-key-here':
-            print("\n⚠️  未配置 ZHIPU_API_KEY，跳过实际API调用测试")
+            print("\n⚠️  未配置 DEEPSEEK_API_KEY，跳过实际API调用测试")
             print("\n请在 settings.py 中配置：")
-            print("  ZHIPU_API_KEY = '你的API密钥'")
-            print("  ZHIPU_MODEL = 'glm-4'")
-            print("\n获取API密钥：https://open.bigmodel.cn/")
+            print("  DEEPSEEK_API_KEY = '你的API密钥'")
+            print("  DEEPSEEK_MODEL = 'deepseek-chat'")
+            print("\n获取API密钥：https://platform.deepseek.com/")
         else:
             print("\n1. 测试简单对话...")
             client = LLMClient()
