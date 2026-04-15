@@ -1,0 +1,35 @@
+# ZJOJ Backend Dependencies
+# Last updated: 2026-04-16
+
+# Core Framework
+django==6.0.3
+djangorestframework==3.14.0
+django-cors-headers==4.3.0
+
+# Database
+mysqlclient==2.2.0
+
+# Authentication & Security
+PyJWT==2.8.0
+shortuuidfield==0.3.0
+
+# Async Tasks
+celery==5.3.6
+sqlalchemy==2.0.23  # For Celery database backend
+
+# Production Server
+gunicorn==21.2.0
+
+# AI Assistant
+sentence-transformers==2.2.2
+chromadb==0.4.22
+openai==1.6.1
+modelscope==1.11.0
+
+# Utilities
+python-dotenv==1.0.0
+
+# Development & Testing (optional)
+# django-debug-toolbar==4.2.0
+# pytest==7.4.3
+# pytest-django==4.7.0

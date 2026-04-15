@@ -1,0 +1,25 @@
+[Unit]
+Description=ZJOJ Django Application
+After=network.target mysql.service redis.service
+Wants=mysql.service redis.service
+
+[Service]
+Type=notify
+User=zjoj
+Group=zjoj
+WorkingDirectory=/opt/zjoj
+Environment="PATH=/opt/zjoj/venv/bin"
+ExecStart=/opt/zjoj/venv/bin/gunicorn -c gunicorn_config.py ZJOJ.wsgi:application
+ExecReload=/bin/kill -s HUP $MAINPID
+Restart=on-failure
+RestartSec=10
+
+# 日志
+StandardOutput=append:/opt/zjoj_data/logs/gunicorn_stdout.log
+StandardError=append:/opt/zjoj_data/logs/gunicorn_stderr.log
+
+# 资源限制
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

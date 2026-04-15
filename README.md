@@ -104,6 +104,7 @@ python manage.py runserver
 | 📘 **项目文档** | 项目概述、架构设计、核心模块说明 | [`docs/PROJECT_DOCUMENTATION.md`](docs/PROJECT_DOCUMENTATION.md) |
 | 🔌 **API 文档** | 完整的 RESTful API 接口文档（含AI助手） | [`docs/API_DOCUMENTATION.md`](docs/API_DOCUMENTATION.md) |
 | 🤖 **AI助手指南** | AI助手系统详细使用说明 | [`docs/AI_ASSISTANT_GUIDE.md`](docs/AI_ASSISTANT_GUIDE.md) |
+| 🚀 **部署指南** | 生产环境部署详细说明 | [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) |
 | 🛠️ **开发指南** | 环境搭建、开发流程、代码规范 | [`docs/DEVELOPMENT_GUIDE.md`](docs/DEVELOPMENT_GUIDE.md) |
 | 💾 **数据库设计** | 数据库表结构、ER 图、优化建议 | [`docs/DATABASE_DESIGN.md`](docs/DATABASE_DESIGN.md) |
 | 🔐 **JWT 认证** | JWT 认证系统详细说明 | [`docs/JWT_AUTHENTICATION.md`](docs/JWT_AUTHENTICATION.md) |
