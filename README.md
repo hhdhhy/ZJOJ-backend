@@ -23,10 +23,10 @@ ZJOJ 是一个基于 Django 框架开发的在线评测（Online Judge）系统�
 
 - 🔐 **JWT 认证系统** - 安全高效的用户认证机制
 - 👤 **自定义用户模型** - 灵活扩展的用户管理
-- 🏆 **在线评测** - 支持多种编程语言的代码评测
+- 🏆 **在线评测** - 基于HydroJudge的异步代码评测
 - 📊 **实时排名** - 动态更新的排行榜系统
-- 🎯 **比赛管理** - 完整的在线比赛功能
 - 📝 **题目管理** - 便捷的题目创建和管理
+- 🤖 **AI助手** - RAG智能问答系统（本地Embedding + 云端LLM）
 - 🔒 **权限控制** - 细粒度的访问权限管理
 
 ---
@@ -102,10 +102,13 @@ python manage.py runserver
 | 文档 | 描述 | 路径 |
 |------|------|------|
 | 📘 **项目文档** | 项目概述、架构设计、核心模块说明 | [`docs/PROJECT_DOCUMENTATION.md`](docs/PROJECT_DOCUMENTATION.md) |
-| 🔌 **API 文档** | 完整的 RESTful API 接口文档 | [`docs/API_DOCUMENTATION.md`](docs/API_DOCUMENTATION.md) |
+| 🔌 **API 文档** | 完整的 RESTful API 接口文档（含AI助手） | [`docs/API_DOCUMENTATION.md`](docs/API_DOCUMENTATION.md) |
+| 🤖 **AI助手指南** | AI助手系统详细使用说明 | [`docs/AI_ASSISTANT_GUIDE.md`](docs/AI_ASSISTANT_GUIDE.md) |
 | 🛠️ **开发指南** | 环境搭建、开发流程、代码规范 | [`docs/DEVELOPMENT_GUIDE.md`](docs/DEVELOPMENT_GUIDE.md) |
 | 💾 **数据库设计** | 数据库表结构、ER 图、优化建议 | [`docs/DATABASE_DESIGN.md`](docs/DATABASE_DESIGN.md) |
 | 🔐 **JWT 认证** | JWT 认证系统详细说明 | [`docs/JWT_AUTHENTICATION.md`](docs/JWT_AUTHENTICATION.md) |
+| 📝 **题目模块** | 题目管理模块详细文档 | [`docs/PROBLEM_MODULE.md`](docs/PROBLEM_MODULE.md) |
+| ⚡ **HydroJudge集成** | 代码评测系统集成说明 | [`docs/HYDRO_JUDGE_INTEGRATION.md`](docs/HYDRO_JUDGE_INTEGRATION.md) |
 
 ### 快速导航
 
@@ -125,9 +128,13 @@ python manage.py runserver
 | **Django** | 6.0.3 | Web 应用框架 |
 | **Django REST Framework** | Latest | RESTful API 开发 |
 | **MySQL** | 5.7+ | 关系型数据库 |
+| **Celery** | Latest | 异步任务队列 |
+| **ChromaDB** | Latest | 向量数据库（AI助手） |
 | **PyJWT** | Latest | JWT 令牌认证 |
-| **ShortUUIDField** | Latest | Short UUID 生成 |
+| **shortuuidfield** | Latest | Short UUID 生成 |
 | **django-cors-headers** | Latest | 跨域资源共享 |
+| **sentence-transformers** | Latest | Embedding模型 |
+| **openai** | Latest | DeepSeek LLM客户端 |
 
 ### 系统架构图
 
