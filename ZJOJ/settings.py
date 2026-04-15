@@ -42,7 +42,8 @@ INSTALLED_APPS = [
 
     "apps.ojauth",
     "apps.problem",
-    "apps.judge"  # 评测系统
+    "apps.judge",  # 评测系统
+    "apps.ai_assistant"  # AI助手
 ]
 
 MIDDLEWARE = [
