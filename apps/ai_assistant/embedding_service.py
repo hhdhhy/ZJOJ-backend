@@ -10,7 +10,7 @@ from django.conf import settings
 class EmbeddingService:
     """本地 Embedding 服务"""
     
-    def __init__(self, model_name='BAAI/bge-m3', cache_dir=None):
+    def __init__(self, model_name='shibing624/text2vec-base-chinese', cache_dir=None):
         """
         初始化 Embedding 服务
         
