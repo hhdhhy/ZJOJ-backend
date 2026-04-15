@@ -28,6 +28,7 @@ class EmbeddingService:
         # 设置环境变量，让 huggingface 缓存到指定目录
         os.environ['HF_HOME'] = cache_dir
         os.environ['TRANSFORMERS_CACHE'] = cache_dir
+        os.environ['HF_ENDPOINT'] = 'https://hf-mirror.com'  # 使用国内镜像
         
         self.model_name = model_name
         self.cache_dir = cache_dir
