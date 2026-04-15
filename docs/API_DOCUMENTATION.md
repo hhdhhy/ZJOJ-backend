@@ -585,6 +585,233 @@ class PasswordResetConfirmView(APIView):
 
 ---
 
+## AI助手接口 🤖
+
+以下接口提供基于RAG技术的智能问答服务。
+
+### 9. AI智能问答 ✅
+
+**接口地址：** `POST /api/ai/chat/`
+
+**认证方式：** JWT Token
+
+**请求参数：**
+```json
+{
+  "question": "string (必填)",
+  "use_rag": true,  // 可选，是否使用RAG模式，默认true
+  "top_k": 3        // 可选，检索文档数量，默认5
+}
+```
+
+**响应格式：**
+
+**成功 (200)：**
+```json
+{
+  "answer": "二分查找是一种在有序数组中查找特定元素的算法...",
+  "tokens_used": 270,
+  "remaining_quota": 47,
+  "chat_id": 3,
+  "sources": [
+    {
+      "id": "kb_abc123",
+      "content": "二分查找（Binary Search）是一种...",
+      "metadata": {
+        "doc_id": 1,
+        "title": "二分查找算法",
+        "doc_type": "algorithm"
+      },
+      "similarity": 0.9822
+    }
+  ]
+}
+```
+
+**字段说明：**
+- `answer`: AI生成的回答
+- `tokens_used`: 消耗的Token数量
+- `remaining_quota`: 剩余每日配额
+- `chat_id`: 对话记录ID
+- `sources`: 引用来源列表（仅RAG模式）
+  - `id`: 文档向量ID
+  - `content`: 文档内容片段
+  - `metadata`: 文档元数据（标题、类型等）
+  - `similarity`: 相似度（0-1之间）
+
+**错误响应：**
+
+**未认证 (401)：**
+```json
+{
+  "detail": "身份认证信息未提供。"
+}
+```
+
+**配额超限 (429)：**
+```json
+{
+  "detail": "今日配额已用完，请明天再试"
+}
+```
+
+**频率限制 (429)：**
+```json
+{
+  "detail": "请求过于频繁，请稍后再试"
+}
+```
+
+**服务器错误 (500)：**
+```json
+{
+  "error": "处理失败: Error executing plan..."
+}
+```
+
+**使用示例：**
+
+```python
+import requests
+
+# 登录获取token
+login_response = requests.post("http://127.0.0.1:8000/auth/login/", json={
+    "username": "test_ai",
+    "password": "TestPass123"
+})
+token = login_response.json()["token"]
+
+headers = {
+    "Authorization": f"jwt {token}",
+    "Content-Type": "application/json"
+}
+
+# RAG模式问答（推荐用于技术问题）
+rag_response = requests.post("http://127.0.0.1:8000/api/ai/chat/", headers=headers, json={
+    "question": "什么是二分查找算法？",
+    "use_rag": True,
+    "top_k": 3
+})
+print(rag_response.json())
+
+# 简单对话模式（适用于闲聊）
+chat_response = requests.post("http://127.0.0.1:8000/api/ai/chat/", headers=headers, json={
+    "question": "你好，请介绍一下自己",
+    "use_rag": False
+})
+print(chat_response.json())
+```
+
+---
+
+### 10. 获取对话历史 ✅
+
+**接口地址：** `GET /api/ai/history/?limit=50&offset=0`
+
+**认证方式：** JWT Token
+
+**查询参数：**
+- `limit`: 每页数量，默认50
+- `offset`: 偏移量，默认0
+
+**响应格式：**
+
+**成功 (200)：**
+```json
+{
+  "count": 10,
+  "results": [
+    {
+      "id": 5,
+      "question": "什么是二分查找算法？",
+      "answer": "二分查找是一种...",
+      "sources": [...],
+      "tokens_used": 270,
+      "created_at": "2026-04-16T00:05:58.123456"
+    }
+  ]
+}
+```
+
+**使用示例：**
+
+```python
+# 获取最近10条对话
+response = requests.get(
+    "http://127.0.0.1:8000/api/ai/history/?limit=10&offset=0",
+    headers=headers
+)
+print(response.json())
+```
+
+---
+
+### 11. 使用情况统计 ✅
+
+**接口地址：** `GET /api/ai/usage/`
+
+**认证方式：** JWT Token
+
+**响应格式：**
+
+**成功 (200)：**
+```json
+{
+  "daily_quota": 50,
+  "used_today": 3,
+  "remaining": 47,
+  "max_history": 100,
+  "history_count": 10,
+  "reset_time": "明天 00:00"
+}
+```
+
+**字段说明：**
+- `daily_quota`: 每日配额上限
+- `used_today`: 今日已使用次数
+- `remaining`: 剩余可用次数
+- `max_history`: 历史记录上限
+- `history_count`: 当前历史记录数
+- `reset_time`: 配额重置时间
+
+**使用示例：**
+
+```python
+response = requests.get("http://127.0.0.1:8000/api/ai/usage/", headers=headers)
+stats = response.json()
+print(f"今日使用: {stats['used_today']}/{stats['daily_quota']}")
+print(f"剩余配额: {stats['remaining']}")
+```
+
+---
+
+### 12. 清空对话历史 ✅
+
+**接口地址：** `DELETE /api/ai/history/clear/`
+
+**认证方式：** JWT Token
+
+**响应格式：**
+
+**成功 (200)：**
+```json
+{
+  "message": "已清空 10 条对话记录"
+}
+```
+
+**使用示例：**
+
+```python
+response = requests.delete(
+    "http://127.0.0.1:8000/api/ai/history/clear/",
+    headers=headers
+)
+print(response.json())
+```
+
+---
+
 ## 通用响应格式
 
 ### 成功响应
@@ -652,7 +879,14 @@ const login = async (username, password) => {
 
 ---
 
-*最后更新：2026 年 3 月 24 日*
+*最后更新：2026 年 4 月 16 日*
+
+**新增内容：**
+- ✅ AI助手接口（RAG智能问答系统）
+  - AI智能问答（支持RAG模式和简单对话）
+  - 对话历史管理
+  - 使用情况统计
+  - 配额和频率限制
 
 ### Python 示例
 ```python
@@ -706,4 +940,11 @@ const getUserProfile = async () => {
 
 ---
 
-*最后更新：2026 年 3 月 24 日*
+*最后更新：2026 年 4 月 16 日*
+
+**新增内容：**
+- ✅ AI助手接口（RAG智能问答系统）
+  - AI智能问答（支持RAG模式和简单对话）
+  - 对话历史管理
+  - 使用情况统计
+  - 配额和频率限制
