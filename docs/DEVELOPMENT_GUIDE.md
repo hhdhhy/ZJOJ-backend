@@ -1,5 +1,9 @@
 # ZJOJ 开发指南
 
+> **最后更新**: 2026年4月16日  
+> **版本**: v1.0.0  
+> **状态**: 核心功能已完成，AI助手已集成
+
 ## 目录
 
 1. [环境搭建](#环境搭建)
@@ -9,6 +13,7 @@
 5. [测试指南](#测试指南)
 6. [部署指南](#部署指南)
 7. [常见问题](#常见问题)
+8. [性能优化](#性能优化)
 
 ---
 
@@ -20,6 +25,7 @@
 - **Django**: 6.0.3
 - **MySQL**: 5.7+ 或 8.0+
 - **操作系统**: Windows/Linux/macOS
+- **磁盘空间**: 至少2GB（AI模型需要约400MB）
 
 ### 安装步骤
 
@@ -46,8 +52,19 @@ source venv/bin/activate
 
 #### 3. 安装依赖
 
+**基础依赖：**
 ```bash
 pip install django==6.0.3 djangorestframework django-cors-headers shortuuidfield pyjwt mysqlclient
+```
+
+**代码评测依赖：**
+```bash
+pip install celery
+```
+
+**AI助手依赖（可选）：**
+```bash
+pip install sentence-transformers chromadb openai modelscope
 ```
 
 或使用 requirements.txt（如已创建）:
@@ -90,14 +107,44 @@ python manage.py createsuperuser
 ```
 
 按提示输入：
-- 用户名
+- 用户名（必填）
 - 邮箱
 - 密码
 
-#### 7. 运行开发服务器
+#### 7. 初始化AI助手（可选）
+
+如果使用AI助手功能，需要初始化知识库和向量数据库：
 
 ```bash
+# 1. 下载Embedding模型（首次运行自动下载，约390MB）
+# 模型会存储到 E:/ai_models/cache
+
+# 2. 添加知识库文档
+python tests/add_knowledge_base.py
+
+# 3. 同步到向量数据库
+python tests/sync_knowledge_to_vector.py
+
+# 4. 测试RAG模式
+python tests/test_rag_mode.py
+```
+
+**注意**: AI模型默认存储到E盘，如需修改路径，请编辑 `ZJOJ/settings.py`：
+```python
+EMBEDDING_CACHE_DIR = 'E:/ai_models/cache'
+CHROMA_DB_PATH = 'E:/ai_data/chroma_db'
+```
+
+#### 8. 启动服务
+
+**Django开发服务器：**
+```bash
 python manage.py runserver
+```
+
+**Celery Worker（代码评测需要）：**
+```bash
+celery -A ZJOJ worker --loglevel=info
 ```
 
 访问：
@@ -261,6 +308,70 @@ urlpatterns = [
 ### 7. 测试接口
 
 使用 Postman、curl 或编写单元测试进行测试。
+
+---
+
+### 8. AI助手模块开发（示例）
+
+#### 8.1 创建知识库文档
+
+```python
+from apps.ai_assistant.models import KnowledgeBase
+
+# 创建算法讲解文档
+doc = KnowledgeBase.objects.create(
+    title='二分查找算法',
+    content='二分查找是一种在有序数组中查找特定元素的搜索算法...',
+    doc_type='algorithm',
+    source='https://example.com/binary-search'
+)
+```
+
+#### 8.2 同步到向量数据库
+
+```python
+from apps.ai_assistant.embedding_service import EmbeddingService
+from apps.ai_assistant.vector_store import VectorStore
+
+embedding_service = EmbeddingService()
+vector_store = VectorStore()
+
+# 生成嵌入向量
+embedding = embedding_service.encode(doc.content)
+
+# 添加到向量数据库
+metadata = {
+    'doc_id': doc.id,
+    'title': doc.title,
+    'doc_type': doc.doc_type,
+}
+
+vector_store.add_document(
+    doc_id=doc.vector_id,
+    text=doc.content,
+    metadata=metadata
+)
+```
+
+#### 8.3 使用RAG引擎问答
+
+```python
+from apps.ai_assistant.rag_engine import RAGEngine
+
+rag_engine = RAGEngine()
+
+# 提问
+result = rag_engine.answer(
+    question='什么是二分查找？',
+    user=request.user,
+    use_rag=True,
+    top_k=3
+)
+
+print(result['answer'])  # AI回答
+print(result['sources'])  # 引用来源
+print(result['tokens_used'])  # Token消耗
+```
 
 ---
 
@@ -703,6 +814,111 @@ mysql -u root -p -h 127.0.0.1 -P 3306
 2. 检查 `STATIC_URL` 和 `STATIC_ROOT` 配置
 3. 配置 Web 服务器（Nginx/Apache）提供静态文件
 
+### Q8: ChromaDB hnsw索引错误
+
+**错误信息：**
+```
+Error executing plan: Internal error: Error creating hnsw segment reader: Nothing found on disk
+```
+
+**解决方案：**
+```bash
+# 1. 停止Django服务器
+
+# 2. 删除旧数据库
+python -c "import shutil; shutil.rmtree('E:/ai_data/chroma_db')"
+
+# 3. 重新启动Django服务器
+python manage.py runserver
+
+# 4. 重新同步知识库
+python tests/sync_knowledge_to_vector.py
+```
+
+### Q9: Embedding模型下载失败
+
+**问题：** 模型下载速度慢或失败
+
+**解决方案：**
+使用ModelScope（魔搭）国内镜像：
+```python
+# settings.py已配置
+EMBEDDING_MODEL_NAME = 'GanymedeNil/text2vec-base-chinese'
+MODELSCOPE_CACHE = 'E:/ai_models/cache'
+```
+
+如果仍然失败，手动下载：
+```bash
+pip install modelscope
+python -c "from modelscope import snapshot_download; snapshot_download('GanymedeNil/text2vec-base-chinese', cache_dir='E:/ai_models/cache')"
+```
+
+### Q10: Celery任务不执行
+
+**可能原因：**
+- Celery Worker未启动
+- Broker配置错误
+- 任务注册失败
+
+**解决方案：**
+```bash
+# 1. 确保Celery Worker正在运行
+celery -A ZJOJ worker --loglevel=info
+
+# 2. 检查Broker配置（开发环境使用SQLite）
+# settings.py中：
+CELERY_BROKER_URL = 'sqla+sqlite:///celerybroker.db'
+CELERY_RESULT_BACKEND = 'db+sqlite:///celeryresults.db'
+
+# 3. 查看任务列表
+celery -A ZJOJ inspect registered
+```
+
+### Q11: AI助手配额用尽
+
+**错误信息：**
+```
+"daily quota exceeded"
+```
+
+**解决方案：**
+1. 等待第二天自动重置
+2. 管理员手动重置：
+```python
+from apps.ai_assistant.models import UserProfile
+from django.utils import timezone
+
+profile = UserProfile.objects.get(user=user)
+profile.used_today = 0
+profile.last_reset_date = timezone.now().date()
+profile.save()
+```
+
+### Q12: JWT Token格式错误
+
+**错误信息：**
+```
+"Authentication credentials were not provided."
+```
+
+**解决方案：**
+本项目使用自定义JWT认证，Header格式为：
+```
+Authorization: jwt <your_token>
+```
+
+**注意**: 不是 `Bearer` 前缀！
+
+示例：
+```python
+import requests
+
+headers = {
+    'Authorization': f'jwt {token}'
+}
+response = requests.get('http://localhost:8000/api/ai/usage/', headers=headers)
+```
+
 ---
 
 ## 性能优化建议
@@ -712,19 +928,153 @@ mysql -u root -p -h 127.0.0.1 -P 3306
 - 使用 `select_related` 和 `prefetch_related` 减少查询次数
 - 避免 N+1 查询问题
 
-### 缓存
+### 缓存策略
 ```python
 from django.core.cache import cache
 
-# 设置缓存
-cache.set('key', 'value', timeout=300)
+# 设置缓存（5分钟）
+cache.set('problem_list', problems, timeout=300)
 
 # 获取缓存
-value = cache.get('key')
+problems = cache.get('problem_list')
+if problems is None:
+    problems = Problem.objects.all()
+    cache.set('problem_list', problems, timeout=300)
 ```
 
+**推荐缓存内容：**
+- 题目列表
+- 标签列表
+- 用户信息
+- 排行榜数据
+
 ### 异步任务
-对于耗时操作（如发送邮件），建议使用 Celery 等异步任务队列。
+对于耗时操作，建议使用 Celery 异步任务队列：
+
+**适用场景：**
+- 代码评测
+- 发送邮件
+- 生成报告
+- 大数据处理
+
+**示例：**
+```python
+from celery import shared_task
+
+@shared_task
+def evaluate_code(submission_id):
+    """异步评测代码"""
+    submission = Submission.objects.get(id=submission_id)
+    # 执行评测逻辑...
+    return result
+```
+
+### AI助手优化
+
+#### 1. Embedding缓存
+Embedding计算结果会自动缓存到 `EMBEDDING_CACHE_DIR`，避免重复计算。
+
+#### 2. 向量检索优化
+ChromaDB使用HNSW索引加速检索，默认配置已优化。
+
+#### 3. LLM API调用优化
+- 合理设置 `top_k` 参数（推荐3-5）
+- 控制prompt长度，减少Token消耗
+- 使用流式响应提升用户体验
+
+#### 4. 配额管理
+- 每日配额：50次/天
+- 频率限制：60秒内最多10次
+- 对话历史：最多100条
+
+### 前端优化
+- 使用CDN加载静态资源
+- 图片懒加载
+- API请求防抖
+- 虚拟滚动长列表
+
+---
+
+## 调试技巧
+
+### Django Debug Toolbar
+安装：
+```bash
+pip install django-debug-toolbar
+```
+
+配置：
+```python
+INSTALLED_APPS += ['debug_toolbar']
+MIDDLEWARE += ['debug_toolbar.middleware.DebugToolbarMiddleware']
+INTERNAL_IPS = ['127.0.0.1']
+```
+
+### 日志配置
+```python
+LOGGING = {
+    'version': 1,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+        'file': {
+            'class': 'logging.FileHandler',
+            'filename': 'zjoj.log',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+        },
+        'apps.ai_assistant': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+        },
+    },
+}
+```
+
+### AI助手调试
+
+#### 查看向量检索结果
+```python
+from apps.ai_assistant.vector_store import VectorStore
+
+vector_store = VectorStore()
+results = vector_store.search('二分查找', top_k=3)
+
+for result in results:
+    print(f"相似度: {result['similarity']}")
+    print(f"标题: {result['metadata']['title']}")
+    print(f"内容: {result['text'][:100]}...")
+```
+
+#### 查看LLM API调用详情
+```python
+from apps.ai_assistant.llm_client import LLMClient
+
+llm_client = LLMClient()
+response = llm_client.chat(
+    messages=[{"role": "user", "content": "你好"}],
+    temperature=0.7
+)
+
+print(f"Model: {response.model}")
+print(f"Tokens: {response.usage.total_tokens}")
+print(f"Answer: {response.choices[0].message.content}")
+```
+
+#### 监控配额使用情况
+```python
+from apps.ai_assistant.models import UserProfile
+
+profile = UserProfile.objects.get(user=user)
+print(f"每日配额: {profile.daily_quota}")
+print(f"今日已用: {profile.used_today}")
+print(f"剩余: {profile.daily_quota - profile.used_today}")
+```
 
 ---
 
@@ -762,4 +1112,10 @@ LOGGING = {
 
 ---
 
-*最后更新：2026 年 3 月 24 日*
+<div align="center">
+
+**Made with ❤️ by 铸剑团队**
+
+[返回顶部](#zjoJ-开发指南)
+
+</div>
