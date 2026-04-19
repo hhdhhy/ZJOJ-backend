@@ -86,11 +86,13 @@ class ProblemDetailSerializer(serializers.ModelSerializer):
         tag_ids = validated_data.pop('tag_ids', [])
         request = self.context.get('request')
         
-        # 设置创建者
+        # 获取创建者
+        creator = None
         if request and hasattr(request, 'user'):
-            validated_data['creator'] = request.user
+            creator = request.user
         
-        problem = Problem.objects.create(**validated_data)
+        # 创建题目（直接传入creator）
+        problem = Problem.objects.create(creator=creator, **validated_data)
         
         # 关联标签
         if tag_ids:
@@ -166,11 +168,13 @@ class CreateProblemSerializer(serializers.ModelSerializer):
         tag_ids = validated_data.pop('tag_ids', [])
         request = self.context.get('request')
         
-        # 设置创建者
+        # 获取创建者
+        creator = None
         if request and hasattr(request, 'user'):
-            validated_data['creator'] = request.user
+            creator = request.user
         
-        problem = Problem.objects.create(**validated_data)
+        # 创建题目（直接传入creator）
+        problem = Problem.objects.create(creator=creator, **validated_data)
         
         # 关联标签
         if tag_ids:
