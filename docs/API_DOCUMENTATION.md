@@ -620,9 +620,155 @@ curl -X POST http://localhost:8000/api/problems/tags/create/ \
 
 ---
 
+## 测试用例管理接口
+
+### 9. 上传测试用例 ✅
+
+**接口地址：** `POST /api/problems/<problem_id>/testcases/upload/`
+
+**认证要求：** 需要登录（JWT Token）+ 仅创建者可操作
+
+**路径参数：**
+- `problem_id` - 题目编号
+
+**请求参数：**
+- `file` - ZIP文件（表单数据）
+
+**ZIP文件格式：**
+- 包含 `.in` 和 `.out` 配对的测试数据文件
+- 支持任意目录结构，系统会自动转换为Hydro标准格式（testdata/目录）
+- 每个输入文件必须有对应的输出文件
+
+**请求示例：**
+```bash
+curl -X POST http://localhost:8000/api/problems/P1001/testcases/upload/ \
+  -H "Authorization: jwt YOUR_TOKEN" \
+  -F "file=@testcases.zip"
+```
+
+**响应格式：**
+
+**成功 (200)：**
+```json
+{
+  "code": 200,
+  "message": "测试用例上传成功",
+  "data": {
+    "problem_id": "P1001",
+    "test_case_count": 10,
+    "file_size": "125.50 KB",
+    "filename": "testcases.zip"
+  }
+}
+```
+
+**失败 (400)：**
+```json
+{
+  "code": 400,
+  "message": "ZIP文件中没有找到.in输入文件"
+}
+```
+
+**权限说明：** 只有题目的创建者可以上传测试用例
+
+---
+
+### 10. 获取测试用例列表 ✅
+
+**接口地址：** `GET /api/problems/<problem_id>/testcases/`
+
+**认证要求：** 需要登录（JWT Token）
+
+**路径参数：**
+- `problem_id` - 题目编号
+
+**请求示例：**
+```bash
+curl -H "Authorization: jwt YOUR_TOKEN" \
+     http://localhost:8000/api/problems/P1001/testcases/
+```
+
+**响应格式：**
+
+**成功 (200) - 有测试用例：**
+```json
+{
+  "code": 200,
+  "message": "获取成功",
+  "data": {
+    "problem_id": "P1001",
+    "has_testcases": true,
+    "test_case_count": 10,
+    "file_size": "125.50 KB",
+    "test_cases": [
+      {
+        "id": 1,
+        "input": "1.in",
+        "output": "1.out",
+        "input_size": "1.20 KB",
+        "output_size": "1.15 KB"
+      }
+    ]
+  }
+}
+```
+
+**成功 (200) - 无测试用例：**
+```json
+{
+  "code": 200,
+  "message": "暂无测试用例",
+  "data": {
+    "problem_id": "P1001",
+    "has_testcases": false,
+    "test_case_count": 0
+  }
+}
+```
+
+---
+
+### 11. 删除测试用例 ✅
+
+**接口地址：** `DELETE /api/problems/<problem_id>/testcases/delete/`
+
+**认证要求：** 需要登录（JWT Token）+ 仅创建者可操作
+
+**路径参数：**
+- `problem_id` - 题目编号
+
+**请求示例：**
+```bash
+curl -X DELETE http://localhost:8000/api/problems/P1001/testcases/delete/ \
+  -H "Authorization: jwt YOUR_TOKEN"
+```
+
+**响应格式：**
+
+**成功 (200)：**
+```json
+{
+  "code": 200,
+  "message": "测试用例已删除"
+}
+```
+
+**失败 (403)：**
+```json
+{
+  "code": 403,
+  "message": "无权限操作此题目"
+}
+```
+
+**权限说明：** 只有题目的创建者可以删除测试用例
+
+---
+
 ## 代码评测接口
 
-### 11. 提交代码 ✅
+### 12. 提交代码 ✅
 
 **接口地址：** `POST /api/submissions/submit/`
 
@@ -692,7 +838,7 @@ curl -X POST http://localhost:8000/api/submissions/submit/ \
 
 ---
 
-### 12. 获取提交列表 ✅
+### 13. 获取提交列表 ✅
 
 **接口地址：** `GET /api/submissions/`
 
@@ -747,7 +893,7 @@ curl -H "Authorization: jwt YOUR_TOKEN" \
 
 ---
 
-### 13. 获取提交详情 ✅
+### 14. 获取提交详情 ✅
 
 **接口地址：** `GET /api/submissions/<submission_id>/`
 
@@ -1937,6 +2083,11 @@ const getUserProfile = async () => {
 *最后更新：2026 年 4 月 20 日*
 
 **新增内容：**
+- ✅ 测试用例管理接口（3个）
+  - POST /api/problems/<id>/testcases/upload/ - 上传测试用例ZIP
+  - GET /api/problems/<id>/testcases/ - 获取测试用例列表
+  - DELETE /api/problems/<id>/testcases/delete/ - 删除测试用例
+  - 自动转换任意格式为Hydro标准格式（testdata/目录）
 - ✅ 用户认证接口（3个）
   - POST /api/register/ - 用户注册
   - POST /api/password/change/ - 修改密码
