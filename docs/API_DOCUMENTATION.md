@@ -86,6 +86,590 @@ class LoginView(APIView):
 
 ---
 
+## 题目管理接口
+
+### 2. 获取题目列表 ✅
+
+**接口地址：** `GET /api/problems/`
+
+**认证要求：** 需要登录（JWT Token）
+
+**查询参数：**
+- `title` (可选) - 按标题搜索
+- `tag_id` (可选) - 按标签过滤
+- `creator` (可选) - 按创建者用户名过滤
+
+**请求示例：**
+```bash
+# 获取所有题目
+curl -H "Authorization: jwt YOUR_TOKEN" \
+     http://localhost:8000/api/problems/
+
+# 按标题搜索
+curl -H "Authorization: jwt YOUR_TOKEN" \
+     "http://localhost:8000/api/problems/?title=二分"
+
+# 按标签过滤
+curl -H "Authorization: jwt YOUR_TOKEN" \
+     "http://localhost:8000/api/problems/?tag_id=1"
+```
+
+**响应格式：**
+
+**成功 (200)：**
+```json
+[
+  {
+    "problem_id": "P1001",
+    "title": "A+B Problem",
+    "description": "计算两个整数的和...",
+    "time_limit": 1000,
+    "memory_limit": 256,
+    "upload_time": "2026-04-16T10:00:00",
+    "update_time": "2026-04-16T12:00:00",
+    "creator": {
+      "uid": "abc123",
+      "username": "admin"
+    },
+    "tags": [
+      {"id": 1, "name": "入门"},
+      {"id": 2, "name": "数学"}
+    ]
+  }
+]
+```
+
+**实现代码：**
+```python
+class ProblemListView(generics.ListAPIView):
+    serializer_class = ProblemListSerializer
+    
+    def get_queryset(self):
+        queryset = Problem.objects.all().order_by('-upload_time')
+        
+        # 按标题搜索
+        title = self.request.query_params.get('title', None)
+        if title:
+            queryset = queryset.filter(title__icontains=title)
+        
+        # 按标签过滤
+        tag_id = self.request.query_params.get('tag_id', None)
+        if tag_id:
+            queryset = queryset.filter(tag__id=tag_id)
+        
+        return queryset
+```
+
+---
+
+### 3. 创建题目 ✅
+
+**接口地址：** `POST /api/problems/create/`
+
+**认证要求：** 需要登录（JWT Token）
+
+**请求参数：**
+```json
+{
+  "problem_id": "string (题目编号，如 P1001)",
+  "title": "string (题目标题)",
+  "description": "string (题目描述，支持Markdown)",
+  "time_limit": "int (时间限制，毫秒)",
+  "memory_limit": "int (内存限制，MB)",
+  "tags": ["int (标签ID列表，可选)"]
+}
+```
+
+**请求示例：**
+```bash
+curl -X POST http://localhost:8000/api/problems/create/ \
+  -H "Authorization: jwt YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "problem_id": "P1001",
+    "title": "A+B Problem",
+    "description": "## 题目描述\n\n计算两个整数的和。",
+    "time_limit": 1000,
+    "memory_limit": 256,
+    "tags": [1, 2]
+  }'
+```
+
+**响应格式：**
+
+**成功 (201)：**
+```json
+{
+  "message": "题目创建成功",
+  "data": {
+    "problem_id": "P1001",
+    "title": "A+B Problem",
+    "description": "## 题目描述\n\n计算两个整数的和。",
+    "time_limit": 1000,
+    "memory_limit": 256,
+    "upload_time": "2026-04-16T10:00:00",
+    "update_time": "2026-04-16T10:00:00",
+    "creator": {
+      "uid": "abc123",
+      "username": "admin"
+    },
+    "tags": [
+      {"id": 1, "name": "入门"},
+      {"id": 2, "name": "数学"}
+    ]
+  }
+}
+```
+
+**失败 (400)：**
+```json
+{
+  "message": "创建失败",
+  "errors": {
+    "problem_id": ["该题目编号已存在"]
+  }
+}
+```
+
+---
+
+### 4. 获取题目详情 ✅
+
+**接口地址：** `GET /api/problems/<problem_id>/`
+
+**认证要求：** 需要登录（JWT Token）
+
+**路径参数：**
+- `problem_id` - 题目编号（如 P1001）
+
+**请求示例：**
+```bash
+curl -H "Authorization: jwt YOUR_TOKEN" \
+     http://localhost:8000/api/problems/P1001/
+```
+
+**响应格式：**
+
+**成功 (200)：**
+```json
+{
+  "problem_id": "P1001",
+  "title": "A+B Problem",
+  "description": "## 题目描述\n\n计算两个整数的和。\n\n## 输入格式\n\n...",
+  "time_limit": 1000,
+  "memory_limit": 256,
+  "upload_time": "2026-04-16T10:00:00",
+  "update_time": "2026-04-16T12:00:00",
+  "creator": {
+    "uid": "abc123",
+    "username": "admin",
+    "realname": "管理员"
+  },
+  "tags": [
+    {"id": 1, "name": "入门", "create_time": "2026-04-16T09:00:00"},
+    {"id": 2, "name": "数学", "create_time": "2026-04-16T09:00:00"}
+  ]
+}
+```
+
+**失败 (404)：**
+```json
+{
+  "detail": "未找到"
+}
+```
+
+---
+
+### 5. 更新题目 ✅
+
+**接口地址：** 
+- `PUT /api/problems/<problem_id>/` - 完整更新
+- `PATCH /api/problems/<problem_id>/` - 部分更新
+
+**认证要求：** 需要登录 + 仅创建者可操作
+
+**路径参数：**
+- `problem_id` - 题目编号
+
+**请求参数（PUT - 完整更新）：**
+```json
+{
+  "title": "string",
+  "description": "string",
+  "time_limit": "int",
+  "memory_limit": "int",
+  "tags": ["int"]
+}
+```
+
+**请求参数（PATCH - 部分更新）：**
+```json
+{
+  "title": "新的标题"  // 只更新标题
+}
+```
+
+**请求示例：**
+```bash
+# 部分更新标题
+curl -X PATCH http://localhost:8000/api/problems/P1001/ \
+  -H "Authorization: jwt YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"title": "A+B Problem (Updated)"}'
+```
+
+**响应格式：**
+
+**成功 (200)：**
+```json
+{
+  "message": "题目更新成功",
+  "data": {
+    "problem_id": "P1001",
+    "title": "A+B Problem (Updated)",
+    ...
+  }
+}
+```
+
+**失败 (403)：**
+```json
+{
+  "message": "无权限修改此题目"
+}
+```
+
+**权限说明：**
+- 只有题目的创建者可以修改
+- 其他用户尝试修改会返回 403 Forbidden
+
+---
+
+### 6. 删除题目 ✅
+
+**接口地址：** `DELETE /api/problems/<problem_id>/`
+
+**认证要求：** 需要登录 + 仅创建者可操作
+
+**路径参数：**
+- `problem_id` - 题目编号
+
+**请求示例：**
+```bash
+curl -X DELETE http://localhost:8000/api/problems/P1001/ \
+  -H "Authorization: jwt YOUR_TOKEN"
+```
+
+**响应格式：**
+
+**成功 (204)：**
+```json
+{
+  "message": "题目删除成功"
+}
+```
+
+**失败 (403)：**
+```json
+{
+  "message": "无权限删除此题目"
+}
+```
+
+**注意事项：**
+- 删除题目会级联删除相关的提交记录
+- 只有创建者可以删除
+
+---
+
+### 7. 获取标签列表 ✅
+
+**接口地址：** `GET /api/problems/tags/`
+
+**认证要求：** 需要登录（JWT Token）
+
+**请求示例：**
+```bash
+curl -H "Authorization: jwt YOUR_TOKEN" \
+     http://localhost:8000/api/problems/tags/
+```
+
+**响应格式：**
+
+**成功 (200)：**
+```json
+[
+  {
+    "id": 1,
+    "name": "入门",
+    "create_time": "2026-04-16T09:00:00"
+  },
+  {
+    "id": 2,
+    "name": "动态规划",
+    "create_time": "2026-04-16T09:30:00"
+  },
+  {
+    "id": 3,
+    "name": "图论",
+    "create_time": "2026-04-16T10:00:00"
+  }
+]
+```
+
+---
+
+### 8. 创建标签 ✅
+
+**接口地址：** `POST /api/problems/tags/create/`
+
+**认证要求：** 需要登录（JWT Token）
+
+**请求参数：**
+```json
+{
+  "name": "string (标签名称)"
+}
+```
+
+**请求示例：**
+```bash
+curl -X POST http://localhost:8000/api/problems/tags/create/ \
+  -H "Authorization: jwt YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "字符串"}'
+```
+
+**响应格式：**
+
+**成功 (201)：**
+```json
+{
+  "message": "标签创建成功",
+  "data": {
+    "id": 4,
+    "name": "字符串",
+    "create_time": "2026-04-16T11:00:00"
+  }
+}
+```
+
+**失败 (400)：**
+```json
+{
+  "message": "该标签已存在"
+}
+```
+
+或
+
+```json
+{
+  "message": "标签名称不能为空"
+}
+```
+
+---
+
+## 代码评测接口
+
+### 9. 提交代码 ✅
+
+**接口地址：** `POST /api/submissions/submit/`
+
+**认证要求：** 需要登录（JWT Token）
+
+**请求参数：**
+```json
+{
+  "problem_id": "string (题目编号)",
+  "language": "string (编程语言: cpp/c/java/python3)",
+  "code": "string (源代码)"
+}
+```
+
+**请求示例：**
+```bash
+curl -X POST http://localhost:8000/api/submissions/submit/ \
+  -H "Authorization: jwt YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "problem_id": "P1001",
+    "language": "cpp",
+    "code": "#include <iostream>\nusing namespace std;\n\nint main() {\n    int a, b;\n    cin >> a >> b;\n    cout << a + b << endl;\n    return 0;\n}"
+  }'
+```
+
+**响应格式：**
+
+**成功 (201)：**
+```json
+{
+  "message": "代码提交成功",
+  "data": {
+    "id": 123,
+    "problem": {
+      "problem_id": "P1001",
+      "title": "A+B Problem"
+    },
+    "user": {
+      "uid": "abc123",
+      "username": "john_doe"
+    },
+    "language": "cpp",
+    "code_length": 123,
+    "status": 0,
+    "status_display": "等待评测",
+    "submit_time": "2026-04-16T12:00:00"
+  }
+}
+```
+
+**评测状态说明：**
+- 0: 等待评测 (Pending)
+- 1: 评测中 (Judging)
+- 2: 已完成 (Completed)
+- 3: 编译错误 (Compilation Error)
+- 4: 系统错误 (System Error)
+
+**评测结果（完成后）：**
+- AC: Accepted
+- WA: Wrong Answer
+- TLE: Time Limit Exceeded
+- MLE: Memory Limit Exceeded
+- RE: Runtime Error
+- CE: Compilation Error
+- SE: System Error
+
+---
+
+### 10. 获取提交列表 ✅
+
+**接口地址：** `GET /api/submissions/`
+
+**认证要求：** 需要登录（JWT Token）
+
+**查询参数：**
+- `problem_id` (可选) - 按题目过滤
+- `user_id` (可选) - 按用户过滤
+- `status` (可选) - 按状态过滤
+- `result` (可选) - 按结果过滤
+
+**请求示例：**
+```bash
+# 获取我的所有提交
+curl -H "Authorization: jwt YOUR_TOKEN" \
+     http://localhost:8000/api/submissions/
+
+# 获取某题目的提交
+curl -H "Authorization: jwt YOUR_TOKEN" \
+     "http://localhost:8000/api/submissions/?problem_id=P1001"
+```
+
+**响应格式：**
+
+**成功 (200)：**
+```json
+[
+  {
+    "id": 123,
+    "problem": {
+      "problem_id": "P1001",
+      "title": "A+B Problem"
+    },
+    "user": {
+      "uid": "abc123",
+      "username": "john_doe"
+    },
+    "language": "cpp",
+    "code_length": 123,
+    "status": 2,
+    "status_display": "已完成",
+    "result": "AC",
+    "result_display": "Accepted",
+    "score": 100,
+    "execution_time": 45,
+    "memory_usage": 1024,
+    "submit_time": "2026-04-16T12:00:00",
+    "judge_time": "2026-04-16T12:00:05"
+  }
+]
+```
+
+---
+
+### 11. 获取提交详情 ✅
+
+**接口地址：** `GET /api/submissions/<submission_id>/`
+
+**认证要求：** 需要登录（JWT Token）
+
+**路径参数：**
+- `submission_id` - 提交ID
+
+**请求示例：**
+```bash
+curl -H "Authorization: jwt YOUR_TOKEN" \
+     http://localhost:8000/api/submissions/123/
+```
+
+**响应格式：**
+
+**成功 (200)：**
+```json
+{
+  "id": 123,
+  "problem": {
+    "problem_id": "P1001",
+    "title": "A+B Problem"
+  },
+  "user": {
+    "uid": "abc123",
+    "username": "john_doe"
+  },
+  "language": "cpp",
+  "code": "#include <iostream>\n...",
+  "code_length": 123,
+  "status": 2,
+  "status_display": "已完成",
+  "result": "AC",
+  "result_display": "Accepted",
+  "score": 100,
+  "execution_time": 45,
+  "memory_usage": 1024,
+  "submit_time": "2026-04-16T12:00:00",
+  "judge_time": "2026-04-16T12:00:05",
+  "test_case_results": [
+    {
+      "test_case_id": 1,
+      "status": "AC",
+      "execution_time": 12,
+      "memory_usage": 512,
+      "score": 50,
+      "message": ""
+    },
+    {
+      "test_case_id": 2,
+      "status": "AC",
+      "execution_time": 15,
+      "memory_usage": 512,
+      "score": 50,
+      "message": ""
+    }
+  ]
+}
+```
+
+**失败 (404)：**
+```json
+{
+  "detail": "未找到"
+}
+```
+
+---
+
 ## 待实现接口 ⏳
 
 以下接口尚未实现，计划在未来版本中添加：
@@ -943,7 +1527,19 @@ const getUserProfile = async () => {
 *最后更新：2026 年 4 月 16 日*
 
 **新增内容：**
-- ✅ AI助手接口（RAG智能问答系统）
+- ✅ 题目管理接口（8个接口）
+  - 获取题目列表（支持搜索和过滤）
+  - 创建题目
+  - 获取题目详情
+  - 更新题目（PUT/PATCH）
+  - 删除题目
+  - 获取标签列表
+  - 创建标签
+- ✅ 代码评测接口（3个接口）
+  - 提交代码
+  - 获取提交列表
+  - 获取提交详情（含测试点结果）
+- ✅ AI助手接口（4个接口）
   - AI智能问答（支持RAG模式和简单对话）
   - 对话历史管理
   - 使用情况统计
