@@ -63,12 +63,26 @@ class TestCaseUploadView(APIView):
                 for chunk in zip_file.chunks():
                     destination.write(chunk)
             
-            # 验证ZIP文件有效性
+            # 验证ZIP文件有效性并获取测试用例信息
             try:
                 with zipfile.ZipFile(zip_path, 'r') as test_zip:
                     file_list = test_zip.namelist()
-                    input_files = [f for f in file_list if f.endswith('.in')]
-                    output_files = [f for f in file_list if f.endswith('.out')]
+                    
+                    # 支持两种格式：
+                    # 1. 直接在根目录: 1.in, 1.out
+                    # 2. 在testdata目录: testdata/1.in, testdata/1.out
+                    
+                    # 检查是否有testdata目录
+                    has_testdata_dir = any(f.startswith('testdata/') for f in file_list)
+                    
+                    if has_testdata_dir:
+                        # 从testdata目录中查找
+                        input_files = [f for f in file_list if f.startswith('testdata/') and f.endswith('.in')]
+                        output_files = [f for f in file_list if f.startswith('testdata/') and f.endswith('.out')]
+                    else:
+                        # 从根目录查找
+                        input_files = [f for f in file_list if '/' not in f and f.endswith('.in')]
+                        output_files = [f for f in file_list if '/' not in f and f.endswith('.out')]
                     
                     if not input_files:
                         zip_path.unlink()
@@ -144,13 +158,29 @@ class TestCaseListView(APIView):
         try:
             with zipfile.ZipFile(zip_path, 'r') as test_zip:
                 file_list = test_zip.namelist()
-                input_files = [f for f in file_list if f.endswith('.in')]
-                output_files = [f for f in file_list if f.endswith('.out')]
+                
+                # 支持两种格式
+                has_testdata_dir = any(f.startswith('testdata/') for f in file_list)
+                
+                if has_testdata_dir:
+                    input_files = [f for f in file_list if f.startswith('testdata/') and f.endswith('.in')]
+                    output_files = [f for f in file_list if f.startswith('testdata/') and f.endswith('.out')]
+                else:
+                    input_files = [f for f in file_list if '/' not in f and f.endswith('.in')]
+                    output_files = [f for f in file_list if '/' not in f and f.endswith('.out')]
                 
                 test_cases = []
                 for input_file in sorted(input_files):
+                    # 提取文件名（不含路径）
+                    input_basename = Path(input_file).name
                     case_id = Path(input_file).stem
-                    output_file = f'{case_id}.out'
+                    output_file_name = f'{case_id}.out'
+                    
+                    # 查找对应的output文件
+                    if has_testdata_dir:
+                        output_file = f'testdata/{output_file_name}'
+                    else:
+                        output_file = output_file_name
                     
                     if output_file in output_files:
                         # 获取文件大小
@@ -159,8 +189,8 @@ class TestCaseListView(APIView):
                         
                         test_cases.append({
                             'id': int(case_id),
-                            'input': input_file,
-                            'output': output_file,
+                            'input': input_basename,
+                            'output': output_file_name,
                             'input_size': f'{input_info.file_size / 1024:.2f} KB',
                             'output_size': f'{output_info.file_size / 1024:.2f} KB'
                         })
