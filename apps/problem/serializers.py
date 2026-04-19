@@ -51,10 +51,9 @@ class ProblemDetailSerializer(serializers.ModelSerializer):
             'tag_ids',
             'upload_time',
             'update_time',
-            'creator',
             'creator_name'
         ]
-        read_only_fields = ['upload_time', 'update_time', 'creator', 'creator_name']
+        read_only_fields = ['upload_time', 'update_time', 'creator_name']
     
     def validate_problem_id(self, value):
         """验证题目编号唯一性"""
