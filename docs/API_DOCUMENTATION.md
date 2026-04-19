@@ -398,7 +398,7 @@ curl -H "Authorization: jwt YOUR_TOKEN" \
 
 **响应格式：**
 
-**成功 (200)：**
+**成功 (200) ：**
 ```json
 {
   "problem_id": "P1001",
@@ -408,11 +408,7 @@ curl -H "Authorization: jwt YOUR_TOKEN" \
   "memory_limit": 256,
   "upload_time": "2026-04-16T10:00:00",
   "update_time": "2026-04-16T12:00:00",
-  "creator": {
-    "uid": "abc123",
-    "username": "admin",
-    "realname": "管理员"
-  },
+  "creator_name": "admin",
   "tags": [
     {"id": 1, "name": "入门", "create_time": "2026-04-16T09:00:00"},
     {"id": 2, "name": "数学", "create_time": "2026-04-16T09:00:00"}
