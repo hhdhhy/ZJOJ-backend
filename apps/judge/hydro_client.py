@@ -4,6 +4,7 @@ HydroJudge API 客户端
 """
 import requests
 import json
+import zipfile
 from django.conf import settings
 
 
@@ -113,27 +114,41 @@ class HydroJudgeClient:
         Returns:
             list: 测试用例列表
         """
-        # TODO: 从文件系统或数据库加载测试用例
-        # 这里假设测试用例存储在 /media/problems/{problem_id}/tests/ 目录
-        import os
         from pathlib import Path
+        import tempfile
+        import shutil
         
-        tests_dir = Path(f'media/problems/{problem.problem_id}/tests')
+        # 测试用例ZIP文件路径
+        zip_path = Path(f'media/problems/{problem.problem_id}/testcases.zip')
+        
+        if not zip_path.exists():
+            return []
+        
+        # 创建临时目录解压
+        temp_dir = tempfile.mkdtemp()
         test_cases = []
         
-        if tests_dir.exists():
-            # 查找所有 .in 文件
-            for input_file in sorted(tests_dir.glob('*.in')):
-                case_id = int(input_file.stem)
-                output_file = tests_dir / f'{case_id}.out'
+        try:
+            # 解压ZIP文件
+            with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+                zip_ref.extractall(temp_dir)
                 
-                if output_file.exists():
-                    test_cases.append({
-                        'id': case_id,
-                        'input': str(input_file),
-                        'output': str(output_file),
-                        'score': 10,  # 默认每个测试点10分，可根据需要调整
-                    })
+                # 查找所有.in文件
+                tests_dir = Path(temp_dir)
+                for input_file in sorted(tests_dir.glob('*.in')):
+                    case_id = int(input_file.stem)
+                    output_file = tests_dir / f'{case_id}.out'
+                    
+                    if output_file.exists():
+                        test_cases.append({
+                            'id': case_id,
+                            'input': str(input_file),
+                            'output': str(output_file),
+                            'score': 10,  # 默认每个测试点10分
+                        })
+        finally:
+            # 清理临时目录
+            shutil.rmtree(temp_dir, ignore_errors=True)
         
         return test_cases
     
