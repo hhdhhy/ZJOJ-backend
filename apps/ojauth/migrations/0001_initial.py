@@ -2,7 +2,6 @@
 
 import apps.ojauth.models
 import django.contrib.auth.validators
-import shortuuidfield.fields
 from django.db import migrations, models
 
 
@@ -35,12 +34,13 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "uid",
-                    shortuuidfield.fields.ShortUUIDField(
-                        blank=True,
+                    models.CharField(
+                        default=apps.ojauth.models.generate_short_uuid,
                         editable=False,
                         max_length=22,
                         primary_key=True,
                         serialize=False,
+                        verbose_name='UID',
                     ),
                 ),
                 (
