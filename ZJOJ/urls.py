@@ -22,8 +22,8 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("auth/",include("apps.ojauth.urls")),
-    path("api/", include("apps.problem.urls")),
+    path("api/", include("apps.ojauth.urls")),  # 用户认证
+    path("api/", include("apps.problem.urls")),  # 题目和评测
     path("api/ai/", include("apps.ai_assistant.urls"))  # AI助手
 ]
 

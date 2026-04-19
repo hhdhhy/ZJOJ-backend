@@ -86,9 +86,157 @@ class LoginView(APIView):
 
 ---
 
+### 2. 获取用户信息 ✅
+
+**接口地址：** `GET /api/user/profile/`
+
+**认证要求：** 需要登录（JWT Token）
+
+**请求示例：**
+```bash
+curl -H "Authorization: jwt YOUR_TOKEN" \
+     http://localhost:8000/api/user/profile/
+```
+
+**响应格式：**
+
+**成功 (200)：**
+```json
+{
+  "code": 200,
+  "message": "获取成功",
+  "data": {
+    "uid": "abc123",
+    "username": "john_doe",
+    "realname": "John Doe",
+    "email": "john@example.com",
+    "telephone": "13800138000",
+    "is_staff": false,
+    "status": 1,
+    "date_joined": "2026-04-16T10:00:00",
+    "last_login": "2026-04-20T01:20:00"
+  }
+}
+```
+
+**失败 (401)：**
+```json
+{
+  "detail": "未提供身份验证凭据"
+}
+```
+
+**实现代码：**
+```python
+class UserProfileView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        user = request.user
+        serializer = UerSerializer(user)
+        return Response({
+            "code": 200,
+            "message": "获取成功",
+            "data": serializer.data
+        })
+```
+
+---
+
+### 3. 更新用户信息 ✅
+
+**接口地址：** `PUT /api/user/profile/`
+
+**认证要求：** 需要登录（JWT Token）
+
+**请求参数：**
+```json
+{
+  "realname": "string (可选，真实姓名)",
+  "telephone": "string (可选，电话号码)"
+}
+```
+
+**请求示例：**
+```bash
+curl -X PUT http://localhost:8000/api/user/profile/ \
+  -H "Authorization: jwt YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "realname": "张三",
+    "telephone": "13900139000"
+  }'
+```
+
+**响应格式：**
+
+**成功 (200)：**
+```json
+{
+  "code": 200,
+  "message": "更新成功",
+  "data": {
+    "uid": "abc123",
+    "username": "john_doe",
+    "realname": "张三",
+    "email": "john@example.com",
+    "telephone": "13900139000",
+    "is_staff": false,
+    "status": 1
+  }
+}
+```
+
+**失败 (400)：**
+```json
+{
+  "code": 400,
+  "message": "该手机号已被注册"
+}
+```
+
+**注意事项：**
+- 只能更新 `realname` 和 `telephone` 字段
+- 电话号码必须唯一，不能与其他用户重复
+- username、email 等字段不可修改
+
+**实现代码：**
+```python
+class UserProfileView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def put(self, request):
+        user = request.user
+        
+        realname = request.data.get('realname')
+        telephone = request.data.get('telephone')
+        
+        if realname:
+            user.realname = realname
+        if telephone:
+            # 检查电话是否已被其他用户使用
+            if OJUser.objects.filter(telephone=telephone).exclude(uid=user.uid).exists():
+                return Response({
+                    "code": 400,
+                    "message": "该手机号已被注册"
+                }, status=status.HTTP_400_BAD_REQUEST)
+            user.telephone = telephone
+        
+        user.save()
+        serializer = UerSerializer(user)
+        
+        return Response({
+            "code": 200,
+            "message": "更新成功",
+            "data": serializer.data
+        })
+```
+
+---
+
 ## 题目管理接口
 
-### 2. 获取题目列表 ✅
+### 4. 获取题目列表 ✅
 
 **接口地址：** `GET /api/problems/`
 
@@ -162,7 +310,7 @@ class ProblemListView(generics.ListAPIView):
 
 ---
 
-### 3. 创建题目 ✅
+### 5. 创建题目 ✅
 
 **接口地址：** `POST /api/problems/create/`
 
@@ -233,7 +381,7 @@ curl -X POST http://localhost:8000/api/problems/create/ \
 
 ---
 
-### 4. 获取题目详情 ✅
+### 6. 获取题目详情 ✅
 
 **接口地址：** `GET /api/problems/<problem_id>/`
 
@@ -281,7 +429,7 @@ curl -H "Authorization: jwt YOUR_TOKEN" \
 
 ---
 
-### 5. 更新题目 ✅
+### 7. 更新题目 ✅
 
 **接口地址：** 
 - `PUT /api/problems/<problem_id>/` - 完整更新
@@ -346,7 +494,7 @@ curl -X PATCH http://localhost:8000/api/problems/P1001/ \
 
 ---
 
-### 6. 删除题目 ✅
+### 8. 删除题目 ✅
 
 **接口地址：** `DELETE /api/problems/<problem_id>/`
 
@@ -383,7 +531,7 @@ curl -X DELETE http://localhost:8000/api/problems/P1001/ \
 
 ---
 
-### 7. 获取标签列表 ✅
+### 9. 获取标签列表 ✅
 
 **接口地址：** `GET /api/problems/tags/`
 
@@ -420,7 +568,7 @@ curl -H "Authorization: jwt YOUR_TOKEN" \
 
 ---
 
-### 8. 创建标签 ✅
+### 10. 创建标签 ✅
 
 **接口地址：** `POST /api/problems/tags/create/`
 
@@ -474,7 +622,7 @@ curl -X POST http://localhost:8000/api/problems/tags/create/ \
 
 ## 代码评测接口
 
-### 9. 提交代码 ✅
+### 11. 提交代码 ✅
 
 **接口地址：** `POST /api/submissions/submit/`
 
@@ -544,7 +692,7 @@ curl -X POST http://localhost:8000/api/submissions/submit/ \
 
 ---
 
-### 10. 获取提交列表 ✅
+### 12. 获取提交列表 ✅
 
 **接口地址：** `GET /api/submissions/`
 
@@ -599,7 +747,7 @@ curl -H "Authorization: jwt YOUR_TOKEN" \
 
 ---
 
-### 11. 获取提交详情 ✅
+### 13. 获取提交详情 ✅
 
 **接口地址：** `GET /api/submissions/<submission_id>/`
 
@@ -670,27 +818,289 @@ curl -H "Authorization: jwt YOUR_TOKEN" \
 
 ---
 
-## 待实现接口 ⏳
+### 14. 用户注册 ✅
 
-以下接口尚未实现，计划在未来版本中添加：
-
-### 2. 用户注册
 **接口地址：** `POST /api/register/`
 
-### 3. 用户登出
-**接口地址：** `POST /api/logout/`
+**认证要求：** 不需要登录
 
-### 4. 获取用户信息
-**接口地址：** `GET /api/user/profile/`
+**请求参数：**
+```json
+{
+  "username": "string (必填，2-20字符)",
+  "password": "string (必填，6-20字符)",
+  "email": "string (必填，唯一)",
+  "realname": "string (必填，真实姓名)",
+  "telephone": "string (可选，唯一)"
+}
+```
 
-### 5. 更新用户信息
-**接口地址：** `PUT /api/user/profile/`
+**请求示例：**
+```bash
+curl -X POST http://localhost:8000/api/register/ \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "newuser",
+    "password": "password123",
+    "email": "newuser@example.com",
+    "realname": "新用户",
+    "telephone": "13900139000"
+  }'
+```
 
-### 6. 修改密码
+**响应格式：**
+
+**成功 (201)：**
+```json
+{
+  "code": 201,
+  "message": "注册成功",
+  "data": {
+    "uid": "xyz789",
+    "username": "newuser",
+    "realname": "新用户",
+    "email": "newuser@example.com"
+  }
+}
+```
+
+**失败 (400)：**
+```json
+{
+  "code": 400,
+  "message": "用户名已存在"
+}
+```
+
+或其他错误：
+- `请填写必填字段` - 缺少必要参数
+- `用户名长度必须在2-20字符之间` - 用户名长度不符合要求
+- `密码长度必须在6-20字符之间` - 密码长度不符合要求
+- `用户名已存在` - 用户名已被注册
+- `邮箱已被注册` - 邮箱已被使用
+- `该手机号已被注册` - 电话已被使用
+
+**实现代码：**
+```python
+class RegisterView(APIView):
+    permission_classes = [AllowAny]
+    
+    def post(self, request):
+        username = request.data.get('username')
+        password = request.data.get('password')
+        email = request.data.get('email')
+        realname = request.data.get('realname')
+        telephone = request.data.get('telephone', '')
+        
+        # 验证必填字段
+        if not all([username, password, email, realname]):
+            return Response({
+                "code": 400,
+                "message": "请填写必填字段"
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # 验证长度
+        if len(username) < 2 or len(username) > 20:
+            return Response({
+                "code": 400,
+                "message": "用户名长度必须在2-20字符之间"
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        if len(password) < 6 or len(password) > 20:
+            return Response({
+                "code": 400,
+                "message": "密码长度必须在6-20字符之间"
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # 检查唯一性
+        if OJUser.objects.filter(username=username).exists():
+            return Response({"code": 400, "message": "用户名已存在"}, status=400)
+        
+        if OJUser.objects.filter(email=email).exists():
+            return Response({"code": 400, "message": "邮箱已被注册"}, status=400)
+        
+        if telephone and OJUser.objects.filter(telephone=telephone).exists():
+            return Response({"code": 400, "message": "该手机号已被注册"}, status=400)
+        
+        # 创建用户
+        user = OJUser.objects.create_user(
+            username=username,
+            realname=realname,
+            email=email,
+            password=password,
+            telephone=telephone
+        )
+        
+        return Response({
+            "code": 201,
+            "message": "注册成功",
+            "data": {
+                "uid": user.uid,
+                "username": user.username,
+                "realname": user.realname,
+                "email": user.email
+            }
+        }, status=status.HTTP_201_CREATED)
+```
+
+---
+
+### 15. 修改密码 ✅
+
 **接口地址：** `POST /api/password/change/`
 
-### 7. 重置密码
+**认证要求：** 需要登录（JWT Token）
+
+**请求参数：**
+```json
+{
+  "old_password": "string (原密码)",
+  "new_password": "string (新密码，6-20字符)"
+}
+```
+
+**请求示例：**
+```bash
+curl -X POST http://localhost:8000/api/password/change/ \
+  -H "Authorization: jwt YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "old_password": "oldpass123",
+    "new_password": "newpass456"
+  }'
+```
+
+**响应格式：**
+
+**成功 (200)：**
+```json
+{
+  "code": 200,
+  "message": "密码修改成功"
+}
+```
+
+**失败 (400)：**
+```json
+{
+  "code": 400,
+  "message": "原密码错误"
+}
+```
+
+或其他错误：
+- `请提供原密码和新密码` - 缺少参数
+- `原密码错误` - 原密码不正确
+- `新密码长度必须在6-20字符之间` - 新密码长度不符合要求
+
+**实现代码：**
+```python
+class ChangePasswordView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request):
+        user = request.user
+        old_password = request.data.get('old_password')
+        new_password = request.data.get('new_password')
+        
+        if not old_password or not new_password:
+            return Response({
+                "code": 400,
+                "message": "请提供原密码和新密码"
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        if not user.check_password(old_password):
+            return Response({
+                "code": 400,
+                "message": "原密码错误"
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        if len(new_password) < 6 or len(new_password) > 20:
+            return Response({
+                "code": 400,
+                "message": "新密码长度必须在6-20字符之间"
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        user.set_password(new_password)
+        user.save()
+        
+        return Response({
+            "code": 200,
+            "message": "密码修改成功"
+        })
+```
+
+---
+
+### 16. 重置密码（邮件）✅
+
 **接口地址：** `POST /api/password/reset/`
+
+**认证要求：** 不需要登录
+
+**请求参数：**
+```json
+{
+  "email": "string (注册邮箱)"
+}
+```
+
+**请求示例：**
+```bash
+curl -X POST http://localhost:8000/api/password/reset/ \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "user@example.com"
+  }'
+```
+
+**响应格式：**
+
+**成功 (200)：**
+```json
+{
+  "code": 200,
+  "message": "如果该邮箱已注册，重置链接将发送到您的邮箱"
+}
+```
+
+**说明：**
+- 为防止邮箱枚举攻击，无论邮箱是否存在都返回相同消息
+- 实际项目中需要配置邮件服务并生成安全的reset token
+- TODO: 实现邮件发送功能
+
+**实现代码：**
+```python
+class ResetPasswordView(APIView):
+    permission_classes = [AllowAny]
+    
+    def post(self, request):
+        email = request.data.get('email')
+        
+        if not email:
+            return Response({
+                "code": 400,
+                "message": "请提供邮箱地址"
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            user = OJUser.objects.get(email=email)
+        except OJUser.DoesNotExist:
+            # 为防止邮箱枚举，即使不存在也返回成功
+            return Response({
+                "code": 200,
+                "message": "如果该邮箱已注册，重置链接将发送到您的邮箱"
+            })
+        
+        # TODO: 生成重置token并发送邮件
+        # reset_token = generate_reset_token(user)
+        # send_reset_email(email, reset_token)
+        
+        return Response({
+            "code": 200,
+            "message": "如果该邮箱已注册，重置链接将发送到您的邮箱"
+        })
+```
 
 ---
 
@@ -1524,10 +1934,17 @@ const getUserProfile = async () => {
 
 ---
 
-*最后更新：2026 年 4 月 16 日*
+*最后更新：2026 年 4 月 20 日*
 
 **新增内容：**
-- ✅ 题目管理接口（8个接口）
+- ✅ 用户认证接口（3个）
+  - POST /api/register/ - 用户注册
+  - POST /api/password/change/ - 修改密码
+  - POST /api/password/reset/ - 重置密码（邮件）
+- ✅ 用户信息接口（2个）
+  - GET /api/user/profile/ - 获取当前用户信息
+  - PUT /api/user/profile/ - 更新用户信息（realname、telephone）
+- ✅ 题目管理接口（7个）
   - 获取题目列表（支持搜索和过滤）
   - 创建题目
   - 获取题目详情
@@ -1535,11 +1952,11 @@ const getUserProfile = async () => {
   - 删除题目
   - 获取标签列表
   - 创建标签
-- ✅ 代码评测接口（3个接口）
+- ✅ 代码评测接口（3个）
   - 提交代码
   - 获取提交列表
   - 获取提交详情（含测试点结果）
-- ✅ AI助手接口（4个接口）
+- ✅ AI助手接口（4个）
   - AI智能问答（支持RAG模式和简单对话）
   - 对话历史管理
   - 使用情况统计
