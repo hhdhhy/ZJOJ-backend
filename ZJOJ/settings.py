@@ -10,11 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
-import warnings
 from pathlib import Path
-
-# 抑制 pkg_resources 弃用警告
-warnings.filterwarnings('ignore', message='pkg_resources is deprecated')
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent

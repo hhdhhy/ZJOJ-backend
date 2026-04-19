@@ -8,7 +8,12 @@ from django.contrib.auth.models import User, PermissionsMixin, UserManager
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.apps.registry import apps
-from shortuuidfield import ShortUUIDField
+import shortuuid
+
+
+def generate_short_uuid():
+    """生成短UUID"""
+    return shortuuid.ShortUUID().random(length=22)
 # Create your models here.
 class UserStatusChoices(models.IntegerChoices):
     # 用户状态
@@ -137,7 +142,13 @@ class OJUser(AbstractBaseUser, PermissionsMixin):
 
     username_validator = UnicodeUsernameValidator()
 
-    uid=ShortUUIDField(primary_key=True)
+    uid = models.CharField(
+        primary_key=True,
+        max_length=22,
+        default=generate_short_uuid,
+        editable=False,
+        verbose_name='UID'
+    )
 
     username = models.CharField(
         _("username"),
