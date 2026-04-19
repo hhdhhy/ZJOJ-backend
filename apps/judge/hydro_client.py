@@ -133,11 +133,8 @@ class HydroJudgeClient:
             with zipfile.ZipFile(zip_path, 'r') as zip_ref:
                 zip_ref.extractall(temp_dir)
                 
-                # 确定测试数据目录
+                # 测试数据在testdata目录（标准格式）
                 tests_dir = Path(temp_dir) / 'testdata'
-                if not tests_dir.exists():
-                    # 如果没有testdata目录，使用根目录
-                    tests_dir = Path(temp_dir)
                 
                 # 查找所有.in文件
                 for input_file in sorted(tests_dir.glob('*.in')):

@@ -58,53 +58,72 @@ class TestCaseUploadView(APIView):
             if zip_path.exists():
                 zip_path.unlink()
             
-            # 保存新文件
-            with open(zip_path, 'wb+') as destination:
+            # 保存上传的ZIP到临时位置
+            import tempfile
+            temp_zip_path = Path(tempfile.mktemp(suffix='.zip'))
+            with open(temp_zip_path, 'wb+') as destination:
                 for chunk in zip_file.chunks():
                     destination.write(chunk)
             
-            # 验证ZIP文件有效性并获取测试用例信息
+            # 验证并重新打包为标准格式
             try:
-                with zipfile.ZipFile(zip_path, 'r') as test_zip:
-                    file_list = test_zip.namelist()
+                with zipfile.ZipFile(temp_zip_path, 'r') as src_zip:
+                    file_list = src_zip.namelist()
                     
-                    # 支持两种格式：
-                    # 1. 直接在根目录: 1.in, 1.out
-                    # 2. 在testdata目录: testdata/1.in, testdata/1.out
-                    
-                    # 检查是否有testdata目录
-                    has_testdata_dir = any(f.startswith('testdata/') for f in file_list)
-                    
-                    if has_testdata_dir:
-                        # 从testdata目录中查找
-                        input_files = [f for f in file_list if f.startswith('testdata/') and f.endswith('.in')]
-                        output_files = [f for f in file_list if f.startswith('testdata/') and f.endswith('.out')]
-                    else:
-                        # 从根目录查找
-                        input_files = [f for f in file_list if '/' not in f and f.endswith('.in')]
-                        output_files = [f for f in file_list if '/' not in f and f.endswith('.out')]
+                    # 查找所有.in和.out文件（无论在哪层目录）
+                    input_files = [f for f in file_list if f.endswith('.in')]
+                    output_files = [f for f in file_list if f.endswith('.out')]
                     
                     if not input_files:
-                        zip_path.unlink()
+                        temp_zip_path.unlink()
                         return Response({
                             'code': 400,
                             'message': 'ZIP文件中没有找到.in输入文件'
                         }, status=status.HTTP_400_BAD_REQUEST)
                     
                     if len(input_files) != len(output_files):
-                        zip_path.unlink()
+                        temp_zip_path.unlink()
                         return Response({
                             'code': 400,
                             'message': f'输入文件({len(input_files)}个)和输出文件({len(output_files)}个)数量不匹配'
                         }, status=status.HTTP_400_BAD_REQUEST)
                     
+                    # 创建标准格式的ZIP（带testdata目录）
+                    with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as dst_zip:
+                        for input_file in input_files:
+                            # 获取文件名（不含路径）
+                            input_basename = Path(input_file).name
+                            case_id = Path(input_file).stem
+                            output_basename = f'{case_id}.out'
+                            
+                            # 查找对应的output文件
+                            output_file = None
+                            for of in output_files:
+                                if Path(of).name == output_basename:
+                                    output_file = of
+                                    break
+                            
+                            if output_file:
+                                # 读取并写入标准位置
+                                input_data = src_zip.read(input_file)
+                                output_data = src_zip.read(output_file)
+                                
+                                # 写入testdata目录
+                                dst_zip.writestr(f'testdata/{input_basename}', input_data)
+                                dst_zip.writestr(f'testdata/{output_basename}', output_data)
+                    
                     test_case_count = len(input_files)
+                    
             except zipfile.BadZipFile:
-                zip_path.unlink()
+                temp_zip_path.unlink()
                 return Response({
                     'code': 400,
                     'message': '无效的ZIP文件'
                 }, status=status.HTTP_400_BAD_REQUEST)
+            finally:
+                # 清理临时文件
+                if temp_zip_path.exists():
+                    temp_zip_path.unlink()
             
             return Response({
                 'code': 200,
@@ -154,20 +173,14 @@ class TestCaseListView(APIView):
                 }
             })
         
-        # 读取ZIP文件信息
+        # 读取ZIP文件信息（标准格式：testdata/目录）
         try:
             with zipfile.ZipFile(zip_path, 'r') as test_zip:
                 file_list = test_zip.namelist()
                 
-                # 支持两种格式
-                has_testdata_dir = any(f.startswith('testdata/') for f in file_list)
-                
-                if has_testdata_dir:
-                    input_files = [f for f in file_list if f.startswith('testdata/') and f.endswith('.in')]
-                    output_files = [f for f in file_list if f.startswith('testdata/') and f.endswith('.out')]
-                else:
-                    input_files = [f for f in file_list if '/' not in f and f.endswith('.in')]
-                    output_files = [f for f in file_list if '/' not in f and f.endswith('.out')]
+                # 从testdata目录中查找
+                input_files = [f for f in file_list if f.startswith('testdata/') and f.endswith('.in')]
+                output_files = [f for f in file_list if f.startswith('testdata/') and f.endswith('.out')]
                 
                 test_cases = []
                 for input_file in sorted(input_files):
@@ -175,12 +188,7 @@ class TestCaseListView(APIView):
                     input_basename = Path(input_file).name
                     case_id = Path(input_file).stem
                     output_file_name = f'{case_id}.out'
-                    
-                    # 查找对应的output文件
-                    if has_testdata_dir:
-                        output_file = f'testdata/{output_file_name}'
-                    else:
-                        output_file = output_file_name
+                    output_file = f'testdata/{output_file_name}'
                     
                     if output_file in output_files:
                         # 获取文件大小
