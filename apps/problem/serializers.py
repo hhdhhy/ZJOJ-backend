@@ -96,7 +96,7 @@ class ProblemDetailSerializer(serializers.ModelSerializer):
         # 关联标签
         if tag_ids:
             tags = Tag.objects.filter(id__in=tag_ids)
-            problem.tag.set(tags)
+            problem.tags.set(tags)
         
         return problem
     
@@ -112,7 +112,7 @@ class ProblemDetailSerializer(serializers.ModelSerializer):
         # 更新标签关联
         if tag_ids is not None:
             tags = Tag.objects.filter(id__in=tag_ids)
-            instance.tag.set(tags)
+            instance.tags.set(tags)
         
         return instance
 
@@ -176,7 +176,7 @@ class CreateProblemSerializer(serializers.ModelSerializer):
         # 关联标签
         if tag_ids:
             tags = Tag.objects.filter(id__in=tag_ids)
-            problem.tag.set(tags)
+            problem.tags.set(tags)
         
         return problem
   

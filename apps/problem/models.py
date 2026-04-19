@@ -20,7 +20,7 @@ class Problem(models.Model):
     description = models.TextField()
     time_limit = models.PositiveIntegerField()
     memory_limit = models.PositiveIntegerField()
-    tag=models.ManyToManyField(Tag,verbose_name='标签',blank=True,related_name='problems')
+    tags = models.ManyToManyField(Tag, verbose_name='标签', blank=True, related_name='problems')
     upload_time = models.DateTimeField(auto_now_add=True, verbose_name='上传时间')
     update_time = models.DateTimeField(auto_now=True, verbose_name='修改时间')
     creator = models.ForeignKey(OJUser, on_delete=models.SET_NULL, null=True, related_name='created_problems', verbose_name='创建者')
