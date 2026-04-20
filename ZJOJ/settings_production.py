@@ -119,6 +119,10 @@ HYDRO_JUDGE_URL = 'http://localhost:5050'
 HYDRO_JUDGE_TIMEOUT = 30
 
 # ==================== Celery配置 ====================
-# 生产环境建议使用Redis或RabbitMQ
-# CELERY_BROKER_URL = 'redis://localhost:6379/0'
-# CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+# 生产环境使用Redis
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'Asia/Shanghai'
