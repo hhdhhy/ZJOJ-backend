@@ -7,7 +7,7 @@ djangorestframework==3.14.0
 django-cors-headers==4.3.0
 
 # Database
-mysqlclient==2.2.0
+mysqlclient==2.2.4
 
 # Authentication & Security
 PyJWT==2.8.0
