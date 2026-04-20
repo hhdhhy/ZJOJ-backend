@@ -35,8 +35,8 @@ sudo apt upgrade -y
 # ==================== 步骤 2: 安装依赖 ====================
 echo_step "2" "安装系统依赖..."
 sudo apt install -y \
-    python3.10 \
-    python3.10-venv \
+    python3 \
+    python3-venv \
     python3-pip \
     mysql-server \
     nginx \
@@ -60,20 +60,25 @@ echo_warn "MySQL用户: zjoj_user"
 echo_warn "MySQL密码: ZjoJ@2026!Secure"
 echo_warn "请记得修改 settings.py 中的数据库配置！"
 
-# ==================== 步骤 4: 克隆/更新代码 ====================
-echo_step "4" "获取项目代码..."
-if [ -d "$PROJECT_DIR" ]; then
-    cd "$PROJECT_DIR"
-    git pull origin main
+# ==================== 步骤 4: 检查项目代码 ====================
+echo_step "4" "检查项目代码..."
+if [ ! -d "$PROJECT_DIR" ]; then
+    echo "错误: 项目目录不存在，请先上传代码到 $PROJECT_DIR"
+    exit 1
+fi
+
+cd "$PROJECT_DIR"
+
+# 如果是Git仓库，尝试更新
+if [ -d ".git" ]; then
+    git pull origin main 2>/dev/null || echo_warn "Git更新失败，使用现有代码"
 else
-    cd /home/ubuntu
-    git clone <YOUR_GIT_REPO_URL> ZJOJ
-    cd "$PROJECT_DIR"
+    echo_warn "非Git仓库，使用现有代码"
 fi
 
 # ==================== 步骤 5: 创建虚拟环境 ====================
 echo_step "5" "创建Python虚拟环境..."
-python3.10 -m venv $VENV_DIR
+python3 -m venv $VENV_DIR
 source $VENV_DIR/bin/activate
 
 # 升级pip
