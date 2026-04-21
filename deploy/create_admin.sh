@@ -17,8 +17,9 @@ echo "邮箱: $ADMIN_EMAIL"
 echo "========================================="
 
 # 检查 Docker Compose 是否运行
-if ! docker compose ps | grep -q "zjoj-web"; then
+if ! docker compose ps 2>/dev/null | grep -q "web"; then
     echo "❌ 错误: Docker 服务未运行，请先启动服务"
+    echo "   运行: docker compose up -d"
     exit 1
 fi
 
