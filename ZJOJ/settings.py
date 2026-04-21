@@ -162,13 +162,13 @@ HYDRO_JUDGE_URL = 'http://localhost:5050'  # HydroJudge 服务地址
 HYDRO_JUDGE_TIMEOUT = 30  # 超时时间（秒）
 
 # AI Assistant Configuration
-EMBEDDING_CACHE_DIR = 'E:/ai_models/cache'  # Embedding 模型缓存目录
-CHROMA_DB_PATH = 'E:/ai_data/chroma_db'  # ChromaDB 数据存储目录
+EMBEDDING_CACHE_DIR = os.getenv('EMBEDDING_CACHE_DIR', 'E:/ai_models/cache')
+CHROMA_DB_PATH = os.getenv('CHROMA_DB_PATH', 'E:/ai_data/chroma_db')
 
 # LLM API Configuration (DeepSeek)
-DEEPSEEK_API_KEY = 'sk-9d8da1c7c07548ecb6986efe57f233b8'  # DeepSeek API密钥
-DEEPSEEK_MODEL = 'deepseek-chat'  # 模型名称
-DEEPSEEK_BASE_URL = 'https://api.deepseek.com'  # API地址
+DEEPSEEK_API_KEY = os.getenv('DEEPSEEK_API_KEY', '')  # 从环境变量读取
+DEEPSEEK_MODEL = os.getenv('DEEPSEEK_MODEL', 'deepseek-chat')
+DEEPSEEK_BASE_URL = os.getenv('DEEPSEEK_BASE_URL', 'https://api.deepseek.com')
 
 # DRF Configuration
 REST_FRAMEWORK = {
