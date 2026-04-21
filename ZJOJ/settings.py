@@ -84,15 +84,19 @@ WSGI_APPLICATION = "ZJOJ.wsgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
-        "NAME": "ZJOJ",
-        "USER": "root",
-        "PASSWORD": "Liu2004hd",
-        "HOST": "127.0.0.1",
-        "PORT": "3306",
+        "NAME": os.getenv("DB_NAME", "ZJOJ"),
+        "USER": os.getenv("DB_USER", "zjoj_user"),
+        "PASSWORD": os.getenv("DB_PASSWORD", "ZJOJ@2024secure"),
+        "HOST": os.getenv("DB_HOST", "127.0.0.1"),
+        "PORT": os.getenv("DB_PORT", "3306"),
     }
 }
 
