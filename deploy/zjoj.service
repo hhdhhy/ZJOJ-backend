@@ -1,18 +1,18 @@
 [Unit]
 Description=ZJOJ Django Application
-After=network.target mysql.service redis.service
-Wants=mysql.service redis.service
+After=network.target mysql.service
+Wants=mysql.service
 
 [Service]
-Type=notify
-User=zjoj
-Group=zjoj
-WorkingDirectory=/opt/zjoj
-Environment="PATH=/opt/zjoj/venv/bin"
-ExecStart=/opt/zjoj/venv/bin/gunicorn -c gunicorn_config.py ZJOJ.wsgi:application
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu/ZJOJ
+Environment="PATH=/home/ubuntu/ZJOJ/.venv/bin"
+ExecStart=/home/ubuntu/ZJOJ/.venv/bin/gunicorn --workers 3 --bind 127.0.0.1:8000 --timeout 120 ZJOJ.wsgi:application
 ExecReload=/bin/kill -s HUP $MAINPID
 Restart=on-failure
-RestartSec=10
+RestartSec=5
 
 # 日志
 StandardOutput=append:/opt/zjoj_data/logs/gunicorn_stdout.log
