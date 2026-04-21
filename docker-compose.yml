@@ -44,7 +44,7 @@ services:
       - DB_HOST=db
       - DB_PORT=3306
       - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
-      - DJANGO_SETTINGS_MODULE=ZJOJ.settings
+      - DJANGO_SETTINGS_MODULE=ZJOJ.settings_production
       - PYTHONUNBUFFERED=1
     depends_on:
       db:
