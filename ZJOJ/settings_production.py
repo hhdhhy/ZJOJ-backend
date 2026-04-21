@@ -20,14 +20,15 @@ ALLOWED_HOSTS = [
 ]
 
 # ==================== 数据库配置 ====================
+# Docker环境：DB_HOST应为'db'（Docker服务名）
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
-        "NAME": os.environ.get('DB_NAME', 'zjoj_db'),
+        "NAME": os.environ.get('DB_NAME', 'ZJOJ'),
         "USER": os.environ.get('DB_USER', 'zjoj_user'),
-        "PASSWORD": os.environ.get('DB_PASSWORD', 'ZjoJ@2026!Secure'),
-        "HOST": os.environ.get('DB_HOST', '127.0.0.1'),
-        "PORT": os.environ.get('DB_PORT', '3306'),
+        "PASSWORD": os.environ.get('DB_PASSWORD', 'ZJOJ@2024secure'),
+        "HOST": 'db',  # Docker Compose中的MySQL服务名
+        "PORT": '3306',
         "OPTIONS": {
             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
             'charset': 'utf8mb4',
