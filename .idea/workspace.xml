@@ -6,46 +6,6 @@
   <component name="ChangeListManager">
     <list default="true" id="52d331c5-8e4f-4652-a570-624eaeebea14" name="更改" comment="feat(auth): 添加JWT登录验证中间件和用户认证功能&#10;&#10;- 创建LoginCheckMiddleware中间件，实现JWT令牌验证逻辑&#10;- 集成JWT解码和签名验证，支持时间偏差容错处理&#10;- 在settings.py中注册JWT登录验证中间件&#10;- 更新MYJWT认证模块，统一JWT算法和前缀常量&#10;- 实现ResetPasswordView重置密码接口，添加身份验证权限&#10;- 优化登录接口错误处理，返回具体的验证失败详情&#10;- 添加重置密码接口的认证权限控制，确保安全性">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/DEPLOY.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/DEPLOYMENT.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/ai_assistant/__init__.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/ai_assistant/admin.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/ai_assistant/apps.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/ai_assistant/migrations/__init__.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/ai_assistant/models.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/ai_assistant/tests.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/ai_assistant/views.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/judge/hydro_client.py" beforeDir="false" afterPath="$PROJECT_DIR$/apps/judge/hydro_client.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/celery_supervisor.conf" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/celerybroker.db" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/celeryresults.db" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/deploy.sh" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/deploy/nginx.conf.example" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/deploy/quick_deploy.sh" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/deploy_simple.sh" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docker-daemon.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/API_DOCUMENTATION.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/DEPLOYMENT.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/HYDRO_JUDGE_INTEGRATION.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/PROJECT_DOCUMENTATION.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/gunicorn_config.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/gunicorn_config.py.example" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/quick_deploy.sh" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/add_knowledge_base.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/sync_knowledge_to_vector.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/test_ai_assistant_full.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/test_celery.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/test_embedding.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/test_full_judge.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/test_problem_full.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/test_problem_upload.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/test_rag_mode.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/test_submission_api.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/test_vector_store.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/tests.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/zjoj_nginx.conf" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/zjoj_supervisor.conf" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -174,7 +134,7 @@
       <workItem from="1776614178738" duration="1053000" />
       <workItem from="1776615357317" duration="8426000" />
       <workItem from="1776668582359" duration="22331000" />
-      <workItem from="1776776607297" duration="2445000" />
+      <workItem from="1776776607297" duration="5091000" />
     </task>
     <task id="LOCAL-00001" summary="chore(project): 初始化 Django 项目配置&#10;&#10;- 添加了 .idea 目录下的项目配置文件（misc.xml, modules.xml, profiles_settings.xml, vcs.xml, workspace.xml, ZJOJ.iml）&#10;- 创建了 apps/ojauth 应用的基本文件结构（admin.py, apps.py, models.py, tests.py, views.py）&#10;- 添加了 Django 项目的主配置文件（asgi.py, wsgi.py, settings.py, urls.py）&#10;- 配置了数据库连接（MySQL）和 CORS 设置&#10;- 设置了 Django 管理命令入口文件 manage.py&#10;- 配置了 Django 模板目录和静态文件设置&#10;- 添加了 Python 3.13 运行环境配置">
       <option name="closed" value="true" />

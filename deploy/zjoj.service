@@ -14,10 +14,6 @@ ExecReload=/bin/kill -s HUP $MAINPID
 Restart=on-failure
 RestartSec=5
 
-# 日志
-StandardOutput=append:/opt/zjoj_data/logs/gunicorn_stdout.log
-StandardError=append:/opt/zjoj_data/logs/gunicorn_stderr.log
-
 # 资源限制
 LimitNOFILE=65536
 
