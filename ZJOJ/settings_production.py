@@ -87,7 +87,7 @@ LOGGING = {
         'file': {
             'level': 'WARNING',
             'class': 'logging.FileHandler',
-            'filename': '/var/log/zjoj/django.log',
+            'filename': '/home/zjoj/logs/django.log',
             'formatter': 'verbose',
         },
         'console': {

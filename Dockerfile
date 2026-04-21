@@ -28,7 +28,7 @@ RUN pip install --upgrade pip && \
 COPY . .
 
 # 创建必要的目录
-RUN mkdir -p staticfiles media
+RUN mkdir -p staticfiles media logs
 
 # 暴露端口
 EXPOSE 8000
