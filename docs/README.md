@@ -13,7 +13,8 @@
 - [🏗️ 系统架构](02-ARCHITECTURE.md) - 技术选型和架构设计
 
 ### 🔧 部署运维
-- [📦 部署指南](03-DEPLOYMENT.md) - 从安装到上线的完整流程
+- [📦 传统部署指南](03-DEPLOYMENT.md) - 手动安装和配置
+- [🐳 Docker 部署指南](DOCKER_DEPLOYMENT.md) - Docker Compose 快速部署（推荐）
 
 ### 💻 开发参考
 - [🔌 API 参考](04-API_REFERENCE.md) - 完整的 RESTful API 文档
