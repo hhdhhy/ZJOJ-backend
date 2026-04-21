@@ -67,21 +67,34 @@
 | 字段 | 类型 | 说明 |
 |------|------|------|
 | id | BIGINT | 自增主键 |
-| submit_time | DATETIME | 提交时间 |
-| result | INT | 评测结果（0-6） |
-| code | LONGTEXT | 提交的代码 |
-| language | VARCHAR(20) | 编程语言 |
-| user_id | VARCHAR(255) | 用户（外键） |
 | problem_id | VARCHAR(20) | 题目（外键） |
+| user_id | VARCHAR(255) | 用户（外键） |
+| language | VARCHAR(20) | 编程语言（cpp/c/java/python3） |
+| code | LONGTEXT | 提交的代码 |
+| code_length | INT | 代码长度（字节） |
+| status | INT | 评测状态（0-4） |
+| result | VARCHAR(10) | 评测结果（AC/WA/TLE等） |
+| score | INT | 得分 |
+| execution_time | INT | 运行时间（毫秒） |
+| memory_usage | INT | 内存使用（KB） |
+| submit_time | DATETIME | 提交时间 |
+| judge_time | DATETIME | 评测时间 |
 
-**评测结果枚举**：
-- 0: Pending（等待中）
-- 1: Accepted（通过）
-- 2: Wrong Answer（答案错误）
-- 3: Time Limit Exceeded（超时）
-- 4: Memory Limit Exceeded（超内存）
-- 5: Runtime Error（运行错误）
-- 6: Compile Error（编译错误）
+**评测状态**：
+- 0: 等待评测
+- 1: 评测中
+- 2: 已完成
+- 3: 编译错误
+- 4: 系统错误
+
+**评测结果**：
+- AC: Accepted（通过）
+- WA: Wrong Answer（答案错误）
+- TLE: Time Limit Exceeded（超时）
+- MLE: Memory Limit Exceeded（超内存）
+- RE: Runtime Error（运行错误）
+- CE: Compilation Error（编译错误）
+- SE: System Error（系统错误）
 
 #### test_case_result（测试点结果表）
 
@@ -90,9 +103,11 @@
 | id | BIGINT | 自增主键 |
 | submission_id | BIGINT | 提交记录（外键） |
 | test_case_id | INT | 测试用例ID |
-| result | INT | 测试结果 |
-| time_used | INT | 用时（毫秒） |
-| memory_used | INT | 内存（KB） |
+| status | VARCHAR(10) | 测试点状态（AC/WA/TLE/MLE/RE） |
+| execution_time | INT | 用时（毫秒） |
+| memory_usage | INT | 内存（KB） |
+| score | INT | 该测试点得分 |
+| message | TEXT | 详细信息 |
 
 ---
 
@@ -208,5 +223,5 @@
 
 - 用户模型：`apps/ojauth/models.py`
 - 题目模型：`apps/problem/models.py`
-- 提交模型：`apps/submission/models.py`
+- 提交模型：`apps/problem/models.py`（Submission, TestCaseResult）
 - AI 模型：`apps/ai_assistant/models.py`

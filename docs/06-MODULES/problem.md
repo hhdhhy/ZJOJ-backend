@@ -30,7 +30,7 @@ class Tag(models.Model):
 - `description` - 题面描述（Markdown）
 - `time_limit` - 时间限制（毫秒）
 - `memory_limit` - 内存限制（MB）
-- `tag` - 多对多关联标签
+- `tags` - 多对多关联标签
 - `creator` - 创建者（外键）
 - `upload_time` / `update_time` - 时间戳
 
@@ -41,7 +41,7 @@ class Problem(models.Model):
     description = models.TextField()
     time_limit = models.PositiveIntegerField()
     memory_limit = models.PositiveIntegerField()
-    tag = models.ManyToManyField(Tag, blank=True)
+    tags = models.ManyToManyField(Tag, blank=True, related_name='problems')
     creator = models.ForeignKey(OJUser, on_delete=models.SET_NULL)
     upload_time = models.DateTimeField(auto_now_add=True)
     update_time = models.DateTimeField(auto_now=True)
@@ -143,7 +143,7 @@ problem = Problem.objects.create(
 
 # 添加标签
 tag = Tag.objects.get(name='入门')
-problem.tag.add(tag)
+problem.tags.add(tag)
 ```
 
 ### 查询题目
@@ -153,7 +153,7 @@ problem.tag.add(tag)
 problems = Problem.objects.all()
 
 # 按标签筛选
-dp_problems = Problem.objects.filter(tag__name='动态规划')
+dp_problems = Problem.objects.filter(tags__name='动态规划')
 
 # 搜索标题
 results = Problem.objects.filter(title__contains='A+B')
