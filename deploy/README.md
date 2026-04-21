@@ -46,7 +46,45 @@ cd ~/projects/ZJOJ-backend
 
 ---
 
-### 3. `quick-deploy.sh` - 快速部署脚本
+### 3. `setup_ai_api.sh` - AI API Key 配置
+
+**用途**: 交互式配置 AI 服务提供商的 API Key
+
+**用法**:
+```bash
+./deploy/setup_ai_api.sh
+```
+
+**功能**:
+- ✅ 支持 DeepSeek（推荐）
+- ✅ 支持智谱 AI（Zhipu）
+- ✅ 支持通义千问（Qwen）
+- ✅ 安全输入 API Key（不显示在屏幕）
+- ✅ 可选重启服务应用配置
+
+**配置示例**:
+```bash
+$ ./deploy/setup_ai_api.sh
+
+请选择 AI 服务提供商：
+1. DeepSeek (推荐)
+2. 智谱 AI (Zhipu)
+3. 通义千问 (Qwen)
+4. 跳过 AI 配置
+
+请选择 [1-4]: 1
+
+--- DeepSeek 配置 ---
+请输入 DeepSeek API Key: sk-xxxxxxxxxxxxx
+模型名称 [deepseek-chat]: deepseek-chat
+API 基础URL [https://api.deepseek.com]: https://api.deepseek.com
+
+✅ DeepSeek 配置完成
+```
+
+---
+
+### 4. `quick-deploy.sh` - 快速部署脚本
 
 **用途**: 一键完成代码拉取、环境配置和服务启动
 
@@ -131,7 +169,10 @@ docker compose up -d
 # 4. 创建管理员账户
 ./deploy/create_admin.sh admin YourPassword admin@example.com
 
-# 5. 查看日志确认运行正常
+# 5. 配置 AI API Key（可选）
+./deploy/setup_ai_api.sh
+
+# 6. 查看日志确认运行正常
 docker compose logs -f web
 ```
 
@@ -151,6 +192,14 @@ docker compose logs -f web
 ---
 
 ## 📝 配置文件说明
+
+### 服务访问地址
+
+部署完成后，可通过以下地址访问：
+
+- **后端 API**: `http://101.35.233.33:8000/api/`
+- **Admin 后台**: `http://101.35.233.33:8000/admin/`
+- **API 文档**: `http://101.35.233.33:8000/api/docs/` (如果启用)
 
 ### `.env` 文件结构
 
@@ -211,7 +260,9 @@ docker compose exec web python manage.py collectstatic --noinput
    - 定期备份数据库
 
 2. **端口占用**:
-   - 确保 80、443 端口未被占用
+   - 后端默认使用 8000 端口（避免与前端冲突）
+   - HTTPS 使用 8443 端口
+   - 确保在云服务器安全组中开放相应端口
    - 如有冲突，修改 `docker-compose.yml` 中的端口映射
 
 3. **资源要求**:
