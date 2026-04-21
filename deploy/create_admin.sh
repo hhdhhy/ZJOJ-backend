@@ -52,8 +52,8 @@ print(f"  用户名: {user.username}")
 print(f"  密码: $ADMIN_PASSWORD")
 print(f"  邮箱: {user.email}")
 print(f"\\n访问地址:")
-print(f"  Admin后台: http://101.35.233.33/admin/")
-print(f"  API登录: POST http://101.35.233.33/api/login/")
+print(f"  Admin后台: http://101.35.233.33:8000/admin/")
+print(f"  API登录: POST http://101.35.233.33:8000/api/login/")
 EOF
 
 echo ""
