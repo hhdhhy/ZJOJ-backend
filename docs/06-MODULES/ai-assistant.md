@@ -50,16 +50,30 @@ AI助手是一个基于RAG（检索增强生成）技术的智能问答系统，
 |------|---------|------|
 | Web框架 | Django 6.0 + DRF | RESTful API服务 |
 | 身份认证 | JWT (自定义) | Token-based认证 |
-| Embedding模型 | text2vec-base-chinese | 本地部署，390MB |
-| 向量数据库 | ChromaDB | 持久化存储到E盘 |
+| Embedding模型 | paraphrase-multilingual-MiniLM-L12-v2 | 多语言支持，384维向量，约400MB |
+| 向量数据库 | ChromaDB | 持久化存储到容器内 /tmp/ai_models |
 | LLM API | DeepSeek (deepseek-chat) | 云端调用，按量付费 |
 | 相似度算法 | 余弦相似度 | HNSW索引加速 |
 
 ### 数据存储
 
-- **Embedding模型**：`E:/ai_models/cache/damo/nlp_corom_sentence-embedding_chinese-base`
-- **向量数据库**：`E:/ai_data/chroma_db`
+- **Embedding模型**：容器内 `/tmp/ai_models/models--sentence-transformers--paraphrase-multilingual-MiniLM-L12-v2/snapshots/`
+- **向量数据库**：ChromaDB（内存模式或持久化）
 - **关系型数据**：MySQL（知识库、用户配置、对话历史）
+
+### 模型部署说明
+
+**重要**：由于服务器网络限制，embedding 模型采用手动预下载方式部署：
+
+1. 在容器内执行模型下载脚本
+2. 模型缓存到 `/tmp/ai_models` 目录
+3. embedding_service.py 自动检测并使用本地模型路径
+4. 避免运行时网络请求，提高稳定性
+
+```bash
+# 在服务器上执行
+docker exec zjoj-web python3 /tmp/download_model.py
+```
 
 ---
 
@@ -798,6 +812,37 @@ docker compose up -d
 ---
 
 ## 更新日志
+
+### v1.2.0 (2026-04-23)
+
+**RAG引擎生产环境部署完成**：
+- ✅ Embedding模型成功部署到云服务器容器内
+- ✅ 使用 paraphrase-multilingual-MiniLM-L12-v2 多语言模型（384维向量）
+- ✅ 模型预下载到 `/tmp/ai_models` 目录，避免运行时网络请求
+- ✅ 配置国内镜像源（hf-mirror.com）加速模型下载
+- ✅ embedding_service.py 自动检测并使用本地模型路径
+
+**测试验证**：
+- ✅ AI问答功能正常（不使用RAG模式）
+- ✅ RAG增强问答功能正常（使用知识库检索）
+- ✅ Token计数和配额管理正常
+- ✅ 聊天历史查询功能正常
+- ✅ 响应时间：5-30秒（取决于回答长度和是否使用RAG）
+
+**技术细节**：
+- **模型名称**: `paraphrase-multilingual-MiniLM-L12-v2`
+- **向量维度**: 384
+- **支持语言**: 多语言（包括中文）
+- **模型大小**: 约400MB
+- **存储位置**: 容器内 `/tmp/ai_models/models--sentence-transformers--paraphrase-multilingual-MiniLM-L12-v2/snapshots/`
+- **部署方式**: 手动预下载 + 本地路径加载
+
+**已知限制**：
+- ⚠️ 聊天记录详情接口 (`/api/ai/history/<id>/`) 尚未实现
+- ⚠️ 知识库管理接口 (`/api/ai/knowledge/`) 尚未实现
+- ⚠️ 这些功能将在后续版本中补充
+
+---
 
 ### v1.1.0 (2026-04-24)
 
