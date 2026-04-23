@@ -32,7 +32,16 @@ class EmbeddingService:
         
         # 默认使用多语言轻量级模型（支持中文）
         if model_name is None:
-            model_name = 'paraphrase-multilingual-MiniLM-L12-v2'
+            # 使用已下载的模型路径
+            model_name = '/tmp/ai_models/models--sentence-transformers--paraphrase-multilingual-MiniLM-L12-v2/snapshots'
+            # 查找最新的 snapshot 目录
+            import glob
+            snapshots = glob.glob(f'{model_name}/*')
+            if snapshots:
+                model_name = snapshots[0]  # 使用第一个（最新的）snapshot
+            else:
+                # 如果没有找到 snapshot，回退到模型名称
+                model_name = 'paraphrase-multilingual-MiniLM-L12-v2'
         
         self.model_name = model_name
         self.cache_dir = cache_dir
