@@ -21,18 +21,25 @@
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
-| uid | VARCHAR(255) | Short UUID 主键 |
+| uid | VARCHAR(22) | Short UUID 主键 |
 | username | VARCHAR(150) | 用户名（唯一） |
 | email | VARCHAR(254) | 邮箱（登录账号，唯一） |
+| telephone | VARCHAR(20) | 手机号（唯一） |
+| realname | VARCHAR(150) | 真实姓名 |
 | password | VARCHAR(128) | 密码哈希 |
+| role | INT | 角色：1-学生, 2-教练, 3-管理员 |
 | is_superuser | TINYINT | 是否超级用户 |
 | is_staff | TINYINT | 是否工作人员 |
 | status | INT | 状态：1-激活, 2-未激活, 3-锁定 |
+| avatar | VARCHAR(200) | 头像URL |
+| bio | TEXT | 个人简介 |
+| date_joined | DATETIME | 注册时间 |
 
 **特点**：
 - 使用 Short UUID 避免信息泄露
 - 邮箱作为登录账号
 - PBKDF2 加密存储密码
+- 支持三种角色：学生、教练、管理员
 
 ---
 
@@ -111,7 +118,34 @@
 
 ---
 
-### 4. AI 助手模块
+### 4. 班级管理模块
+
+#### ojauth_class（班级表）
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | BIGINT | 自增主键 |
+| name | VARCHAR(100) | 班级名称（唯一） |
+| coach_id | VARCHAR(22) | 班主任/教练（外键，SET NULL） |
+| description | TEXT | 班级描述 |
+| create_time | DATETIME | 创建时间 |
+
+#### ojauth_class_member（班级成员表）
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | BIGINT | 自增主键 |
+| class_obj_id | BIGINT | 班级（外键） |
+| user_id | VARCHAR(22) | 学生（外键） |
+| join_time | DATETIME | 加入时间 |
+
+**关系**：
+- Class ↔ OJUser (coach): 多对一
+- Class ↔ OJUser (members): 多对多（通过 ClassMember）
+
+---
+
+### 5. AI 助手模块
 
 #### ai_assistant_knowledgebase（知识库）
 
@@ -137,7 +171,7 @@
 | 字段 | 类型 | 说明 |
 |------|------|------|
 | id | BIGINT | 自增主键 |
-| user_id | VARCHAR(255) | 用户（一对一） |
+| user_id | VARCHAR(22) | 用户（一对一） |
 | api_key | VARCHAR(255) | 用户自定义 API Key |
 | model | VARCHAR(50) | 偏好模型 |
 
@@ -146,7 +180,7 @@
 | 字段 | 类型 | 说明 |
 |------|------|------|
 | id | BIGINT | 自增主键 |
-| user_id | VARCHAR(255) | 用户（外键） |
+| user_id | VARCHAR(22) | 用户（外键） |
 | request_count | INT | 今日请求次数 |
 | last_request | DATETIME | 最后请求时间 |
 
@@ -161,9 +195,9 @@
 │ uid (PK)     │◄──────│ creator_id (FK) │
 │ username     │       │ problem_id (PK) │
 │ email        │       │ title           │
-│ password     │       │ description     │
-└──────┬───────┘       └────────┬────────┘
-       │                        │
+│ role         │       │ description     │
+│ telephone    │       └────────┬────────┘
+└──────┬───────┘                │
        │                        │
        │              ┌─────────▼────────┐
        │              │   Submission     │
@@ -184,6 +218,21 @@
        │              └───────────────────────┘
        │
        │              ┌──────────────────────┐
+       │              │   Class              │
+       │              │──────────────────────│
+       │              │ id (PK)              │
+       │              │ coach_id (FK) ◄──────┤
+       │              │ name                 │
+       │              └────────┬─────────────┘
+       │                       │
+       │              ┌────────▼──────────────┐
+       │              │ ClassMember           │
+       │              │───────────────────────│
+       │              │ class_obj_id (FK)     │
+       │              │ user_id (FK) ◄────────┤
+       │              └───────────────────────┘
+       │
+       │              ┌──────────────────────┐
        │              │ ChatHistory          │
        │              │──────────────────────│
        │              │ user_id (FK)         │
@@ -201,6 +250,8 @@
 2. **题目表**：problem_id（主键）
 3. **提交表**：user_id, problem_id, submit_time（联合查询优化）
 4. **测试点结果**：submission_id（外键查询）
+5. **班级表**：name（唯一索引）
+6. **班级成员**：class_obj_id, user_id（联合唯一索引）
 
 ### 性能优化
 
@@ -212,10 +263,11 @@
 
 ## 注意事项
 
-1. **外键约束**：creator_id 使用 SET NULL，删除用户时保留题目
-2. **大字段**：description、code、content 使用 LONGTEXT
+1. **外键约束**：creator_id、coach_id 使用 SET NULL，删除用户时保留数据
+2. **大字段**：description、code、content、bio 使用 LONGTEXT/TEXT
 3. **JSON 字段**：messages、embedding 使用 JSON 类型（MySQL 5.7+）
 4. **时间戳**：使用 DATETIME(6) 支持微秒精度
+5. **唯一性**：班级名称全局唯一，避免重复
 
 ---
 
@@ -225,3 +277,4 @@
 - 题目模型：`apps/problem/models.py`
 - 提交模型：`apps/problem/models.py`（Submission, TestCaseResult）
 - AI 模型：`apps/ai_assistant/models.py`
+- 权限系统文档：`docs/06-MODULES/permission-system.md`

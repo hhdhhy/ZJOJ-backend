@@ -199,6 +199,19 @@ class SubmissionViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]  # 需要登录
 ```
 
+#### 角色权限控制
+
+```python
+from Middleware.PermissionCheck import coach_required, student_required
+
+class ClassView(APIView):
+    @coach_required  # 仅教练可访问
+    def post(self, request):
+        pass
+```
+
+详见：[权限系统文档](06-MODULES/permission-system.md)
+
 公开接口需显式豁免：
 
 ```python
