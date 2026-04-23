@@ -24,6 +24,12 @@ class UserStatusChoices(models.IntegerChoices):
     #锁定
     LOCKED = 3
 
+class UserRoleChoices(models.IntegerChoices):
+    """用户角色选择"""
+    STUDENT = 1, '学生'
+    COACH = 2, '教练'
+    ADMIN = 3, '管理员'
+
 class OJUserManager(BaseUserManager):
     use_in_migrations = True
 
@@ -184,6 +190,33 @@ class OJUser(AbstractBaseUser, PermissionsMixin):
     )
 
     status = models.IntegerField(choices=UserStatusChoices, default=UserStatusChoices.UNACTIVE)
+    role = models.IntegerField(
+        choices=UserRoleChoices,
+        default=UserRoleChoices.STUDENT,
+        verbose_name='用户角色'
+    )
+    school = models.CharField(
+        max_length=200,
+        blank=True,
+        default='',
+        verbose_name='学校'
+    )
+    grade = models.CharField(
+        max_length=50,
+        blank=True,
+        default='',
+        verbose_name='年级/班级'
+    )
+    avatar = models.URLField(
+        blank=True,
+        default='',
+        verbose_name='头像URL'
+    )
+    bio = models.TextField(
+        blank=True,
+        default='',
+        verbose_name='个人简介'
+    )
     is_active = models.BooleanField(
         _("active"),
         default=True,
@@ -218,3 +251,65 @@ class OJUser(AbstractBaseUser, PermissionsMixin):
     def get_username(self):
         """Return the short name for the user."""
         return self.username
+
+    def is_student(self):
+        """判断是否为学生"""
+        return self.role == UserRoleChoices.STUDENT
+
+    def is_coach(self):
+        """判断是否为教练"""
+        return self.role == UserRoleChoices.COACH
+
+    def is_admin_user(self):
+        """判断是否为管理员"""
+        return self.role == UserRoleChoices.ADMIN or self.is_superuser
+
+
+class Class(models.Model):
+    """班级模型"""
+    name = models.CharField(max_length=100, verbose_name='班级名称')
+    school = models.CharField(max_length=200, verbose_name='学校')
+    coach = models.ForeignKey(
+        OJUser,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='managed_classes',
+        verbose_name='班主任/教练'
+    )
+    description = models.TextField(blank=True, default='', verbose_name='班级描述')
+    create_time = models.DateTimeField(auto_now_add=True, verbose_name='创建时间')
+    
+    class Meta:
+        db_table = 'ojauth_class'
+        verbose_name = '班级'
+        verbose_name_plural = '班级'
+        unique_together = ['name', 'school']
+    
+    def __str__(self):
+        return f"{self.school} - {self.name}"
+
+
+class ClassMember(models.Model):
+    """班级成员关系"""
+    class_obj = models.ForeignKey(
+        Class,
+        on_delete=models.CASCADE,
+        related_name='members',
+        verbose_name='班级'
+    )
+    user = models.ForeignKey(
+        OJUser,
+        on_delete=models.CASCADE,
+        related_name='classes',
+        verbose_name='学生'
+    )
+    join_time = models.DateTimeField(auto_now_add=True, verbose_name='加入时间')
+    
+    class Meta:
+        db_table = 'ojauth_class_member'
+        verbose_name = '班级成员'
+        verbose_name_plural = '班级成员'
+        unique_together = ['class_obj', 'user']
+    
+    def __str__(self):
+        return f"{self.user.username} in {self.class_obj}"

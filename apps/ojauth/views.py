@@ -7,8 +7,8 @@ from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
 from MYJWT.myjwt import get_token
-from .models import OJUser
-from .seriallizers import LoginSerializer, UerSerializer
+from .models import OJUser, Class, ClassMember
+from .seriallizers import LoginSerializer, UerSerializer, RegisterSerializer, UserProfileSerializer, UserProfileUpdateSerializer
 import MYJWT.myjwt
 
 
@@ -40,85 +40,25 @@ class RegisterView(APIView):
     permission_classes = [AllowAny]  # 注册不需要认证
     
     def post(self, request):
-        username = request.data.get('username')
-        password = request.data.get('password')
-        email = request.data.get('email')
-        realname = request.data.get('realname')
-        telephone = request.data.get('telephone', '')
-        
-        # 验证必填字段
-        if not all([username, password, email, realname]):
-            return Response({
-                "code": 400,
-                "message": "请填写必填字段",
-                "errors": {
-                    "username": "用户名不能为空" if not username else None,
-                    "password": "密码不能为空" if not password else None,
-                    "email": "邮箱不能为空" if not email else None,
-                    "realname": "真实姓名不能为空" if not realname else None,
-                }
-            }, status=status.HTTP_400_BAD_REQUEST)
-        
-        # 验证用户名长度
-        if len(username) < 2 or len(username) > 20:
-            return Response({
-                "code": 400,
-                "message": "用户名长度必须在2-20字符之间"
-            }, status=status.HTTP_400_BAD_REQUEST)
-        
-        # 验证密码长度
-        if len(password) < 6 or len(password) > 20:
-            return Response({
-                "code": 400,
-                "message": "密码长度必须在6-20字符之间"
-            }, status=status.HTTP_400_BAD_REQUEST)
-        
-        # 检查用户名是否已存在
-        if OJUser.objects.filter(username=username).exists():
-            return Response({
-                "code": 400,
-                "message": "用户名已存在"
-            }, status=status.HTTP_400_BAD_REQUEST)
-        
-        # 检查邮箱是否已存在
-        if OJUser.objects.filter(email=email).exists():
-            return Response({
-                "code": 400,
-                "message": "邮箱已被注册"
-            }, status=status.HTTP_400_BAD_REQUEST)
-        
-        # 检查电话是否已存在（如果提供了电话）
-        if telephone and OJUser.objects.filter(telephone=telephone).exists():
-            return Response({
-                "code": 400,
-                "message": "该手机号已被注册"
-            }, status=status.HTTP_400_BAD_REQUEST)
-        
-        # 创建用户
-        try:
-            user = OJUser.objects.create_user(
-                username=username,
-                realname=realname,
-                email=email,
-                password=password,
-                telephone=telephone
-            )
-            
+        serializer = RegisterSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.save()
             return Response({
                 "code": 201,
                 "message": "注册成功",
                 "data": {
                     "uid": user.uid,
                     "username": user.username,
-                    "realname": user.realname,
-                    "email": user.email
+                    "email": user.email,
+                    "role": user.get_role_display()
                 }
             }, status=status.HTTP_201_CREATED)
-        except Exception as e:
+        else:
             return Response({
-                "code": 500,
-                "message": f"注册失败：{str(e)}"
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                "code": 400,
+                "message": "注册失败",
+                "errors": serializer.errors
+            }, status=status.HTTP_400_BAD_REQUEST)
 
 
 class UserProfileView(APIView):
@@ -131,7 +71,7 @@ class UserProfileView(APIView):
     def get(self, request):
         """获取当前用户信息"""
         user = request.user
-        serializer = UerSerializer(user)
+        serializer = UserProfileSerializer(user)
         return Response({
             "code": 200,
             "message": "获取成功",
@@ -139,32 +79,22 @@ class UserProfileView(APIView):
         })
     
     def put(self, request):
-        """更新用户信息（部分字段）"""
+        """更新用户信息"""
         user = request.user
-        
-        # 可更新的字段
-        realname = request.data.get('realname')
-        telephone = request.data.get('telephone')
-        
-        if realname:
-            user.realname = realname
-        if telephone:
-            # 检查电话是否已被其他用户使用
-            if OJUser.objects.filter(telephone=telephone).exclude(uid=user.uid).exists():
-                return Response({
-                    "code": 400,
-                    "message": "该手机号已被注册"
-                }, status=status.HTTP_400_BAD_REQUEST)
-            user.telephone = telephone
-        
-        user.save()
-        serializer = UerSerializer(user)
-        
-        return Response({
-            "code": 200,
-            "message": "更新成功",
-            "data": serializer.data
-        })
+        serializer = UserProfileUpdateSerializer(user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({
+                "code": 200,
+                "message": "更新成功",
+                "data": UserProfileSerializer(user).data
+            })
+        else:
+            return Response({
+                "code": 400,
+                "message": "更新失败",
+                "errors": serializer.errors
+            }, status=status.HTTP_400_BAD_REQUEST)
 
 
 class ChangePasswordView(APIView):
@@ -244,6 +174,254 @@ class ResetPasswordView(APIView):
         return Response({
             "code": 200,
             "message": "如果该邮箱已注册，重置链接将发送到您的邮箱"
+        })
+
+
+class ClassListView(APIView):
+    """
+    班级列表接口
+    GET /api/classes/ - 获取班级列表
+    POST /api/classes/ - 创建班级（教练）
+    """
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        """获取班级列表"""
+        user = request.user
+        
+        # 教练可以看到自己管理的班级
+        if user.is_coach() or user.is_admin_user():
+            classes = Class.objects.filter(coach=user)
+        else:
+            # 学生可以看到自己加入的班级
+            class_members = ClassMember.objects.filter(user=user)
+            classes = Class.objects.filter(id__in=[cm.class_obj_id for cm in class_members])
+        
+        class_list = []
+        for cls in classes:
+            member_count = ClassMember.objects.filter(class_obj=cls).count()
+            class_list.append({
+                'id': cls.id,
+                'name': cls.name,
+                'school': cls.school,
+                'coach': cls.coach.username if cls.coach else None,
+                'description': cls.description,
+                'member_count': member_count,
+                'create_time': cls.create_time
+            })
+        
+        return Response({
+            "code": 200,
+            "message": "获取成功",
+            "data": class_list
+        })
+    
+    def post(self, request):
+        """创建班级（仅教练）"""
+        user = request.user
+        
+        if not (user.is_coach() or user.is_admin_user()):
+            return Response({
+                "code": 403,
+                "message": "只有教练可以创建班级"
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        name = request.data.get('name')
+        school = request.data.get('school')
+        description = request.data.get('description', '')
+        
+        if not name or not school:
+            return Response({
+                "code": 400,
+                "message": "班级名称和学校不能为空"
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # 检查是否已存在
+        if Class.objects.filter(name=name, school=school).exists():
+            return Response({
+                "code": 400,
+                "message": "该班级已存在"
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        cls = Class.objects.create(
+            name=name,
+            school=school,
+            coach=user,
+            description=description
+        )
+        
+        return Response({
+            "code": 201,
+            "message": "班级创建成功",
+            "data": {
+                'id': cls.id,
+                'name': cls.name,
+                'school': cls.school
+            }
+        }, status=status.HTTP_201_CREATED)
+
+
+class ClassDetailView(APIView):
+    """
+    班级详情接口
+    GET /api/classes/{id}/ - 获取班级详情
+    """
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request, class_id):
+        """获取班级详情和成员列表"""
+        try:
+            cls = Class.objects.get(id=class_id)
+        except Class.DoesNotExist:
+            return Response({
+                "code": 404,
+                "message": "班级不存在"
+            }, status=status.HTTP_404_NOT_FOUND)
+        
+        # 权限检查：只有教练或班级成员可以查看
+        user = request.user
+        if not (user.is_coach() and cls.coach == user) and \
+           not ClassMember.objects.filter(class_obj=cls, user=user).exists() and \
+           not user.is_admin_user():
+            return Response({
+                "code": 403,
+                "message": "无权查看此班级"
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        # 获取成员列表
+        members = ClassMember.objects.filter(class_obj=cls).select_related('user')
+        member_list = [{
+            'uid': m.user.uid,
+            'username': m.user.username,
+            'realname': m.user.realname,
+            'school': m.user.school,
+            'grade': m.user.grade,
+            'join_time': m.join_time
+        } for m in members]
+        
+        return Response({
+            "code": 200,
+            "message": "获取成功",
+            "data": {
+                'id': cls.id,
+                'name': cls.name,
+                'school': cls.school,
+                'coach': cls.coach.username if cls.coach else None,
+                'description': cls.description,
+                'create_time': cls.create_time,
+                'members': member_list
+            }
+        })
+
+
+class ClassMemberView(APIView):
+    """
+    班级成员管理接口
+    POST /api/classes/{id}/members/ - 添加成员（教练）
+    DELETE /api/classes/{id}/members/ - 移除成员（教练）
+    """
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request, class_id):
+        """添加班级成员（仅教练）"""
+        user = request.user
+        
+        try:
+            cls = Class.objects.get(id=class_id)
+        except Class.DoesNotExist:
+            return Response({
+                "code": 404,
+                "message": "班级不存在"
+            }, status=status.HTTP_404_NOT_FOUND)
+        
+        # 权限检查
+        if not (user.is_coach() and cls.coach == user) and not user.is_admin_user():
+            return Response({
+                "code": 403,
+                "message": "只有班主任可以添加成员"
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        username = request.data.get('username')
+        if not username:
+            return Response({
+                "code": 400,
+                "message": "请提供用户名"
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            student = OJUser.objects.get(username=username)
+        except OJUser.DoesNotExist:
+            return Response({
+                "code": 404,
+                "message": "用户不存在"
+            }, status=status.HTTP_404_NOT_FOUND)
+        
+        if not student.is_student():
+            return Response({
+                "code": 400,
+                "message": "只能添加学生"
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # 检查是否已在班级中
+        if ClassMember.objects.filter(class_obj=cls, user=student).exists():
+            return Response({
+                "code": 400,
+                "message": "该学生已在班级中"
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        ClassMember.objects.create(class_obj=cls, user=student)
+        
+        return Response({
+            "code": 200,
+            "message": "添加成功"
+        })
+    
+    def delete(self, request, class_id):
+        """移除班级成员（仅教练）"""
+        user = request.user
+        
+        try:
+            cls = Class.objects.get(id=class_id)
+        except Class.DoesNotExist:
+            return Response({
+                "code": 404,
+                "message": "班级不存在"
+            }, status=status.HTTP_404_NOT_FOUND)
+        
+        # 权限检查
+        if not (user.is_coach() and cls.coach == user) and not user.is_admin_user():
+            return Response({
+                "code": 403,
+                "message": "只有班主任可以移除成员"
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        username = request.data.get('username')
+        if not username:
+            return Response({
+                "code": 400,
+                "message": "请提供用户名"
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            student = OJUser.objects.get(username=username)
+        except OJUser.DoesNotExist:
+            return Response({
+                "code": 404,
+                "message": "用户不存在"
+            }, status=status.HTTP_404_NOT_FOUND)
+        
+        # 删除成员关系
+        deleted, _ = ClassMember.objects.filter(class_obj=cls, user=student).delete()
+        
+        if deleted == 0:
+            return Response({
+                "code": 404,
+                "message": "该学生不在班级中"
+            }, status=status.HTTP_404_NOT_FOUND)
+        
+        return Response({
+            "code": 200,
+            "message": "移除成功"
         })
 
 

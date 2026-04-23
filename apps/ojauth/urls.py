@@ -4,7 +4,10 @@ from apps.ojauth.views import (
     RegisterView,
     UserProfileView,
     ChangePasswordView,
-    ResetPasswordView
+    ResetPasswordView,
+    ClassListView,
+    ClassDetailView,
+    ClassMemberView
 )
 
 app_name = "ojauth"
@@ -19,4 +22,9 @@ urlpatterns = [
     # 密码管理接口
     path('password/change/', ChangePasswordView.as_view(), name="change-password"),
     path('password/reset/', ResetPasswordView.as_view(), name="reset-password"),
+    
+    # 班级管理接口
+    path('classes/', ClassListView.as_view(), name="class-list"),
+    path('classes/<int:class_id>/', ClassDetailView.as_view(), name="class-detail"),
+    path('classes/<int:class_id>/members/', ClassMemberView.as_view(), name="class-member"),
 ]
