@@ -10,6 +10,7 @@
 - [配置说明](#配置说明)
 - [常见问题](#常见问题)
 - [新增功能](#新增功能-v110)
+- [v1.2.0 更新](#v120-更新)
 
 ---
 
@@ -845,6 +846,421 @@ docker compose up -d
 ---
 
 ### v1.1.0 (2026-04-24)
+
+**新增功能**：
+- ✅ 学情分析报告系统（学生个性化 + 教练班级共性）
+- ✅ 错误解决方案自动推送
+- ✅ API调用优化（24小时缓存 + 指数退避重试）
+- ✅ 知识库增强（支持error_solution类型、关联题目）
+
+**性能优化**：
+- ✅ Docker构建速度提升80%（使用国内镜像源）
+- ✅ 相同问题响应时间从10-30秒降至<100ms（缓存命中）
+- ✅ API调用成本降低30-50%
+
+**Bug修复**：
+- ✅ 修复URL路由404问题（启用AI助手路由）
+- ✅ 修复认证头格式问题（使用jwt而非Bearer）
+- ✅ 添加缺失的AI依赖（chromadb, sentence-transformers, torch）
+
+**配置变更**：
+- ✅ DeepSeek API密钥已配置
+- ✅ 认证中间件正常工作
+- ✅ 所有API端点可访问
+
+---
+
+### v1.0.0 (2026-04-16)
+
+- ✅ 完成基础RAG问答系统
+- ✅ 实现知识库管理
+- ✅ 集成DeepSeek API
+- ✅ 添加配额和频率限制
+- ✅ 完成端到端测试
+
+---
+
+## v1.2.0 更新
+
+### 新功能概览
+
+**v1.2.0 (2026-04-23)** 完成了 AI 助手系统的核心功能开发，主要包括：
+
+1. ✅ **聊天记录详情接口** - 支持查看单条对话的完整信息
+2. ✅ **知识库管理接口（完整 CRUD）** - 教练/管理员可管理知识库文档
+3. ✅ **批量导入脚本** - 快速初始化知识库内容
+4. ✅ **Embedding 模型生产环境部署** - 使用真实语义向量模型
+
+---
+
+### 1. 聊天记录详情接口
+
+#### API 接口
+
+**获取单条记录详情**：`GET /api/ai/history/<int:chat_id>/`
+
+**响应示例**：
+
+```json
+{
+  "id": 4,
+  "question": "什么是动态规划？",
+  "answer": "好的，这是一个非常核心的算法问题！...",
+  "sources": [
+    {
+      "id": "kb_abc123",
+      "title": "动态规划基础",
+      "type": "algorithm",
+      "similarity": 0.95
+    }
+  ],
+  "created_at": "2026-04-23T18:59:14.240903",
+  "tokens_used": 1751
+}
+```
+
+**错误响应**：
+- `404 Not Found` - 聊天记录不存在或无权访问
+
+**使用示例**：
+
+```bash
+curl -X GET http://101.35.233.33:8000/api/ai/history/4/ \
+  -H "Authorization: jwt YOUR_TOKEN"
+```
+
+---
+
+### 2. 知识库管理接口
+
+知识库管理功能允许教练和管理员对知识库文档进行完整的增删改查操作。
+
+#### 2.1 创建知识库文档
+
+**接口地址**：`POST /api/ai/knowledge/`
+
+**权限要求**：仅教练或管理员
+
+**请求参数**：
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| title | string | 是 | 文档标题 |
+| content | string | 是 | 文档内容（支持 Markdown） |
+| doc_type | string | 是 | 文档类型：algorithm/solution/template/concept/error_solution |
+| tag_names | array | 否 | 标签名称列表，自动创建或关联现有标签 |
+| problem | integer | 否 | 关联的题目 ID |
+| error_type | string | 否 | 错误类型（WA/TLE/MLE/RE/CE），仅当 doc_type=error_solution 时使用 |
+| source | string | 否 | 来源说明 |
+| is_active | boolean | 否 | 是否启用，默认 true |
+
+**请求示例**：
+
+```bash
+curl -X POST http://101.35.233.33:8000/api/ai/knowledge/ \
+  -H "Authorization: jwt YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "动态规划基础教程",
+    "content": "动态规划是一种算法思想，用于解决具有最优子结构和重叠子问题性质的问题。",
+    "doc_type": "algorithm",
+    "tag_names": ["DP", "算法", "动态规划"]
+  }'
+```
+
+**响应示例**：
+
+```json
+{
+  "message": "知识库文档创建成功",
+  "data": {
+    "id": 1,
+    "title": "动态规划基础教程",
+    "content": "动态规划是一种算法思想...",
+    "doc_type": "algorithm",
+    "tags": [1, 2, 3],
+    "problem": null,
+    "error_type": "",
+    "source": "",
+    "vector_id": "kb_1776971398541",
+    "is_active": true,
+    "created_at": "2026-04-23T19:09:58.541541",
+    "updated_at": "2026-04-23T19:09:58.541566"
+  }
+}
+```
+
+---
+
+#### 2.2 获取知识库文档列表
+
+**接口地址**：`GET /api/ai/knowledge/?page=1&page_size=20&doc_type=algorithm`
+
+**查询参数**：
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| page | integer | 否 | 页码，默认 1 |
+| page_size | integer | 否 | 每页数量，默认 20 |
+| doc_type | string | 否 | 按类型过滤 |
+| error_type | string | 否 | 按错误类型过滤 |
+| is_active | boolean | 否 | 按激活状态过滤 |
+
+**响应示例**：
+
+```json
+{
+  "count": 7,
+  "page": 1,
+  "page_size": 20,
+  "results": [
+    {
+      "id": 2,
+      "title": "二分查找算法",
+      "content": "二分查找是一种在有序数组中查找特定元素的高效算法...",
+      "doc_type": "algorithm",
+      "tags": [4, 5, 6],
+      "problem": null,
+      "error_type": "",
+      "source": "",
+      "vector_id": "kb_1776971504289",
+      "is_active": true,
+      "created_at": "2026-04-23T19:11:44.289958",
+      "updated_at": "2026-04-23T19:11:44.289979"
+    }
+  ]
+}
+```
+
+---
+
+#### 2.3 获取单个文档详情
+
+**接口地址**：`GET /api/ai/knowledge/<int:kb_id>/`
+
+**响应示例**：同创建接口的 data 字段
+
+---
+
+#### 2.4 更新知识库文档
+
+**接口地址**：`PUT /api/ai/knowledge/<int:kb_id>/`
+
+**权限要求**：仅教练或管理员
+
+**请求示例**：
+
+```bash
+curl -X PUT http://101.35.233.33:8000/api/ai/knowledge/2/ \
+  -H "Authorization: jwt YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "动态规划基础教程（已更新）",
+    "tag_names": ["DP", "算法", "动态规划", "进阶"]
+  }'
+```
+
+**响应示例**：
+
+```json
+{
+  "message": "知识库文档更新成功",
+  "data": {
+    "id": 2,
+    "title": "动态规划基础教程（已更新）",
+    ...
+  }
+}
+```
+
+---
+
+#### 2.5 删除知识库文档
+
+**接口地址**：`DELETE /api/ai/knowledge/<int:kb_id>/`
+
+**权限要求**：仅教练或管理员
+
+**响应示例**：
+
+```json
+{
+  "message": "知识库文档删除成功"
+}
+```
+
+---
+
+### 3. 批量导入脚本
+
+为了快速初始化知识库，系统提供了批量导入脚本。
+
+#### 使用方法
+
+**步骤 1**：编辑导入脚本
+
+文件位置：`tests/import_knowledge_base.py`
+
+在 `documents` 列表中添加需要导入的文档：
+
+```python
+documents = [
+    {
+        'title': '动态规划基础',
+        'content': '''动态规划的核心思想...
+        （支持多行文本和 Markdown 格式）''',
+        'doc_type': 'algorithm',
+        'tags': ['DP', '算法', '动态规划'],
+    },
+    {
+        'title': 'WA（答案错误）常见原因',
+        'content': 'WA 的常见原因包括...',
+        'doc_type': 'error_solution',
+        'error_type': 'WA',
+        'tags': ['调试', '常见错误'],
+    },
+    # ... 更多文档
+]
+```
+
+**步骤 2**：上传并执行脚本
+
+```bash
+# 上传脚本到服务器
+scp tests/import_knowledge_base.py ubuntu@101.35.233.33:~/projects/ZJOJ-backend/tests/
+
+# 复制到容器内并执行
+ssh ubuntu@101.35.233.33 "docker cp ~/projects/ZJOJ-backend/tests/import_knowledge_base.py zjoj-web:/home/zjoj/ && docker exec -w /home/zjoj zjoj-web python3 import_knowledge_base.py"
+```
+
+**执行输出示例**：
+
+```
+开始导入 5 个知识库文档...
+============================================================
+✓ 创建成功: 动态规划基础
+✓ 创建成功: 二分查找算法
+✓ 创建成功: WA（答案错误）常见原因
+✓ 创建成功: TLE（超时）优化技巧
+✓ 创建成功: 快速排序模板
+============================================================
+导入完成！
+  新建: 5 个
+  跳过: 0 个
+  总计: 5 个文档
+```
+
+#### 注意事项
+
+1. **幂等性**：脚本会检查文档是否已存在（通过标题判断），避免重复导入
+2. **vector_id 生成**：使用 UUID 确保唯一性，避免时间戳冲突
+3. **标签处理**：自动创建不存在的标签，或关联已有标签
+4. **建议内容**：
+   - 算法讲解（algorithm）：核心思想、模板代码、复杂度分析
+   - 错误解决方案（error_solution）：常见原因、调试技巧、优化建议
+   - 代码模板（template）：标准实现、注意事项、适用场景
+   - 题解（solution）：解题思路、关键步骤、代码实现
+
+---
+
+### 4. Embedding 模型部署
+
+#### 技术细节
+
+- **模型名称**：`paraphrase-multilingual-MiniLM-L12-v2`
+- **向量维度**：384
+- **支持语言**：多语言（包括中文）
+- **模型大小**：约 400MB
+- **存储位置**：容器内 `/tmp/ai_models/models--sentence-transformers--paraphrase-multilingual-MiniLM-L12-v2/snapshots/`
+
+#### 部署方式
+
+由于服务器网络限制，采用手动预下载方式：
+
+```bash
+# 在服务器上执行
+docker exec zjoj-web python3 /tmp/download_model.py
+```
+
+模型会自动从国内镜像源（hf-mirror.com）下载，并缓存到指定目录。embedding_service.py 会自动检测并使用本地模型路径，避免运行时网络请求。
+
+---
+
+### 测试验证
+
+所有功能已在云服务器上完成测试：
+
+- ✅ AI 问答功能正常（不使用 RAG 模式）
+- ✅ RAG 增强问答功能正常（使用知识库检索）
+- ✅ Token 计数和配额管理正常
+- ✅ 聊天历史列表和详情查询正常
+- ✅ 知识库 CRUD 操作正常
+- ✅ 权限控制正常（学生无法管理知识库）
+- ✅ 批量导入脚本正常工作
+- ✅ 响应时间：5-30 秒（取决于回答长度和是否使用 RAG）
+
+---
+
+### 已知限制
+
+1. ⚠️ **向量数据库同步**：目前通过 API 创建的知识库文档尚未自动同步到 ChromaDB 向量数据库
+   - 解决方案：后续版本将实现自动同步机制
+   - 临时方案：可以手动调用同步脚本
+
+2. ⚠️ **知识库搜索**：暂不支持全文搜索功能
+   - 可通过 doc_type、error_type、is_active 等字段过滤
+
+3. ⚠️ **批量更新**：暂不支持批量更新或删除操作
+   - 需要逐个文档操作
+
+---
+
+## 版本历史
+
+### v1.2.0 (2026-04-23)
+
+**核心功能完成**：
+- ✅ 聊天记录详情接口 (`/api/ai/history/<int:chat_id>/`)
+- ✅ 知识库管理完整 CRUD 接口 (`/api/ai/knowledge/`)
+  - 创建文档（仅教练/管理员）
+  - 获取列表（支持分页和过滤）
+  - 获取详情
+  - 更新文档（仅教练/管理员）
+  - 删除文档（仅教练/管理员）
+- ✅ 批量导入脚本 (`tests/import_knowledge_base.py`)
+- ✅ Embedding 模型生产环境部署完成
+
+**RAG引擎部署**：
+- ✅ 使用 paraphrase-multilingual-MiniLM-L12-v2 多语言模型（384维向量）
+- ✅ 模型预下载到 `/tmp/ai_models` 目录，避免运行时网络请求
+- ✅ 配置国内镜像源（hf-mirror.com）加速模型下载
+- ✅ embedding_service.py 自动检测并使用本地模型路径
+
+**测试验证**：
+- ✅ AI问答功能正常（不使用RAG模式）
+- ✅ RAG增强问答功能正常（使用知识库检索）
+- ✅ Token计数和配额管理正常
+- ✅ 聊天历史查询功能正常（列表+详情）
+- ✅ 知识库管理功能正常（CRUD + 权限控制）
+- ✅ 批量导入脚本正常工作（已导入5个示例文档）
+- ✅ 响应时间：5-30秒（取决于回答长度和是否使用RAG）
+
+**技术细节**：
+- **模型名称**: `paraphrase-multilingual-MiniLM-L12-v2`
+- **向量维度**: 384
+- **支持语言**: 多语言（包括中文）
+- **模型大小**: 约400MB
+- **存储位置**: 容器内 `/tmp/ai_models/models--sentence-transformers--paraphrase-multilingual-MiniLM-L12-v2/snapshots/`
+- **部署方式**: 手动预下载 + 本地路径加载
+
+**已知限制**：
+- ⚠️ 通过 API 创建的知识库文档尚未自动同步到 ChromaDB 向量数据库
+- ⚠️ 暂不支持知识库全文搜索功能
+- ⚠️ 暂不支持批量更新或删除操作
+
+---
+
+### v1.1.0 (2026-04-16)
 
 **新增功能**：
 - ✅ 学情分析报告系统（学生个性化 + 教练班级共性）
