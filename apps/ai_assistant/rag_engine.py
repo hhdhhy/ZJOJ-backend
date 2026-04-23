@@ -100,6 +100,42 @@ class RAGEngine:
             'answer': result['answer'],
             'tokens_used': result['tokens_used']
         }
+    
+    def search_knowledge_base(self, query: str, doc_type=None, top_k=5):
+        """
+        搜索知识库（支持按类型过滤）
+        
+        Args:
+            query: 查询关键词
+            doc_type: 文档类型过滤（algorithm/solution/error_solution等）
+            top_k: 返回数量
+        
+        Returns:
+            相关文档列表
+        """
+        results = self.vector_store.search(query, top_k=top_k * 2)  # 多检索一些用于过滤
+        
+        # 按类型过滤
+        if doc_type:
+            filtered = [
+                doc for doc in results
+                if doc.get('metadata', {}).get('type') == doc_type
+            ]
+        else:
+            filtered = results
+        
+        # 格式化返回结果
+        formatted_results = []
+        for doc in filtered[:top_k]:
+            formatted_results.append({
+                'id': doc['id'],
+                'title': doc['metadata'].get('title', ''),
+                'content': doc['content'],
+                'doc_type': doc['metadata'].get('type', ''),
+                'score': doc.get('similarity', 0),
+            })
+        
+        return formatted_results
 
 
 # 测试代码

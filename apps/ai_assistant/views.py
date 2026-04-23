@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
 from .rag_engine import RAGEngine
-from .models import ChatHistory, UserProfile
+from .models import ChatHistory, UserProfile, LearningReport
 from .serializers import (
     ChatRequestSerializer,
     ChatResponseSerializer,
@@ -14,6 +14,8 @@ from .serializers import (
     UsageStatsSerializer
 )
 from .limits import AILimitChecker
+from .learning_analytics import LearningAnalyticsService
+from .error_pusher import ErrorSolutionPusher
 
 
 class AIChatView(APIView):
@@ -142,3 +144,113 @@ class ClearHistoryView(APIView):
         return Response({
             'message': f'已清空 {deleted_count} 条对话记录'
         })
+
+
+class StudentLearningReportView(APIView):
+    """学生个性化学情报告"""
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        """获取学生学情报告"""
+        days = int(request.query_params.get('days', 7))
+        
+        # 检查权限：只有学生可以查看自己的报告
+        if not request.user.is_student():
+            return Response({
+                'error': '只有学生可以查看学情报告'
+            }, status=403)
+        
+        try:
+            report = LearningAnalyticsService.get_or_generate_student_report(
+                request.user, days
+            )
+            
+            if not report:
+                return Response({
+                    'message': '暂无学习数据',
+                    'data': None
+                })
+            
+            return Response({
+                'report_type': report.get_report_type_display(),
+                'period': f"{report.period_start} 至 {report.period_end}",
+                'summary': report.summary,
+                'statistics': report.statistics,
+                'recommendations': report.recommendations,
+                'generated_at': report.generated_at,
+            })
+        except Exception as e:
+            return Response({
+                'error': f'生成报告失败: {str(e)}'
+            }, status=500)
+
+
+class ClassLearningReportView(APIView):
+    """班级共性学情报告（教练）"""
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request, class_id):
+        """获取班级学情报告"""
+        from apps.ojauth.models import Class, ClassMember
+        
+        days = int(request.query_params.get('days', 7))
+        
+        # 获取班级
+        try:
+            class_obj = Class.objects.get(id=class_id)
+        except Class.DoesNotExist:
+            return Response({
+                'error': '班级不存在'
+            }, status=404)
+        
+        # 权限检查：只有教练或管理员可以查看
+        user = request.user
+        if not (user.is_coach() and class_obj.coach == user) and not user.is_admin_user():
+            return Response({
+                'error': '无权查看此班级的报告'
+            }, status=403)
+        
+        try:
+            report = LearningAnalyticsService.get_or_generate_class_report(
+                class_obj, user, days
+            )
+            
+            if not report:
+                return Response({
+                    'message': '暂无学习数据',
+                    'data': None
+                })
+            
+            return Response({
+                'report_type': report.get_report_type_display(),
+                'class_name': class_obj.name,
+                'period': f"{report.period_start} 至 {report.period_end}",
+                'summary': report.summary,
+                'statistics': report.statistics,
+                'recommendations': report.recommendations,
+                'generated_at': report.generated_at,
+            })
+        except Exception as e:
+            return Response({
+                'error': f'生成报告失败: {str(e)}'
+            }, status=500)
+
+
+class ErrorSolutionView(APIView):
+    """判题失败错误解决方案"""
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request, submission_id):
+        """获取提交记录的错误解决方案"""
+        try:
+            solutions = ErrorSolutionPusher.push_on_judge_failure(submission_id)
+            
+            return Response({
+                'submission_id': submission_id,
+                'solutions': solutions,
+                'count': len(solutions),
+            })
+        except Exception as e:
+            return Response({
+                'error': f'获取解决方案失败: {str(e)}'
+            }, status=500)
