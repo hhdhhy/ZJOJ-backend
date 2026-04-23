@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
 from .rag_engine import RAGEngine
-from .models import ChatHistory, UserProfile, LearningReport
+from .models import ChatHistory, UserProfile, LearningReport, KnowledgeBase
 from .serializers import (
     ChatRequestSerializer,
     ChatResponseSerializer,
