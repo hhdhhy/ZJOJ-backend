@@ -24,7 +24,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", include("apps.ojauth.urls")),  # 用户认证
     path("api/", include("apps.problem.urls")),  # 题目和评测
-    path("api/ai/", include("apps.ai_assistant.urls")),  # AI助手
+    path("api/ai/", include("apps.ai_assistant.urls")),  # AI助手（RAG引擎）
 ]
 
 # 开发环境下提供媒体文件服务
