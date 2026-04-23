@@ -20,6 +20,7 @@ urlpatterns = [
     
     # 对话历史
     path('history/', ChatHistoryView.as_view(), name='history'),
+    path('history/<int:chat_id>/', ChatHistoryView.as_view(), name='history-detail'),
     
     # 使用情况统计
     path('usage/', UsageStatsView.as_view(), name='usage'),

@@ -85,7 +85,32 @@ class ChatHistoryView(APIView):
     """获取对话历史"""
     permission_classes = [IsAuthenticated]
     
-    def get(self, request):
+    def get(self, request, chat_id=None):
+        """
+        获取对话历史
+        - 如果提供 chat_id，返回单条记录详情
+        - 否则返回历史记录列表
+        """
+        # 如果提供了 chat_id，返回单条记录
+        if chat_id is not None:
+            return self._get_chat_detail(request, chat_id)
+        
+        # 否则返回列表
+        return self._get_chat_list(request)
+    
+    def _get_chat_detail(self, request, chat_id):
+        """获取单条聊天记录详情"""
+        try:
+            chat = ChatHistory.objects.get(id=chat_id, user=request.user)
+            serializer = ChatHistorySerializer(chat)
+            return Response(serializer.data)
+        except ChatHistory.DoesNotExist:
+            return Response({
+                'error': '聊天记录不存在或无权访问'
+            }, status=404)
+    
+    def _get_chat_list(self, request):
+        """获取聊天记录列表"""
         # 获取查询参数
         limit = int(request.query_params.get('limit', 50))
         offset = int(request.query_params.get('offset', 0))
