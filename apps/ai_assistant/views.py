@@ -11,7 +11,8 @@ from .serializers import (
     ChatRequestSerializer,
     ChatResponseSerializer,
     ChatHistorySerializer,
-    UsageStatsSerializer
+    UsageStatsSerializer,
+    KnowledgeBaseSerializer
 )
 from .limits import AILimitChecker
 from .learning_analytics import LearningAnalyticsService
@@ -279,3 +280,137 @@ class ErrorSolutionView(APIView):
             return Response({
                 'error': f'获取解决方案失败: {str(e)}'
             }, status=500)
+
+
+class KnowledgeBaseView(APIView):
+    """知识库管理"""
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request, kb_id=None):
+        """
+        获取知识库文档
+        - 如果提供 kb_id，返回单个文档详情
+        - 否则返回文档列表（支持过滤）
+        """
+        if kb_id is not None:
+            return self._get_knowledge_detail(request, kb_id)
+        return self._get_knowledge_list(request)
+    
+    def _get_knowledge_detail(self, request, kb_id):
+        """获取单个知识库文档详情"""
+        try:
+            doc = KnowledgeBase.objects.get(id=kb_id)
+            serializer = KnowledgeBaseSerializer(doc)
+            return Response(serializer.data)
+        except KnowledgeBase.DoesNotExist:
+            return Response({
+                'error': '知识库文档不存在'
+            }, status=404)
+    
+    def _get_knowledge_list(self, request):
+        """获取知识库文档列表"""
+        # 获取查询参数
+        doc_type = request.query_params.get('doc_type', None)
+        error_type = request.query_params.get('error_type', None)
+        is_active = request.query_params.get('is_active', None)
+        page = int(request.query_params.get('page', 1))
+        page_size = int(request.query_params.get('page_size', 20))
+        
+        # 构建查询
+        queryset = KnowledgeBase.objects.all()
+        
+        if doc_type:
+            queryset = queryset.filter(doc_type=doc_type)
+        if error_type:
+            queryset = queryset.filter(error_type=error_type)
+        if is_active is not None:
+            queryset = queryset.filter(is_active=(is_active.lower() == 'true'))
+        
+        # 分页
+        total = queryset.count()
+        start = (page - 1) * page_size
+        end = start + page_size
+        docs = queryset[start:end]
+        
+        serializer = KnowledgeBaseSerializer(docs, many=True)
+        
+        return Response({
+            'count': total,
+            'page': page,
+            'page_size': page_size,
+            'results': serializer.data
+        })
+    
+    def post(self, request):
+        """创建知识库文档（仅教练或管理员）"""
+        user = request.user
+        if not (user.is_coach() or user.is_admin_user()):
+            return Response({
+                'error': '只有教练或管理员可以添加知识库文档'
+            }, status=403)
+        
+        serializer = KnowledgeBaseSerializer(data=request.data)
+        if serializer.is_valid():
+            doc = serializer.save()
+            
+            # TODO: 同步到向量数据库
+            # from .rag_engine import RAGEngine
+            # engine = RAGEngine()
+            # engine.add_to_vector_store(doc)
+            
+            return Response({
+                'message': '知识库文档创建成功',
+                'data': KnowledgeBaseSerializer(doc).data
+            }, status=201)
+        
+        return Response(serializer.errors, status=400)
+    
+    def put(self, request, kb_id):
+        """更新知识库文档（仅教练或管理员）"""
+        user = request.user
+        if not (user.is_coach() or user.is_admin_user()):
+            return Response({
+                'error': '只有教练或管理员可以更新知识库文档'
+            }, status=403)
+        
+        try:
+            doc = KnowledgeBase.objects.get(id=kb_id)
+        except KnowledgeBase.DoesNotExist:
+            return Response({
+                'error': '知识库文档不存在'
+            }, status=404)
+        
+        serializer = KnowledgeBaseSerializer(doc, data=request.data, partial=True)
+        if serializer.is_valid():
+            doc = serializer.save()
+            
+            # TODO: 更新向量数据库
+            
+            return Response({
+                'message': '知识库文档更新成功',
+                'data': KnowledgeBaseSerializer(doc).data
+            })
+        
+        return Response(serializer.errors, status=400)
+    
+    def delete(self, request, kb_id):
+        """删除知识库文档（仅教练或管理员）"""
+        user = request.user
+        if not (user.is_coach() or user.is_admin_user()):
+            return Response({
+                'error': '只有教练或管理员可以删除知识库文档'
+            }, status=403)
+        
+        try:
+            doc = KnowledgeBase.objects.get(id=kb_id)
+            doc.delete()
+            
+            # TODO: 从向量数据库删除
+            
+            return Response({
+                'message': '知识库文档删除成功'
+            })
+        except KnowledgeBase.DoesNotExist:
+            return Response({
+                'error': '知识库文档不存在'
+            }, status=404)

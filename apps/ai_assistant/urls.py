@@ -9,7 +9,8 @@ from .views import (
     ClearHistoryView,
     StudentLearningReportView,
     ClassLearningReportView,
-    ErrorSolutionView
+    ErrorSolutionView,
+    KnowledgeBaseView
 )
 
 app_name = 'ai_assistant'
@@ -27,6 +28,10 @@ urlpatterns = [
     
     # 清空历史
     path('history/clear/', ClearHistoryView.as_view(), name='clear_history'),
+    
+    # 知识库管理
+    path('knowledge/', KnowledgeBaseView.as_view(), name='knowledge'),
+    path('knowledge/<int:kb_id>/', KnowledgeBaseView.as_view(), name='knowledge-detail'),
     
     # 学情分析
     path('report/student/', StudentLearningReportView.as_view(), name='student-report'),
