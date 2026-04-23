@@ -30,9 +30,9 @@ class EmbeddingService:
         os.environ['TRANSFORMERS_CACHE'] = cache_dir
         os.environ['HF_ENDPOINT'] = 'https://hf-mirror.com'  # 使用国内镜像
         
-        # 默认使用 ModelScope 下载的模型
+        # 默认使用标准中文 embedding 模型
         if model_name is None:
-            model_name = f'{cache_dir}/damo/nlp_corom_sentence-embedding_chinese-base'
+            model_name = 'sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2'
         
         self.model_name = model_name
         self.cache_dir = cache_dir
