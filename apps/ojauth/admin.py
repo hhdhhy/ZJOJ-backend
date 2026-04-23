@@ -17,7 +17,7 @@ class OJUserAdmin(admin.ModelAdmin):
             'fields': ('password', 'role', 'status', 'is_active', 'is_staff', 'is_superuser')
         }),
         ('个人信息', {
-            'fields': ('school', 'grade', 'avatar', 'bio'),
+            'fields': ('avatar', 'bio'),
             'classes': ('collapse',)
         }),
         ('时间信息', {
@@ -29,9 +29,8 @@ class OJUserAdmin(admin.ModelAdmin):
 
 @admin.register(Class)
 class ClassAdmin(admin.ModelAdmin):
-    list_display = ['name', 'school', 'coach', 'create_time']
-    list_filter = ['school']
-    search_fields = ['name', 'school']
+    list_display = ['name', 'coach', 'create_time']
+    search_fields = ['name']
     readonly_fields = ['create_time']
 
 

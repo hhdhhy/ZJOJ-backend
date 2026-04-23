@@ -195,18 +195,6 @@ class OJUser(AbstractBaseUser, PermissionsMixin):
         default=UserRoleChoices.STUDENT,
         verbose_name='用户角色'
     )
-    school = models.CharField(
-        max_length=200,
-        blank=True,
-        default='',
-        verbose_name='学校'
-    )
-    grade = models.CharField(
-        max_length=50,
-        blank=True,
-        default='',
-        verbose_name='年级/班级'
-    )
     avatar = models.URLField(
         blank=True,
         default='',
@@ -267,8 +255,7 @@ class OJUser(AbstractBaseUser, PermissionsMixin):
 
 class Class(models.Model):
     """班级模型"""
-    name = models.CharField(max_length=100, verbose_name='班级名称')
-    school = models.CharField(max_length=200, verbose_name='学校')
+    name = models.CharField(max_length=100, unique=True, verbose_name='班级名称')
     coach = models.ForeignKey(
         OJUser,
         on_delete=models.SET_NULL,
@@ -283,10 +270,9 @@ class Class(models.Model):
         db_table = 'ojauth_class'
         verbose_name = '班级'
         verbose_name_plural = '班级'
-        unique_together = ['name', 'school']
     
     def __str__(self):
-        return f"{self.school} - {self.name}"
+        return self.name
 
 
 class ClassMember(models.Model):

@@ -203,7 +203,6 @@ class ClassListView(APIView):
             class_list.append({
                 'id': cls.id,
                 'name': cls.name,
-                'school': cls.school,
                 'coach': cls.coach.username if cls.coach else None,
                 'description': cls.description,
                 'member_count': member_count,
@@ -227,17 +226,16 @@ class ClassListView(APIView):
             }, status=status.HTTP_403_FORBIDDEN)
         
         name = request.data.get('name')
-        school = request.data.get('school')
         description = request.data.get('description', '')
         
-        if not name or not school:
+        if not name:
             return Response({
                 "code": 400,
-                "message": "班级名称和学校不能为空"
+                "message": "班级名称不能为空"
             }, status=status.HTTP_400_BAD_REQUEST)
         
         # 检查是否已存在
-        if Class.objects.filter(name=name, school=school).exists():
+        if Class.objects.filter(name=name).exists():
             return Response({
                 "code": 400,
                 "message": "该班级已存在"
@@ -245,7 +243,6 @@ class ClassListView(APIView):
         
         cls = Class.objects.create(
             name=name,
-            school=school,
             coach=user,
             description=description
         )
@@ -255,8 +252,7 @@ class ClassListView(APIView):
             "message": "班级创建成功",
             "data": {
                 'id': cls.id,
-                'name': cls.name,
-                'school': cls.school
+                'name': cls.name
             }
         }, status=status.HTTP_201_CREATED)
 
@@ -294,8 +290,6 @@ class ClassDetailView(APIView):
             'uid': m.user.uid,
             'username': m.user.username,
             'realname': m.user.realname,
-            'school': m.user.school,
-            'grade': m.user.grade,
             'join_time': m.join_time
         } for m in members]
         
@@ -305,7 +299,6 @@ class ClassDetailView(APIView):
             "data": {
                 'id': cls.id,
                 'name': cls.name,
-                'school': cls.school,
                 'coach': cls.coach.username if cls.coach else None,
                 'description': cls.description,
                 'create_time': cls.create_time,

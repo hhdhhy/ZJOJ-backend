@@ -39,12 +39,10 @@ class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = OJUser
         fields = ['username', 'email', 'telephone', 'realname', 'password', 
-                  'password_confirm', 'role', 'school', 'grade']
+                  'password_confirm', 'role']
         extra_kwargs = {
             'password': {'write_only': True},
             'role': {'default': UserRoleChoices.STUDENT},
-            'school': {'required': False, 'allow_blank': True},
-            'grade': {'required': False, 'allow_blank': True},
         }
     
     def validate_username(self, value):
@@ -85,7 +83,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
         model = OJUser
         fields = ['uid', 'username', 'email', 'telephone', 'realname', 
                   'role', 'role_name', 'status', 'status_name',
-                  'school', 'grade', 'avatar', 'bio', 'date_joined']
+                  'avatar', 'bio', 'date_joined']
         read_only_fields = ['uid', 'username', 'email', 'date_joined']
 
 
@@ -93,4 +91,4 @@ class UserProfileUpdateSerializer(serializers.ModelSerializer):
     """用户信息更新序列化器"""
     class Meta:
         model = OJUser
-        fields = ['realname', 'telephone', 'school', 'grade', 'avatar', 'bio']
+        fields = ['realname', 'telephone', 'avatar', 'bio']
