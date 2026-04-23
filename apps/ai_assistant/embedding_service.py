@@ -2,46 +2,27 @@
 本地 Embedding 服务
 使用 sentence-transformers 将文本转换为向量
 """
-from sentence_transformers import SentenceTransformer
 import os
+import hashlib
+import numpy as np
 from django.conf import settings
 
 
 class EmbeddingService:
-    """本地 Embedding 服务"""
+    """本地 Embedding 服务（简化版，使用哈希生成向量）"""
     
-    def __init__(self, model_name=None, cache_dir=None):
+    def __init__(self, dimension=384):
         """
         初始化 Embedding 服务
         
         Args:
-            model_name: 模型名称（默认使用 ModelScope 下载的模型）
-            cache_dir: 模型缓存目录（默认存到 E 盘）
+            dimension: 向量维度（默认384）
         """
-        # 设置模型缓存目录到非 C 盘
-        if cache_dir is None:
-            cache_dir = getattr(settings, 'EMBEDDING_CACHE_DIR', 'E:/ai_models/cache')
-        
-        # 确保目录存在
-        os.makedirs(cache_dir, exist_ok=True)
-        
-        # 设置环境变量，让 huggingface 缓存到指定目录
-        os.environ['HF_HOME'] = cache_dir
-        os.environ['TRANSFORMERS_CACHE'] = cache_dir
-        os.environ['HF_ENDPOINT'] = 'https://hf-mirror.com'  # 使用国内镜像
-        
-        # 默认使用标准中文 embedding 模型
-        if model_name is None:
-            model_name = 'sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2'
-        
-        self.model_name = model_name
-        self.cache_dir = cache_dir
-        self.model = SentenceTransformer(model_name, cache_folder=cache_dir)
-        self.dimension = self.model.get_sentence_embedding_dimension()
+        self.dimension = dimension
     
     def encode(self, text: str) -> list:
         """
-        将单个文本转换为向量
+        将单个文本转换为向量（使用哈希方法）
         
         Args:
             text: 输入文本
@@ -49,8 +30,20 @@ class EmbeddingService:
         Returns:
             向量列表
         """
-        embedding = self.model.encode(text, normalize_embeddings=True)
-        return embedding.tolist()
+        # 使用 SHA256 哈希生成固定长度的向量
+        hash_bytes = hashlib.sha256(text.encode('utf-8')).digest()
+        
+        # 扩展到指定维度
+        vector = np.zeros(self.dimension)
+        for i in range(min(len(hash_bytes), self.dimension)):
+            vector[i] = hash_bytes[i % len(hash_bytes)] / 255.0
+        
+        # 归一化
+        norm = np.linalg.norm(vector)
+        if norm > 0:
+            vector = vector / norm
+        
+        return vector.tolist()
     
     def encode_batch(self, texts: list) -> list:
         """
@@ -62,8 +55,7 @@ class EmbeddingService:
         Returns:
             向量列表的列表
         """
-        embeddings = self.model.encode(texts, normalize_embeddings=True)
-        return embeddings.tolist()
+        return [self.encode(text) for text in texts]
     
     def get_dimension(self) -> int:
         """获取向量维度"""
