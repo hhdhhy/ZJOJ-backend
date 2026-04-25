@@ -451,27 +451,26 @@ testcases.zip
 ```json
 {
   "question": "什么是动态规划？",
-  "mode": "rag"  // rag 或 normal
+  "use_rag": true,  // 是否使用 RAG 模式，默认 true
+  "top_k": 5        // 检索文档数量，默认 5
 }
 ```
 
 **响应** (200):
 ```json
 {
-  "code": 200,
-  "message": "success",
-  "data": {
-    "answer": "动态规划是一种算法设计技术...",
-    "sources": [
-      {
-        "title": "动态规划入门",
-        "doc_type": "tutorial",
-        "similarity": 0.95
-      }
-    ],
-    "tokens_used": 150,
-    "remaining_quota": 49
-  }
+  "answer": "动态规划是一种算法设计技术...",
+  "sources": [
+    {
+      "id": "kb_abc123",
+      "title": "动态规划入门",
+      "type": "algorithm",
+      "similarity": 0.95
+    }
+  ],
+  "tokens_used": 150,
+  "remaining_quota": 49,
+  "chat_id": 1
 }
 ```
 
@@ -481,24 +480,22 @@ testcases.zip
 
 ---
 
-### 2. 获取对话历史
+### 2. 获取对话历史列表
 
-**端点**: `GET /api/ai/history/`
+**端点**: `GET /api/ai/history/?limit=50&offset=0`
 
 **认证**: 需要 JWT Token
 
 **查询参数**:
 | 参数 | 类型 | 说明 |
 |------|------|------|
-| `page` | int | 页码 |
-| `page_size` | int | 每页数量（默认 20） |
+| `limit` | int | 每页数量（默认 50） |
+| `offset` | int | 偏移量（默认 0） |
 
 **响应** (200):
 ```json
 {
   "count": 30,
-  "next": "...",
-  "previous": null,
   "results": [
     {
       "id": 1,
@@ -514,26 +511,38 @@ testcases.zip
 
 ---
 
-### 3. 获取使用情况
+### 3. 获取单条对话详情
 
-**端点**: `GET /api/ai/usage/`
+**端点**: `GET /api/ai/history/<int:chat_id>/`
 
 **认证**: 需要 JWT Token
+
+**路径参数**:
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| `chat_id` | int | 聊天记录 ID |
 
 **响应** (200):
 ```json
 {
-  "code": 200,
-  "data": {
-    "daily_quota": 50,
-    "used_today": 5,
-    "remaining": 45,
-    "total_questions": 120,
-    "max_history": 100,
-    "history_count": 30
-  }
+  "id": 1,
+  "question": "什么是动态规划？",
+  "answer": "动态规划是一种算法设计技术...",
+  "sources": [
+    {
+      "id": "kb_abc123",
+      "title": "动态规划基础",
+      "type": "algorithm",
+      "similarity": 0.95
+    }
+  ],
+  "created_at": "2026-04-23T18:59:14.240903",
+  "tokens_used": 1751
 }
 ```
+
+**错误响应**:
+- `404 Not Found` - 聊天记录不存在或无权访问
 
 ---
 
@@ -546,10 +555,317 @@ testcases.zip
 **响应** (200):
 ```json
 {
-  "code": 200,
-  "message": "历史已清空"
+  "message": "已清空 30 条对话记录"
 }
 ```
+
+---
+
+### 5. 使用情况统计
+
+**端点**: `GET /api/ai/usage/`
+
+**认证**: 需要 JWT Token
+
+**响应** (200):
+```json
+{
+  "daily_quota": 50,
+  "used_today": 5,
+  "remaining": 45,
+  "max_history": 100,
+  "history_count": 30,
+  "reset_time": "明天 00:00"
+}
+```
+
+---
+
+### 6. 知识库管理
+
+#### 6.1 获取知识库列表
+
+**端点**: `GET /api/ai/knowledge/?page=1&page_size=20&doc_type=algorithm`
+
+**认证**: 需要 JWT Token
+
+**查询参数**:
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| `page` | int | 页码（默认 1） |
+| `page_size` | int | 每页数量（默认 20） |
+| `doc_type` | string | 按类型过滤 |
+| `error_type` | string | 按错误类型过滤 |
+| `is_active` | boolean | 按激活状态过滤 |
+
+**响应** (200):
+```json
+{
+  "count": 7,
+  "page": 1,
+  "page_size": 20,
+  "results": [
+    {
+      "id": 1,
+      "title": "动态规划基础教程",
+      "content": "动态规划是一种算法思想...",
+      "doc_type": "algorithm",
+      "tags": [1, 2, 3],
+      "problem": null,
+      "error_type": "",
+      "source": "",
+      "vector_id": "kb_1776971398541",
+      "is_active": true,
+      "created_at": "2026-04-23T19:09:58.541541",
+      "updated_at": "2026-04-23T19:09:58.541566"
+    }
+  ]
+}
+```
+
+---
+
+#### 6.2 创建知识库文档
+
+**端点**: `POST /api/ai/knowledge/`
+
+**认证**: 需要 JWT Token
+**权限**: 仅教练或管理员
+
+**请求体**:
+```json
+{
+  "title": "动态规划基础教程",
+  "content": "动态规划是一种算法思想，用于解决具有最优子结构和重叠子问题性质的问题。",
+  "doc_type": "algorithm",
+  "tag_names": ["DP", "算法", "动态规划"],
+  "problem": null,
+  "error_type": "",
+  "source": "",
+  "is_active": true
+}
+```
+
+**请求参数**:
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| title | string | 是 | 文档标题 |
+| content | string | 是 | 文档内容（支持 Markdown） |
+| doc_type | string | 是 | 文档类型：algorithm/solution/template/concept/error_solution |
+| tag_names | array | 否 | 标签名称列表 |
+| problem | integer | 否 | 关联的题目 ID |
+| error_type | string | 否 | 错误类型（WA/TLE/MLE/RE/CE） |
+| source | string | 否 | 来源说明 |
+| is_active | boolean | 否 | 是否启用，默认 true |
+
+**响应** (201):
+```json
+{
+  "message": "知识库文档创建成功",
+  "data": {
+    "id": 1,
+    "title": "动态规划基础教程",
+    "content": "动态规划是一种算法思想...",
+    "doc_type": "algorithm",
+    "tags": [1, 2, 3],
+    "vector_id": "kb_1776971398541",
+    "is_active": true,
+    "created_at": "2026-04-23T19:09:58.541541",
+    "updated_at": "2026-04-23T19:09:58.541566"
+  }
+}
+```
+
+**注意**: 创建成功后会自动同步到向量数据库。
+
+---
+
+#### 6.3 获取知识库详情
+
+**端点**: `GET /api/ai/knowledge/<int:kb_id>/`
+
+**认证**: 需要 JWT Token
+
+**响应** (200): 同创建接口的 data 字段
+
+---
+
+#### 6.4 更新知识库文档
+
+**端点**: `PUT /api/ai/knowledge/<int:kb_id>/`
+
+**认证**: 需要 JWT Token
+**权限**: 仅教练或管理员
+
+**请求体** (部分更新):
+```json
+{
+  "title": "动态规划基础教程（已更新）",
+  "tag_names": ["DP", "算法", "动态规划", "进阶"]
+}
+```
+
+**响应** (200):
+```json
+{
+  "message": "知识库文档更新成功",
+  "data": {
+    "id": 1,
+    "title": "动态规划基础教程（已更新）",
+    ...
+  }
+}
+```
+
+**注意**: 更新成功后会自动同步到向量数据库。
+
+---
+
+#### 6.5 删除知识库文档
+
+**端点**: `DELETE /api/ai/knowledge/<int:kb_id>/`
+
+**认证**: 需要 JWT Token
+**权限**: 仅教练或管理员
+
+**响应** (200):
+```json
+{
+  "message": "知识库文档删除成功"
+}
+```
+
+**注意**: 删除成功后会自动从向量数据库中删除。
+
+---
+
+### 7. 学情分析报告
+
+#### 7.1 学生个性化学情报告
+
+**端点**: `GET /api/ai/report/student/?days=7`
+
+**认证**: 需要 JWT Token
+**权限**: 仅学生可查看自己的报告
+
+**查询参数**:
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| days | int | 统计天数（默认 7） |
+
+**响应** (200):
+```json
+{
+  "report_type": "学生个性报告",
+  "period": "2026-04-16 至 2026-04-23",
+  "summary": "本周你完成了 15 道题目，正确率 73%...",
+  "statistics": {
+    "total_submissions": 20,
+    "accepted_count": 15,
+    "acceptance_rate": 0.75,
+    "problem_solved": 12,
+    "error_distribution": {
+      "WA": 3,
+      "TLE": 1,
+      "RE": 1
+    }
+  },
+  "recommendations": [
+    "建议加强动态规划练习",
+    "注意边界条件处理"
+  ],
+  "generated_at": "2026-04-23T19:00:00"
+}
+```
+
+**错误响应**:
+- `403 Forbidden` - 非学生用户无权访问
+
+---
+
+#### 7.2 班级共性学情报告
+
+**端点**: `GET /api/ai/report/class/<int:class_id>/?days=7`
+
+**认证**: 需要 JWT Token
+**权限**: 仅该班级的教练或管理员
+
+**路径参数**:
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| class_id | int | 班级 ID |
+
+**查询参数**:
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| days | int | 统计天数（默认 7） |
+
+**响应** (200):
+```json
+{
+  "report_type": "班级共性报告",
+  "class_name": "算法竞赛班",
+  "period": "2026-04-16 至 2026-04-23",
+  "summary": "本周班级整体表现良好，平均正确率 68%...",
+  "statistics": {
+    "total_students": 30,
+    "active_students": 25,
+    "total_submissions": 450,
+    "acceptance_rate": 0.68,
+    "common_errors": [
+      {
+        "error_type": "WA",
+        "count": 80,
+        "percentage": 0.40
+      }
+    ]
+  },
+  "recommendations": [
+    "建议组织动态规划专题讲解",
+    "重点关注时间复杂度优化"
+  ],
+  "generated_at": "2026-04-23T19:00:00"
+}
+```
+
+**错误响应**:
+- `403 Forbidden` - 无权查看此班级报告
+- `404 Not Found` - 班级不存在
+
+---
+
+### 8. 错误解决方案
+
+**端点**: `GET /api/ai/error-solution/<int:submission_id>/`
+
+**认证**: 需要 JWT Token
+
+**路径参数**:
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| submission_id | int | 提交记录 ID |
+
+**功能说明**: 当学生提交代码判题失败时，系统自动根据错误类型从知识库中检索相关解决方案。
+
+**响应** (200):
+```json
+{
+  "submission_id": 123,
+  "solutions": [
+    {
+      "id": 3,
+      "title": "WA（答案错误）常见原因",
+      "content": "WA 的常见原因包括：1. 边界条件处理不当...",
+      "doc_type": "error_solution",
+      "error_type": "WA",
+      "similarity": 0.85
+    }
+  ],
+  "count": 1
+}
+```
+
+**使用场景**: 学生提交后收到 WA/TLE 等错误时，调用此接口获取针对性的解决方案。
 
 ---
 
