@@ -18,6 +18,18 @@ services:
       retries: 5
       start_period: 10s
 
+  # go-judge 评测沙箱服务（运行在宿主机网络）
+  gojudge:
+    image: hydrooj/gojudge:latest
+    container_name: zjoj-gojudge
+    restart: always
+    privileged: true
+    network_mode: host
+    volumes:
+      - /tmp:/w
+    environment:
+      - JUDGE_SERVER_PORT=5050
+
   # MySQL 数据库
   db:
     image: mysql:8.0
@@ -61,6 +73,7 @@ services:
       - DB_PORT=3306
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - GO_JUDGE_URL=http://host.docker.internal:5050
       - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
       - DJANGO_SETTINGS_MODULE=ZJOJ.settings_production
       - PYTHONUNBUFFERED=1
@@ -69,6 +82,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - zjoj-network
 
@@ -89,6 +104,7 @@ services:
       - DB_PORT=3306
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - GO_JUDGE_URL=http://host.docker.internal:5050
       - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
       - DJANGO_SETTINGS_MODULE=ZJOJ.settings_production
       - PYTHONUNBUFFERED=1
@@ -97,6 +113,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - zjoj-network
 
