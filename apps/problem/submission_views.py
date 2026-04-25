@@ -33,16 +33,28 @@ class SubmitCodeView(APIView):
             # 创建提交记录
             submission = serializer.save()
             
-            # 异步执行评测任务（如果Celery不可用，会抛出异常）
+            # 尝试异步执行评测任务
             try:
                 judge_submission_task.delay(submission.id)
                 message = '提交成功，正在评测'
             except Exception as e:
-                # Celery 不可用时，记录日志但仍返回成功
+                # Celery 不可用时，同步执行评测作为备选方案
                 import logging
                 logger = logging.getLogger(__name__)
-                logger.warning(f'Celery任务提交失败: {str(e)}')
-                message = '提交成功（评测队列暂时不可用，请稍后手动触发评测）'
+                logger.warning(f'Celery任务提交失败: {str(e)}，切换为同步评测')
+                
+                try:
+                    from apps.judge.task_processor import JudgeTaskProcessor
+                    processor = JudgeTaskProcessor()
+                    success = processor.process(submission.id)
+                    
+                    if success:
+                        message = '提交成功，评测完成'
+                    else:
+                        message = '提交成功，但评测失败'
+                except Exception as sync_error:
+                    logger.error(f'同步评测也失败: {str(sync_error)}')
+                    message = '提交成功（评测系统暂时不可用）'
             
             return Response({
                 'message': message,
