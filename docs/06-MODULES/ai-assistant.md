@@ -1091,6 +1091,183 @@ curl -X PUT http://101.35.233.33:8000/api/ai/knowledge/2/ \
 
 ---
 
+### 4. 学情分析报告接口
+
+#### 4.1 学生个性化学情报告
+
+**接口地址**：`GET /api/ai/report/student/?days=7`
+
+**权限要求**：仅学生可查看自己的报告
+
+**查询参数**：
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| days | integer | 否 | 统计天数，默认 7 天 |
+
+**响应示例**：
+
+```json
+{
+  "report_type": "学生个性报告",
+  "period": "2026-04-16 至 2026-04-23",
+  "summary": "本周你完成了 15 道题目，正确率 73%...",
+  "statistics": {
+    "total_submissions": 20,
+    "accepted_count": 15,
+    "acceptance_rate": 0.75,
+    "problem_solved": 12,
+    "error_distribution": {
+      "WA": 3,
+      "TLE": 1,
+      "RE": 1
+    }
+  },
+  "recommendations": [
+    "建议加强动态规划练习",
+    "注意边界条件处理"
+  ],
+  "generated_at": "2026-04-23T19:00:00"
+}
+```
+
+**错误响应**：
+- `403 Forbidden` - 非学生用户无权访问
+- `500 Internal Server Error` - 生成报告失败
+
+---
+
+#### 4.2 班级共性学情报告
+
+**接口地址**：`GET /api/ai/report/class/<int:class_id>/?days=7`
+
+**权限要求**：仅该班级的教练或管理员可查看
+
+**路径参数**：
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| class_id | integer | 是 | 班级 ID |
+
+**查询参数**：
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| days | integer | 否 | 统计天数，默认 7 天 |
+
+**响应示例**：
+
+```json
+{
+  "report_type": "班级共性报告",
+  "class_name": "算法竞赛班",
+  "period": "2026-04-16 至 2026-04-23",
+  "summary": "本周班级整体表现良好，平均正确率 68%...",
+  "statistics": {
+    "total_students": 30,
+    "active_students": 25,
+    "total_submissions": 450,
+    "acceptance_rate": 0.68,
+    "common_errors": [
+      {
+        "error_type": "WA",
+        "count": 80,
+        "percentage": 0.40
+      },
+      {
+        "error_type": "TLE",
+        "count": 40,
+        "percentage": 0.20
+      }
+    ]
+  },
+  "recommendations": [
+    "建议组织动态规划专题讲解",
+    "重点关注时间复杂度优化"
+  ],
+  "generated_at": "2026-04-23T19:00:00"
+}
+```
+
+**错误响应**：
+- `403 Forbidden` - 无权查看此班级报告
+- `404 Not Found` - 班级不存在
+- `500 Internal Server Error` - 生成报告失败
+
+---
+
+### 5. 错误解决方案接口
+
+**接口地址**：`GET /api/ai/error-solution/<int:submission_id>/`
+
+**权限要求**：已登录用户
+
+**路径参数**：
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| submission_id | integer | 是 | 提交记录 ID |
+
+**功能说明**：
+当学生提交代码判题失败时，系统会自动根据错误类型（WA/TLE/MLE/RE/CE）从知识库中检索相关的解决方案和调试技巧。
+
+**响应示例**：
+
+```json
+{
+  "submission_id": 123,
+  "solutions": [
+    {
+      "id": 3,
+      "title": "WA（答案错误）常见原因",
+      "content": "WA 的常见原因包括：1. 边界条件处理不当...",
+      "doc_type": "error_solution",
+      "error_type": "WA",
+      "similarity": 0.85
+    },
+    {
+      "id": 8,
+      "title": "数组越界调试技巧",
+      "content": "检查数组访问是否超出范围...",
+      "doc_type": "error_solution",
+      "error_type": "RE",
+      "similarity": 0.72
+    }
+  ],
+  "count": 2
+}
+```
+
+**使用场景**：
+1. 学生提交后收到 WA/TLE 等错误
+2. 前端调用此接口获取针对性的解决方案
+3. 展示给学生帮助其快速定位问题
+
+**错误响应**：
+- `500 Internal Server Error` - 获取解决方案失败
+
+---
+
+## 完整 API 列表
+
+| 接口 | 方法 | 说明 | 权限 |
+|------|------|------|------|
+| `/api/ai/chat/` | POST | AI 智能问答 | 所有用户 |
+| `/api/ai/history/` | GET | 获取对话历史列表 | 所有用户 |
+| `/api/ai/history/<id>/` | GET | 获取单条对话详情 | 所有用户 |
+| `/api/ai/history/clear/` | DELETE | 清空对话历史 | 所有用户 |
+| `/api/ai/usage/` | GET | 使用情况统计 | 所有用户 |
+| `/api/ai/knowledge/` | GET | 获取知识库列表 | 所有用户 |
+| `/api/ai/knowledge/` | POST | 创建知识库文档 | 教练/管理员 |
+| `/api/ai/knowledge/<id>/` | GET | 获取知识库详情 | 所有用户 |
+| `/api/ai/knowledge/<id>/` | PUT | 更新知识库文档 | 教练/管理员 |
+| `/api/ai/knowledge/<id>/` | DELETE | 删除知识库文档 | 教练/管理员 |
+| `/api/ai/report/student/` | GET | 学生学情报告 | 学生 |
+| `/api/ai/report/class/<id>/` | GET | 班级学情报告 | 教练/管理员 |
+| `/api/ai/error-solution/<id>/` | GET | 错误解决方案 | 所有用户 |
+
+---
+
 ### 3. 批量导入脚本
 
 为了快速初始化知识库，系统提供了批量导入脚本。
