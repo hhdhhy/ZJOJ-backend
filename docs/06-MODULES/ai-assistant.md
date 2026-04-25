@@ -1203,14 +1203,10 @@ docker exec zjoj-web python3 /tmp/download_model.py
 
 ### 已知限制
 
-1. ⚠️ **向量数据库同步**：目前通过 API 创建的知识库文档尚未自动同步到 ChromaDB 向量数据库
-   - 解决方案：后续版本将实现自动同步机制
-   - 临时方案：可以手动调用同步脚本
-
-2. ⚠️ **知识库搜索**：暂不支持全文搜索功能
+1. ⚠️ **知识库搜索**：暂不支持全文搜索功能
    - 可通过 doc_type、error_type、is_active 等字段过滤
 
-3. ⚠️ **批量更新**：暂不支持批量更新或删除操作
+2. ⚠️ **批量更新**：暂不支持批量更新或删除操作
    - 需要逐个文档操作
 
 ---
@@ -1228,6 +1224,7 @@ docker exec zjoj-web python3 /tmp/download_model.py
   - 更新文档（仅教练/管理员）
   - 删除文档（仅教练/管理员）
 - ✅ 批量导入脚本 (`tests/import_knowledge_base.py`)
+- ✅ 向量数据库自动同步机制
 - ✅ Embedding 模型生产环境部署完成
 
 **RAG引擎部署**：
@@ -1242,7 +1239,10 @@ docker exec zjoj-web python3 /tmp/download_model.py
 - ✅ Token计数和配额管理正常
 - ✅ 聊天历史查询功能正常（列表+详情）
 - ✅ 知识库管理功能正常（CRUD + 权限控制）
+- ✅ 向量数据库自动同步功能正常（创建/更新/删除时自动同步）
 - ✅ 批量导入脚本正常工作（已导入5个示例文档）
+- ✅ 批量同步脚本正常工作（已同步7个文档到向量数据库）
+- ✅ RAG 检索效果良好（相似度 0.56-0.79）
 - ✅ 响应时间：5-30秒（取决于回答长度和是否使用RAG）
 
 **技术细节**：
@@ -1254,9 +1254,114 @@ docker exec zjoj-web python3 /tmp/download_model.py
 - **部署方式**: 手动预下载 + 本地路径加载
 
 **已知限制**：
-- ⚠️ 通过 API 创建的知识库文档尚未自动同步到 ChromaDB 向量数据库
 - ⚠️ 暂不支持知识库全文搜索功能
 - ⚠️ 暂不支持批量更新或删除操作
+
+---
+
+## 向量数据库同步机制
+
+### 自动同步
+
+系统现已实现知识库文档与 ChromaDB 向量数据库的自动同步：
+
+1. **创建文档时**：自动将文档添加到向量数据库
+2. **更新文档时**：自动更新向量数据库中的对应记录
+3. **删除文档时**：自动从向量数据库中删除对应记录
+
+**实现位置**：`apps/ai_assistant/views.py` - `KnowledgeBaseView`
+
+**同步流程**：
+```python
+# 创建文档时
+engine.vector_store.add_document(
+    doc_id=doc.vector_id,
+    text=doc.content,
+    metadata={
+        'title': doc.title,
+        'type': doc.doc_type,
+        'doc_id': doc.id,
+        'error_type': doc.error_type or '',
+        'source': doc.source or '',
+    }
+)
+```
+
+**异常处理**：
+- 同步失败不会中断主流程
+- 仅在日志中记录错误信息
+- 确保数据库文档始终可访问
+
+### 批量同步脚本
+
+对于历史数据或手动修复，可以使用批量同步脚本：
+
+**使用方法**：
+```bash
+# 上传脚本到服务器
+scp tests/sync_knowledge_to_vector.py ubuntu@101.35.233.33:~/projects/ZJOJ-backend/tests/
+
+# 复制到容器内并执行
+ssh ubuntu@101.35.233.33 "docker cp ~/projects/ZJOJ-backend/tests/sync_knowledge_to_vector.py zjoj-web:/home/zjoj/ && docker exec -w /home/zjoj zjoj-web python3 sync_knowledge_to_vector.py"
+```
+
+**功能特性**：
+- ✅ 幂等性：跳过已存在的文档
+- ✅ 详细统计：显示成功/跳过/失败数量
+- ✅ 错误处理：单个文档失败不影响其他文档
+- ✅ 进度显示：实时显示同步进度
+
+**执行示例**：
+```
+============================================================
+开始同步知识库到向量数据库...
+============================================================
+
+找到 7 个启用的知识库文档
+
+✓ 同步成功: 快速排序模板
+✓ 同步成功: TLE（超时）优化技巧
+✓ 同步成功: WA（答案错误）常见原因
+✓ 同步成功: 二分查找算法
+✓ 同步成功: 动态规划基础
+✓ 同步成功: 动态规划基础教程（已更新）
+✓ 同步成功: 动态规划基础教程
+
+============================================================
+同步完成！
+  成功: 7 个
+  跳过: 0 个
+  失败: 0 个
+  总计: 7 个
+============================================================
+
+向量数据库中文档总数: 7
+```
+
+### 同步状态检查
+
+可以通过以下方式验证同步状态：
+
+1. **查看向量数据库文档数**：
+   ```python
+   from apps.ai_assistant.rag_engine import RAGEngine
+   engine = RAGEngine()
+   print(f"向量数据库文档数: {engine.vector_store.get_document_count()}")
+   ```
+
+2. **测试 RAG 检索**：
+   ```bash
+   curl -X POST http://101.35.233.33:8000/api/ai/chat/ \
+     -H "Authorization: jwt YOUR_TOKEN" \
+     -H "Content-Type: application/json" \
+     -d '{
+       "question": "动态规划的核心思想是什么？",
+       "use_rag": true,
+       "top_k": 3
+     }'
+   ```
+   
+   如果返回的 `sources` 数组不为空，说明 RAG 检索正常工作。
 
 ---
 
