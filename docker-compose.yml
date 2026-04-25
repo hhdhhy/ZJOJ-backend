@@ -72,6 +72,34 @@ services:
     networks:
       - zjoj-network
 
+  # Celery Worker
+  celery:
+    build: .
+    container_name: zjoj-celery
+    restart: always
+    command: >
+      sh -c "celery -A ZJOJ worker --loglevel=info --concurrency=2"
+    volumes:
+      - media_volume:/home/zjoj/media
+    environment:
+      - DB_NAME=ZJOJ
+      - DB_USER=zjoj_user
+      - DB_PASSWORD=${DB_PASSWORD:-ZJOJ@2024secure}
+      - DB_HOST=db
+      - DB_PORT=3306
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
+      - DJANGO_SETTINGS_MODULE=ZJOJ.settings_production
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - zjoj-network
+
   # Nginx 反向代理
   nginx:
     image: nginx:alpine
