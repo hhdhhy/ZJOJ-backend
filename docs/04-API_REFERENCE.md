@@ -35,7 +35,37 @@ Authorization: jwt <token>
 
 ## 👤 用户认证
 
-### 1. 用户登录
+### 1. 用户注册
+
+**端点**: `POST /api/register/`
+
+**请求体**:
+```json
+{
+  "username": "new_user",
+  "password": "secure_password",
+  "email": "user@example.com",
+  "realname": "张三",
+  "telephone": "13800138000"
+}
+```
+
+**响应** (201):
+```json
+{
+  "code": 201,
+  "message": "注册成功",
+  "data": {
+    "uid": "abc123",
+    "username": "new_user",
+    "email": "user@example.com"
+  }
+}
+```
+
+---
+
+### 2. 用户登录
 
 **端点**: `POST /auth/login/`
 
@@ -73,7 +103,7 @@ Authorization: jwt <token>
 
 ---
 
-### 2. 获取用户信息
+### 3. 获取用户信息
 
 **端点**: `GET /api/user/profile/`
 
@@ -100,7 +130,7 @@ Authorization: jwt <token>
 
 ---
 
-### 3. 更新用户信息
+### 4. 更新用户信息
 
 **端点**: `PUT /api/user/profile/`
 
@@ -129,6 +159,165 @@ Authorization: jwt <token>
 ```
 
 **注意**: 只能更新 `realname` 和 `telephone` 字段。
+
+---
+
+### 5. 修改密码
+
+**端点**: `POST /api/password/change/`
+
+**认证**: 需要 JWT Token
+
+**请求体**:
+```json
+{
+  "old_password": "old_password",
+  "new_password": "new_secure_password"
+}
+```
+
+**响应** (200):
+```json
+{
+  "code": 200,
+  "message": "密码修改成功"
+}
+```
+
+**错误响应**:
+- `400 Bad Request` - 旧密码错误
+
+---
+
+### 6. 重置密码
+
+**端点**: `POST /api/password/reset/`
+
+**请求体**:
+```json
+{
+  "email": "user@example.com"
+}
+```
+
+**响应** (200):
+```json
+{
+  "code": 200,
+  "message": "重置密码邮件已发送"
+}
+```
+
+**说明**: 系统会向指定邮箱发送密码重置链接。
+
+---
+
+### 7. 获取班级列表
+
+**端点**: `GET /api/classes/`
+
+**认证**: 需要 JWT Token
+
+**查询参数**:
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| page | int | 页码（默认 1） |
+| page_size | int | 每页数量（默认 20） |
+
+**响应** (200):
+```json
+{
+  "count": 5,
+  "results": [
+    {
+      "id": 1,
+      "name": "算法竞赛班",
+      "coach": {
+        "uid": "coach123",
+        "username": "coach_zhang",
+        "realname": "张老师"
+      },
+      "member_count": 30,
+      "created_at": "2026-04-01T10:00:00"
+    }
+  ]
+}
+```
+
+---
+
+### 8. 获取班级详情
+
+**端点**: `GET /api/classes/<int:class_id>/`
+
+**认证**: 需要 JWT Token
+
+**响应** (200):
+```json
+{
+  "id": 1,
+  "name": "算法竞赛班",
+  "description": "专注于算法竞赛训练的班级",
+  "coach": {
+    "uid": "coach123",
+    "username": "coach_zhang",
+    "realname": "张老师"
+  },
+  "member_count": 30,
+  "created_at": "2026-04-01T10:00:00"
+}
+```
+
+---
+
+### 9. 班级管理成员
+
+**端点**: `GET/POST /api/classes/<int:class_id>/members/`
+
+**认证**: 需要 JWT Token
+**权限**: GET - 所有成员可查看；POST - 仅教练可添加
+
+#### 9.1 获取成员列表
+
+**请求**: `GET /api/classes/1/members/`
+
+**响应** (200):
+```json
+{
+  "count": 30,
+  "results": [
+    {
+      "user": {
+        "uid": "student1",
+        "username": "john_doe",
+        "realname": "张三"
+      },
+      "role": "student",
+      "joined_at": "2026-04-01T10:00:00"
+    }
+  ]
+}
+```
+
+#### 9.2 添加成员
+
+**请求**: `POST /api/classes/1/members/`
+
+**请求体**:
+```json
+{
+  "user_id": "student_uid",
+  "role": "student"  // student 或 coach
+}
+```
+
+**响应** (201):
+```json
+{
+  "code": 201,
+  "message": "成员添加成功"
+}
+```
 
 ---
 
@@ -237,9 +426,80 @@ Authorization: jwt <token>
 
 ---
 
-### 4. 上传测试用例
+### 4. 创建标签
 
-**端点**: `POST /api/problems/{problem_id}/upload-testcases/`
+**端点**: `POST /api/problems/tags/create/`
+
+**认证**: 需要管理员权限
+
+**请求体**:
+```json
+{
+  "name": "动态规划",
+  "slug": "dp"
+}
+```
+
+**响应** (201):
+```json
+{
+  "code": 201,
+  "message": "创建成功",
+  "data": {
+    "name": "动态规划",
+    "slug": "dp",
+    "problem_count": 0
+  }
+}
+```
+
+---
+
+### 5. 获取标签列表
+
+**端点**: `GET /api/problems/tags/`
+
+**响应** (200):
+```json
+{
+  "count": 15,
+  "results": [
+    {"name": "动态规划", "slug": "dp", "problem_count": 50},
+    {"name": "图论", "slug": "graph", "problem_count": 30},
+    {"name": "数学", "slug": "math", "problem_count": 40}
+  ]
+}
+```
+
+---
+
+### 7. 获取测试用例列表
+
+**端点**: `GET /api/problems/<str:problem_id>/testcases/`
+
+**认证**: 需要 JWT Token
+
+**响应** (200):
+```json
+{
+  "count": 10,
+  "results": [
+    {
+      "id": 1,
+      "input_file": "1.in",
+      "output_file": "1.out",
+      "is_sample": true,
+      "created_at": "2026-04-16T10:00:00"
+    }
+  ]
+}
+```
+
+---
+
+### 8. 上传测试用例
+
+**端点**: `POST /api/problems/<str:problem_id>/testcases/upload/`
 
 **认证**: 需要管理员权限
 
@@ -273,19 +533,27 @@ testcases.zip
 
 ---
 
-### 5. 获取标签列表
+### 9. 删除测试用例
 
-**端点**: `GET /api/problems/tags/`
+**端点**: `DELETE /api/problems/<str:problem_id>/testcases/delete/`
+
+**认证**: 需要管理员权限
+
+**请求体**:
+```json
+{
+  "testcase_ids": [1, 2, 3]
+}
+```
 
 **响应** (200):
 ```json
 {
-  "count": 15,
-  "results": [
-    {"name": "动态规划", "slug": "dp", "problem_count": 50},
-    {"name": "图论", "slug": "graph", "problem_count": 30},
-    {"name": "数学", "slug": "math", "problem_count": 40}
-  ]
+  "code": 200,
+  "message": "删除成功",
+  "data": {
+    "deleted_count": 3
+  }
 }
 ```
 
@@ -950,7 +1218,7 @@ testcases.zip
 
 ### Python 示例
 
-```python
+```
 import requests
 
 # 登录获取 Token
@@ -984,7 +1252,7 @@ print(response.json())
 
 ### JavaScript 示例
 
-```javascript
+```
 // 登录
 const loginResponse = await fetch('http://localhost:8000/auth/login/', {
   method: 'POST',
