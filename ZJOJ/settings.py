@@ -148,8 +148,10 @@ AUTH_USER_MODEL = "ojauth.OJUser"
 # Celery Configuration
 # 生产环境配置在 settings_production.py 中
 # 开发环境可以使用 Redis: redis://localhost:6379/0
-CELERY_BROKER_URL = 'redis://localhost:6379/0'
-CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+REDIS_HOST = os.getenv('REDIS_HOST', 'localhost')
+REDIS_PORT = os.getenv('REDIS_PORT', '6379')
+CELERY_BROKER_URL = f'redis://{REDIS_HOST}:{REDIS_PORT}/0'
+CELERY_RESULT_BACKEND = f'redis://{REDIS_HOST}:{REDIS_PORT}/0'
 CELERY_ACCEPT_CONTENT = ['json']  # 接受的内容类型
 CELERY_TASK_SERIALIZER = 'json'  # 任务序列化方式
 CELERY_RESULT_SERIALIZER = 'json'  # 结果序列化方式
