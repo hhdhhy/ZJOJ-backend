@@ -1115,21 +1115,42 @@ testcases.zip
 
 **功能说明**: 当学生提交代码判题失败时，系统自动根据错误类型从知识库中检索相关解决方案。
 
+**限流说明**: 
+- ⚠️ **与 AI 智能问答共用每日配额**（50 次/天）
+- 每次调用消耗 1 次配额，但不消耗 LLM token
+- 频率限制：60秒内最多 10 次
+
 **响应** (200):
 ```json
 {
   "submission_id": 123,
   "solutions": [
     {
-      "id": 3,
       "title": "WA（答案错误）常见原因",
       "content": "WA 的常见原因包括：1. 边界条件处理不当...",
       "doc_type": "error_solution",
-      "error_type": "WA",
-      "similarity": 0.85
+      "relevance_score": 0.85
     }
   ],
-  "count": 1
+  "count": 1,
+  "remaining_quota": 49
+}
+```
+
+**响应字段说明**:
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| submission_id | int | 提交记录 ID |
+| solutions | array | 解决方案列表（最多 3 个） |
+| count | int | 解决方案数量 |
+| remaining_quota | int | ⭐ 剩余配额次数 |
+
+**错误响应** (429 - 配额超限):
+```json
+{
+  "error": "今日配额已用完 (50/50)",
+  "remaining": 0,
+  "reset_time": "明天 00:00"
 }
 ```
 
