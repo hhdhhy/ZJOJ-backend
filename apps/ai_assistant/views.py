@@ -268,13 +268,35 @@ class ErrorSolutionView(APIView):
     
     def get(self, request, submission_id):
         """获取提交记录的错误解决方案"""
+        user = request.user
+        
+        # 检查配额（与 AI 问答共用）
+        quota_check = AIUsageTracker.check_daily_quota(user)
+        if not quota_check['allowed']:
+            return Response({
+                'error': f'今日配额已用完 ({quota_check["used"]}/{quota_check["daily_quota"]})',
+                'remaining': 0,
+                'reset_time': '明天 00:00'
+            }, status=429)
+        
         try:
             solutions = ErrorSolutionPusher.push_on_judge_failure(submission_id)
+            
+            # 记录使用情况
+            AIUsageTracker.record_usage(
+                user=user,
+                tokens_used=0,  # 错误解决方案不消耗 token
+                chat_id=None
+            )
+            
+            # 获取剩余配额
+            remaining = AIUsageTracker.get_remaining_quota(user)
             
             return Response({
                 'submission_id': submission_id,
                 'solutions': solutions,
                 'count': len(solutions),
+                'remaining_quota': remaining,
             })
         except Exception as e:
             return Response({
