@@ -353,10 +353,25 @@ class KnowledgeBaseView(APIView):
         if serializer.is_valid():
             doc = serializer.save()
             
-            # TODO: 同步到向量数据库
-            # from .rag_engine import RAGEngine
-            # engine = RAGEngine()
-            # engine.add_to_vector_store(doc)
+            # 同步到向量数据库
+            try:
+                from .rag_engine import RAGEngine
+                engine = RAGEngine()
+                engine.vector_store.add_document(
+                    doc_id=doc.vector_id,
+                    text=doc.content,
+                    metadata={
+                        'title': doc.title,
+                        'type': doc.doc_type,
+                        'doc_id': doc.id,
+                        'error_type': doc.error_type or '',
+                        'source': doc.source or '',
+                    }
+                )
+                print(f"✅ 知识库文档已同步到向量数据库: {doc.title}")
+            except Exception as e:
+                print(f"⚠️ 向量数据库同步失败: {e}")
+                # 不返回错误，因为文档已成功创建
             
             return Response({
                 'message': '知识库文档创建成功',
@@ -384,7 +399,24 @@ class KnowledgeBaseView(APIView):
         if serializer.is_valid():
             doc = serializer.save()
             
-            # TODO: 更新向量数据库
+            # 更新向量数据库
+            try:
+                from .rag_engine import RAGEngine
+                engine = RAGEngine()
+                engine.vector_store.update_document(
+                    doc_id=doc.vector_id,
+                    text=doc.content,
+                    metadata={
+                        'title': doc.title,
+                        'type': doc.doc_type,
+                        'doc_id': doc.id,
+                        'error_type': doc.error_type or '',
+                        'source': doc.source or '',
+                    }
+                )
+                print(f"✅ 知识库文档已更新到向量数据库: {doc.title}")
+            except Exception as e:
+                print(f"⚠️ 向量数据库更新失败: {e}")
             
             return Response({
                 'message': '知识库文档更新成功',
@@ -403,9 +435,17 @@ class KnowledgeBaseView(APIView):
         
         try:
             doc = KnowledgeBase.objects.get(id=kb_id)
+            vector_id = doc.vector_id  # 保存 vector_id
             doc.delete()
             
-            # TODO: 从向量数据库删除
+            # 从向量数据库删除
+            try:
+                from .rag_engine import RAGEngine
+                engine = RAGEngine()
+                engine.vector_store.delete_document(doc_id=vector_id)
+                print(f"✅ 知识库文档已从向量数据库删除: {vector_id}")
+            except Exception as e:
+                print(f"⚠️ 向量数据库删除失败: {e}")
             
             return Response({
                 'message': '知识库文档删除成功'
