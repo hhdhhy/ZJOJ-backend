@@ -20,7 +20,7 @@ services:
 
   # go-judge 评测沙箱服务（运行在宿主机网络）
   gojudge:
-    image: hydrooj/gojudge:latest
+    image: criyle/go-judge:latest
     container_name: zjoj-gojudge
     restart: always
     privileged: true
@@ -28,7 +28,7 @@ services:
     volumes:
       - /tmp:/w
     environment:
-      - JUDGE_SERVER_PORT=5050
+      - GO_JUDGE_HTTP_ADDR=0.0.0.0:5050
 
   # MySQL 数据库
   db:
