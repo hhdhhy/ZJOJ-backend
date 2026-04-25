@@ -1,5 +1,4 @@
-# API 参考
-
+# API 参�?
 > 🔌 ZJOJ RESTful API 完整接口文档
 
 ---
@@ -19,17 +18,15 @@
 
 ### JWT Token 认证
 
-所有需要认证的接口使用 JWT Token。
-
-**请求头格式**:
+所有需要认证的接口使用 JWT Token�?
+**请求头格�?*:
 ```http
 Authorization: jwt <token>
 ```
 
 **获取 Token**:
-通过登录接口 `/auth/login/` 获取。
-
-**Token 有效期**: 24 小时
+通过登录接口 `/auth/login/` 获取�?
+**Token 有效�?*: 24 小时
 
 ---
 
@@ -39,7 +36,7 @@ Authorization: jwt <token>
 
 **端点**: `POST /api/register/`
 
-**请求体**:
+**请求�?*:
 ```json
 {
   "username": "new_user",
@@ -69,7 +66,7 @@ Authorization: jwt <token>
 
 **端点**: `POST /auth/login/`
 
-**请求体**:
+**请求�?*:
 ```json
 {
   "username": "john_doe",
@@ -107,7 +104,7 @@ Authorization: jwt <token>
 
 **端点**: `GET /api/user/profile/`
 
-**认证**: 需要 JWT Token
+**认证**: 需�?JWT Token
 
 **响应** (200):
 ```json
@@ -134,9 +131,9 @@ Authorization: jwt <token>
 
 **端点**: `PUT /api/user/profile/`
 
-**认证**: 需要 JWT Token
+**认证**: 需�?JWT Token
 
-**请求体**:
+**请求�?*:
 ```json
 {
   "realname": "张三",
@@ -158,17 +155,16 @@ Authorization: jwt <token>
 }
 ```
 
-**注意**: 只能更新 `realname` 和 `telephone` 字段。
-
+**注意**: 只能更新 `realname` �?`telephone` 字段�?
 ---
 
 ### 5. 修改密码
 
 **端点**: `POST /api/password/change/`
 
-**认证**: 需要 JWT Token
+**认证**: 需�?JWT Token
 
-**请求体**:
+**请求�?*:
 ```json
 {
   "old_password": "old_password",
@@ -185,15 +181,14 @@ Authorization: jwt <token>
 ```
 
 **错误响应**:
-- `400 Bad Request` - 旧密码错误
-
+- `400 Bad Request` - 旧密码错�?
 ---
 
 ### 6. 重置密码
 
 **端点**: `POST /api/password/reset/`
 
-**请求体**:
+**请求�?*:
 ```json
 {
   "email": "user@example.com"
@@ -204,25 +199,24 @@ Authorization: jwt <token>
 ```json
 {
   "code": 200,
-  "message": "重置密码邮件已发送"
+  "message": "重置密码邮件已发�?
 }
 ```
 
-**说明**: 系统会向指定邮箱发送密码重置链接。
-
+**说明**: 系统会向指定邮箱发送密码重置链接�?
 ---
 
 ### 7. 获取班级列表
 
 **端点**: `GET /api/classes/`
 
-**认证**: 需要 JWT Token
+**认证**: 需�?JWT Token
 
 **查询参数**:
 | 参数 | 类型 | 说明 |
 |------|------|------|
-| page | int | 页码（默认 1） |
-| page_size | int | 每页数量（默认 20） |
+| page | int | 页码（默�?1�?|
+| page_size | int | 每页数量（默�?20�?|
 
 **响应** (200):
 ```json
@@ -231,7 +225,7 @@ Authorization: jwt <token>
   "results": [
     {
       "id": 1,
-      "name": "算法竞赛班",
+      "name": "算法竞赛�?,
       "coach": {
         "uid": "coach123",
         "username": "coach_zhang",
@@ -250,13 +244,13 @@ Authorization: jwt <token>
 
 **端点**: `GET /api/classes/<int:class_id>/`
 
-**认证**: 需要 JWT Token
+**认证**: 需�?JWT Token
 
 **响应** (200):
 ```json
 {
   "id": 1,
-  "name": "算法竞赛班",
+  "name": "算法竞赛�?,
   "description": "专注于算法竞赛训练的班级",
   "coach": {
     "uid": "coach123",
@@ -274,7 +268,7 @@ Authorization: jwt <token>
 
 **端点**: `GET/POST /api/classes/<int:class_id>/members/`
 
-**认证**: 需要 JWT Token
+**认证**: 需�?JWT Token
 **权限**: GET - 所有成员可查看；POST - 仅教练可添加
 
 #### 9.1 获取成员列表
@@ -303,11 +297,11 @@ Authorization: jwt <token>
 
 **请求**: `POST /api/classes/1/members/`
 
-**请求体**:
+**请求�?*:
 ```json
 {
   "user_id": "student_uid",
-  "role": "student"  // student 或 coach
+  "role": "student"  // student �?coach
 }
 ```
 
@@ -330,11 +324,11 @@ Authorization: jwt <token>
 **查询参数**:
 | 参数 | 类型 | 说明 |
 |------|------|------|
-| `page` | int | 页码（默认 1） |
-| `page_size` | int | 每页数量（默认 20） |
+| `page` | int | 页码（默�?1�?|
+| `page_size` | int | 每页数量（默�?20�?|
 | `difficulty` | string | 难度过滤 (EASY/MEDIUM/HARD) |
 | `tag` | string | 标签过滤 |
-| `search` | string | 搜索关键词 |
+| `search` | string | 搜索关键�?|
 
 **响应** (200):
 ```json
@@ -370,8 +364,8 @@ Authorization: jwt <token>
   "id": "A001",
   "title": "A+B Problem",
   "description": "## 题目描述\n\n计算 A + B 的和...",
-  "input_format": "两个整数 A 和 B",
-  "output_format": "输出 A + B 的结果",
+  "input_format": "两个整数 A �?B",
+  "output_format": "输出 A + B 的结�?,
   "sample_input": "1 2",
   "sample_output": "3",
   "difficulty": "EASY",
@@ -396,7 +390,7 @@ Authorization: jwt <token>
 
 **认证**: 需要管理员权限
 
-**请求体**:
+**请求�?*:
 ```json
 {
   "title": "New Problem",
@@ -432,10 +426,10 @@ Authorization: jwt <token>
 
 **认证**: 需要管理员权限
 
-**请求体**:
+**请求�?*:
 ```json
 {
-  "name": "动态规划",
+  "name": "动态规�?,
   "slug": "dp"
 }
 ```
@@ -446,7 +440,7 @@ Authorization: jwt <token>
   "code": 201,
   "message": "创建成功",
   "data": {
-    "name": "动态规划",
+    "name": "动态规�?,
     "slug": "dp",
     "problem_count": 0
   }
@@ -464,7 +458,7 @@ Authorization: jwt <token>
 {
   "count": 15,
   "results": [
-    {"name": "动态规划", "slug": "dp", "problem_count": 50},
+    {"name": "动态规�?, "slug": "dp", "problem_count": 50},
     {"name": "图论", "slug": "graph", "problem_count": 30},
     {"name": "数学", "slug": "math", "problem_count": 40}
   ]
@@ -477,7 +471,7 @@ Authorization: jwt <token>
 
 **端点**: `GET /api/problems/<str:problem_id>/testcases/`
 
-**认证**: 需要 JWT Token
+**认证**: 需�?JWT Token
 
 **响应** (200):
 ```json
@@ -539,7 +533,7 @@ testcases.zip
 
 **认证**: 需要管理员权限
 
-**请求体**:
+**请求�?*:
 ```json
 {
   "testcase_ids": [1, 2, 3]
@@ -559,15 +553,15 @@ testcases.zip
 
 ---
 
-## ⚡ 代码评测
+## �?代码评测
 
 ### 1. 提交代码
 
 **端点**: `POST /api/submissions/submit/`
 
-**认证**: 需要 JWT Token
+**认证**: 需�?JWT Token
 
-**请求体**:
+**请求�?*:
 ```json
 {
   "problem_id": "A001",
@@ -587,31 +581,28 @@ testcases.zip
 {
   "submission_id": "sub_abc123",
   "status": "PENDING",
-  "message": "提交成功，正在评测..."
+  "message": "提交成功，正在评�?.."
 }
 ```
 
 **评测流程**:
-1. 创建 Submission 记录（status=PENDING）
-2. 同步调用评测系统
+1. 创建 Submission 记录（status=PENDING�?2. 同步调用评测系统
 3. 执行所有测试点
-4. 更新 Submission 状态
-5. 返回最终结果
-
+4. 更新 Submission 状�?5. 返回最终结�?
 ---
 
 ### 2. 获取提交列表
 
 **端点**: `GET /api/submissions/`
 
-**认证**: 需要 JWT Token
+**认证**: 需�?JWT Token
 
 **查询参数**:
 | 参数 | 类型 | 说明 |
 |------|------|------|
 | `page` | int | 页码 |
 | `problem_id` | string | 题目 ID 过滤 |
-| `status` | string | 状态过滤 (AC/WA/TLE/...) |
+| `status` | string | 状态过�?(AC/WA/TLE/...) |
 | `language` | string | 语言过滤 |
 
 **响应** (200):
@@ -648,7 +639,7 @@ testcases.zip
 
 **端点**: `GET /api/submissions/{submission_id}/`
 
-**认证**: 需要 JWT Token
+**认证**: 需�?JWT Token
 
 **响应** (200):
 ```json
@@ -691,17 +682,17 @@ testcases.zip
 }
 ```
 
-**评测状态说明**:
+**评测状态说�?*:
 
-| 状态 | 含义 |
+| 状�?| 含义 |
 |------|------|
 | `PENDING` | 等待评测 |
-| `JUDGING` | 评测中 |
+| `JUDGING` | 评测�?|
 | `ACCEPTED` | 答案正确 |
 | `WRONG_ANSWER` | 答案错误 |
 | `TIME_LIMIT_EXCEEDED` | 超时 |
-| `MEMORY_LIMIT_EXCEEDED` | 超内存 |
-| `RUNTIME_ERROR` | 运行时错误 |
+| `MEMORY_LIMIT_EXCEEDED` | 超内�?|
+| `RUNTIME_ERROR` | 运行时错�?|
 | `COMPILATION_ERROR` | 编译错误 |
 | `SYSTEM_ERROR` | 系统错误 |
 
@@ -713,13 +704,13 @@ testcases.zip
 
 **端点**: `POST /api/ai/chat/`
 
-**认证**: 需要 JWT Token
+**认证**: 需�?JWT Token
 
-**请求体**:
+**请求�?*:
 ```json
 {
   "question": "什么是动态规划？",
-  "use_rag": true,  // 是否使用 RAG 模式，默认 true
+  "use_rag": true,  // 是否使用 RAG 模式，默�?true
   "top_k": 5        // 检索文档数量，默认 5
 }
 ```
@@ -727,11 +718,11 @@ testcases.zip
 **响应** (200):
 ```json
 {
-  "answer": "动态规划是一种算法设计技术...",
+  "answer": "动态规划是一种算法设计技�?..",
   "sources": [
     {
       "id": "kb_abc123",
-      "title": "动态规划入门",
+      "title": "动态规划入�?,
       "type": "algorithm",
       "similarity": 0.95
     }
@@ -743,22 +734,20 @@ testcases.zip
 ```
 
 **配额限制**:
-- 每日限额：50 次
-- 频率限制：60秒内最多 10 次
-
+- 每日限额�?0 �?- 频率限制�?0秒内最�?10 �?
 ---
 
 ### 2. 获取对话历史列表
 
 **端点**: `GET /api/ai/history/?limit=50&offset=0`
 
-**认证**: 需要 JWT Token
+**认证**: 需�?JWT Token
 
 **查询参数**:
 | 参数 | 类型 | 说明 |
 |------|------|------|
-| `limit` | int | 每页数量（默认 50） |
-| `offset` | int | 偏移量（默认 0） |
+| `limit` | int | 每页数量（默�?50�?|
+| `offset` | int | 偏移量（默认 0�?|
 
 **响应** (200):
 ```json
@@ -768,7 +757,7 @@ testcases.zip
     {
       "id": 1,
       "question": "什么是动态规划？",
-      "answer": "动态规划是一种...",
+      "answer": "动态规划是一�?..",
       "sources": [...],
       "tokens_used": 150,
       "created_at": "2026-04-21T10:00:00"
@@ -783,7 +772,7 @@ testcases.zip
 
 **端点**: `GET /api/ai/history/<int:chat_id>/`
 
-**认证**: 需要 JWT Token
+**认证**: 需�?JWT Token
 
 **路径参数**:
 | 参数 | 类型 | 说明 |
@@ -795,7 +784,7 @@ testcases.zip
 {
   "id": 1,
   "question": "什么是动态规划？",
-  "answer": "动态规划是一种算法设计技术...",
+  "answer": "动态规划是一种算法设计技�?..",
   "sources": [
     {
       "id": "kb_abc123",
@@ -818,12 +807,12 @@ testcases.zip
 
 **端点**: `DELETE /api/ai/history/clear/`
 
-**认证**: 需要 JWT Token
+**认证**: 需�?JWT Token
 
 **响应** (200):
 ```json
 {
-  "message": "已清空 30 条对话记录"
+  "message": "已清�?30 条对话记�?
 }
 ```
 
@@ -833,7 +822,7 @@ testcases.zip
 
 **端点**: `GET /api/ai/usage/`
 
-**认证**: 需要 JWT Token
+**认证**: 需�?JWT Token
 
 **响应** (200):
 ```json
@@ -849,22 +838,20 @@ testcases.zip
 
 ---
 
-### 6. 知识库管理
-
-#### 6.1 获取知识库列表
-
+### 6. 知识库管�?
+#### 6.1 获取知识库列�?
 **端点**: `GET /api/ai/knowledge/?page=1&page_size=20&doc_type=algorithm`
 
-**认证**: 需要 JWT Token
+**认证**: 需�?JWT Token
 
 **查询参数**:
 | 参数 | 类型 | 说明 |
 |------|------|------|
-| `page` | int | 页码（默认 1） |
-| `page_size` | int | 每页数量（默认 20） |
-| `doc_type` | string | 按类型过滤 |
-| `error_type` | string | 按错误类型过滤 |
-| `is_active` | boolean | 按激活状态过滤 |
+| `page` | int | 页码（默�?1�?|
+| `page_size` | int | 每页数量（默�?20�?|
+| `doc_type` | string | 按类型过�?|
+| `error_type` | string | 按错误类型过�?|
+| `is_active` | boolean | 按激活状态过�?|
 
 **响应** (200):
 ```json
@@ -893,20 +880,18 @@ testcases.zip
 
 ---
 
-#### 6.2 创建知识库文档
-
+#### 6.2 创建知识库文�?
 **端点**: `POST /api/ai/knowledge/`
 
-**认证**: 需要 JWT Token
-**权限**: 仅教练或管理员
-
-**请求体**:
+**认证**: 需�?JWT Token
+**权限**: 仅教练或管理�?
+**请求�?*:
 ```json
 {
   "title": "动态规划基础教程",
-  "content": "动态规划是一种算法思想，用于解决具有最优子结构和重叠子问题性质的问题。",
+  "content": "动态规划是一种算法思想，用于解决具有最优子结构和重叠子问题性质的问题�?,
   "doc_type": "algorithm",
-  "tag_names": ["DP", "算法", "动态规划"],
+  "tag_names": ["DP", "算法", "动态规�?],
   "problem": null,
   "error_type": "",
   "source": "",
@@ -917,19 +902,19 @@ testcases.zip
 **请求参数**:
 | 参数 | 类型 | 必填 | 说明 |
 |------|------|------|------|
-| title | string | 是 | 文档标题 |
-| content | string | 是 | 文档内容（支持 Markdown） |
-| doc_type | string | 是 | 文档类型：algorithm/solution/template/concept/error_solution |
-| tag_names | array | 否 | 标签名称列表 |
-| problem | integer | 否 | 关联的题目 ID |
-| error_type | string | 否 | 错误类型（WA/TLE/MLE/RE/CE） |
-| source | string | 否 | 来源说明 |
-| is_active | boolean | 否 | 是否启用，默认 true |
+| title | string | �?| 文档标题 |
+| content | string | �?| 文档内容（支�?Markdown�?|
+| doc_type | string | �?| 文档类型：algorithm/solution/template/concept/error_solution |
+| tag_names | array | �?| 标签名称列表 |
+| problem | integer | �?| 关联的题�?ID |
+| error_type | string | �?| 错误类型（WA/TLE/MLE/RE/CE�?|
+| source | string | �?| 来源说明 |
+| is_active | boolean | �?| 是否启用，默�?true |
 
 **响应** (201):
 ```json
 {
-  "message": "知识库文档创建成功",
+  "message": "知识库文档创建成�?,
   "data": {
     "id": 1,
     "title": "动态规划基础教程",
@@ -944,67 +929,59 @@ testcases.zip
 }
 ```
 
-**注意**: 创建成功后会自动同步到向量数据库。
-
+**注意**: 创建成功后会自动同步到向量数据库�?
 ---
 
-#### 6.3 获取知识库详情
-
+#### 6.3 获取知识库详�?
 **端点**: `GET /api/ai/knowledge/<int:kb_id>/`
 
-**认证**: 需要 JWT Token
+**认证**: 需�?JWT Token
 
 **响应** (200): 同创建接口的 data 字段
 
 ---
 
-#### 6.4 更新知识库文档
-
+#### 6.4 更新知识库文�?
 **端点**: `PUT /api/ai/knowledge/<int:kb_id>/`
 
-**认证**: 需要 JWT Token
-**权限**: 仅教练或管理员
-
-**请求体** (部分更新):
+**认证**: 需�?JWT Token
+**权限**: 仅教练或管理�?
+**请求�?* (部分更新):
 ```json
 {
-  "title": "动态规划基础教程（已更新）",
-  "tag_names": ["DP", "算法", "动态规划", "进阶"]
+  "title": "动态规划基础教程（已更新�?,
+  "tag_names": ["DP", "算法", "动态规�?, "进阶"]
 }
 ```
 
 **响应** (200):
 ```json
 {
-  "message": "知识库文档更新成功",
+  "message": "知识库文档更新成�?,
   "data": {
     "id": 1,
-    "title": "动态规划基础教程（已更新）",
+    "title": "动态规划基础教程（已更新�?,
     ...
   }
 }
 ```
 
-**注意**: 更新成功后会自动同步到向量数据库。
-
+**注意**: 更新成功后会自动同步到向量数据库�?
 ---
 
-#### 6.5 删除知识库文档
-
+#### 6.5 删除知识库文�?
 **端点**: `DELETE /api/ai/knowledge/<int:kb_id>/`
 
-**认证**: 需要 JWT Token
-**权限**: 仅教练或管理员
-
+**认证**: 需�?JWT Token
+**权限**: 仅教练或管理�?
 **响应** (200):
 ```json
 {
-  "message": "知识库文档删除成功"
+  "message": "知识库文档删除成�?
 }
 ```
 
-**注意**: 删除成功后会自动从向量数据库中删除。
-
+**注意**: 删除成功后会自动从向量数据库中删除�?
 ---
 
 ### 7. 学情分析报告
@@ -1013,20 +990,19 @@ testcases.zip
 
 **端点**: `GET /api/ai/report/student/?days=7`
 
-**认证**: 需要 JWT Token
-**权限**: 仅学生可查看自己的报告
-
+**认证**: 需�?JWT Token
+**权限**: 仅学生可查看自己的报�?
 **查询参数**:
 | 参数 | 类型 | 说明 |
 |------|------|------|
-| days | int | 统计天数（默认 7） |
+| days | int | 统计天数（默�?7�?|
 
 **响应** (200):
 ```json
 {
-  "report_type": "学生个性报告",
-  "period": "2026-04-16 至 2026-04-23",
-  "summary": "本周你完成了 15 道题目，正确率 73%...",
+  "report_type": "学生个性报�?,
+  "period": "2026-04-16 �?2026-04-23",
+  "summary": "本周你完成了 15 道题目，正确�?73%...",
   "statistics": {
     "total_submissions": 20,
     "accepted_count": 15,
@@ -1039,7 +1015,7 @@ testcases.zip
     }
   },
   "recommendations": [
-    "建议加强动态规划练习",
+    "建议加强动态规划练�?,
     "注意边界条件处理"
   ],
   "generated_at": "2026-04-23T19:00:00"
@@ -1047,17 +1023,14 @@ testcases.zip
 ```
 
 **错误响应**:
-- `403 Forbidden` - 非学生用户无权访问
-
+- `403 Forbidden` - 非学生用户无权访�?
 ---
 
-#### 7.2 班级共性学情报告
-
+#### 7.2 班级共性学情报�?
 **端点**: `GET /api/ai/report/class/<int:class_id>/?days=7`
 
-**认证**: 需要 JWT Token
-**权限**: 仅该班级的教练或管理员
-
+**认证**: 需�?JWT Token
+**权限**: 仅该班级的教练或管理�?
 **路径参数**:
 | 参数 | 类型 | 说明 |
 |------|------|------|
@@ -1066,14 +1039,14 @@ testcases.zip
 **查询参数**:
 | 参数 | 类型 | 说明 |
 |------|------|------|
-| days | int | 统计天数（默认 7） |
+| days | int | 统计天数（默�?7�?|
 
 **响应** (200):
 ```json
 {
-  "report_type": "班级共性报告",
-  "class_name": "算法竞赛班",
-  "period": "2026-04-16 至 2026-04-23",
+  "report_type": "班级共性报�?,
+  "class_name": "算法竞赛�?,
+  "period": "2026-04-16 �?2026-04-23",
   "summary": "本周班级整体表现良好，平均正确率 68%...",
   "statistics": {
     "total_students": 30,
@@ -1089,37 +1062,33 @@ testcases.zip
     ]
   },
   "recommendations": [
-    "建议组织动态规划专题讲解",
-    "重点关注时间复杂度优化"
+    "建议组织动态规划专题讲�?,
+    "重点关注时间复杂度优�?
   ],
   "generated_at": "2026-04-23T19:00:00"
 }
 ```
 
 **错误响应**:
-- `403 Forbidden` - 无权查看此班级报告
-- `404 Not Found` - 班级不存在
-
+- `403 Forbidden` - 无权查看此班级报�?- `404 Not Found` - 班级不存�?
 ---
 
 ### 8. 错误解决方案
 
 **端点**: `GET /api/ai/error-solution/<int:submission_id>/`
 
-**认证**: 需要 JWT Token
+**认证**: 需�?JWT Token
 
 **路径参数**:
 | 参数 | 类型 | 说明 |
 |------|------|------|
 | submission_id | int | 提交记录 ID |
 
-**功能说明**: 当学生提交代码判题失败时，系统自动根据错误类型从知识库中检索相关解决方案。
-
+**功能说明**: 当学生提交代码判题失败时，系统自动根据错误类型从知识库中检索相关解决方案�?
 **限流说明**: 
-- ⚠️ **与 AI 智能问答共用每日配额**（50 次/天）
-- 每次调用消耗 1 次配额，但不消耗 LLM token
-- 频率限制：60秒内最多 10 次
-
+- ⚠️ **�?AI 智能问答共用每日配额**�?0 �?天）
+- 每次调用消�?1 次配额，但不消�?LLM token
+- 频率限制�?0秒内最�?10 �?
 **响应** (200):
 ```json
 {
@@ -1141,24 +1110,23 @@ testcases.zip
 | 字段 | 类型 | 说明 |
 |------|------|------|
 | submission_id | int | 提交记录 ID |
-| solutions | array | 解决方案列表（最多 3 个） |
+| solutions | array | 解决方案列表（最�?3 个） |
 | count | int | 解决方案数量 |
-| remaining_quota | int | ⭐ 剩余配额次数 |
+| remaining_quota | int | �?剩余配额次数 |
 
 **错误响应** (429 - 配额超限):
 ```json
 {
-  "error": "今日配额已用完 (50/50)",
+  "error": "今日配额已用�?(50/50)",
   "remaining": 0,
   "reset_time": "明天 00:00"
 }
 ```
 
-**使用场景**: 学生提交后收到 WA/TLE 等错误时，调用此接口获取针对性的解决方案。
-
+**使用场景**: 学生提交后收�?WA/TLE 等错误时，调用此接口获取针对性的解决方案�?
 ---
 
-## ❌ 错误处理
+## �?错误处理
 
 ### 通用错误格式
 
@@ -1180,10 +1148,10 @@ testcases.zip
 | 201 | 创建成功 |
 | 400 | 请求参数错误 |
 | 401 | 未认证（Token 无效或缺失） |
-| 403 | 无权限 |
-| 404 | 资源不存在 |
+| 403 | 无权�?|
+| 404 | 资源不存�?|
 | 429 | 频率限制 |
-| 500 | 服务器内部错误 |
+| 500 | 服务器内部错�?|
 
 ### 常见错误
 
@@ -1191,11 +1159,11 @@ testcases.zip
 
 ```json
 {
-  "detail": "未提供身份验证凭据"
+  "detail": "未提供身份验证凭�?
 }
 ```
 
-**解决**: 在请求头中添加 `Authorization: jwt <token>`
+**解决**: 在请求头中添�?`Authorization: jwt <token>`
 
 ---
 
@@ -1203,7 +1171,7 @@ testcases.zip
 
 ```json
 {
-  "detail": "您没有执行此操作的权限"
+  "detail": "您没有执行此操作的权�?
 }
 ```
 
@@ -1224,12 +1192,12 @@ testcases.zip
 
 ---
 
-#### 4. 资源不存在 (404)
+#### 4. 资源不存�?(404)
 
 ```json
 {
   "code": 404,
-  "message": "题目不存在"
+  "message": "题目不存�?
 }
 ```
 
@@ -1249,8 +1217,7 @@ response = requests.post('http://localhost:8000/auth/login/', json={
 })
 token = response.json()['token']
 
-# 设置认证头
-headers = {
+# 设置认证�?headers = {
     'Authorization': f'jwt {token}',
     'Content-Type': 'application/json'
 }
@@ -1322,6 +1289,6 @@ const result = await submitResponse.json();
 
 <div align="center">
 
-**返回导航** → [README](README.md)
+**返回导航** �?[README](README.md)
 
 </div>

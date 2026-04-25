@@ -1,11 +1,8 @@
-# 开发指南
-
-> 🛠️ ZJOJ 项目开发规范和最佳实践
-
+# 开发指�?
+> 🛠�?ZJOJ 项目开发规范和最佳实�?
 ---
 
-## 快速开始
-
+## 快速开�?
 ### 环境要求
 
 - **Python**: 3.8+
@@ -13,8 +10,7 @@
 - **MySQL**: 8.0+
 - **Docker**: 20.10+（推荐）
 
-### 开发环境搭建
-
+### 开发环境搭�?
 #### 方式一：Docker（推荐）
 
 ```bash
@@ -24,8 +20,7 @@ cd ZJOJ-backend
 docker compose up -d
 ```
 
-#### 方式二：本地开发
-
+#### 方式二：本地开�?
 ```bash
 # 1. 克隆项目
 git clone git@github.com:hhdhhy/ZJOJ-backend.git
@@ -39,14 +34,12 @@ source .venv/bin/activate  # Linux/Mac
 # 3. 安装依赖
 pip install -r requirements.txt
 
-# 4. 配置数据库
-# 编辑 ZJOJ/settings.py 或创建 .env 文件
+# 4. 配置数据�?# 编辑 ZJOJ/settings.py 或创�?.env 文件
 
 # 5. 数据迁移
 python manage.py migrate
 
-# 6. 创建管理员
-python manage.py createsuperuser
+# 6. 创建管理�?python manage.py createsuperuser
 
 # 7. 启动服务
 python manage.py runserver
@@ -58,27 +51,21 @@ python manage.py runserver
 
 ### Python 代码风格
 
-遵循 PEP 8 规范：
-
+遵循 PEP 8 规范�?
 ```python
-# ✅ 好的命名
+# �?好的命名
 def get_user_profile(user_id: str) -> dict:
     """获取用户资料"""
     pass
 
-# ❌ 不好的命名
-def getUser(u):
+# �?不好的命�?def getUser(u):
     pass
 ```
 
-**要点**：
-- 使用 snake_case 命名函数和变量
-- 使用 PascalCase 命名类
-- 添加类型注解
+**要点**�?- 使用 snake_case 命名函数和变�?- 使用 PascalCase 命名�?- 添加类型注解
 - 编写 docstring
 
-### Django 最佳实践
-
+### Django 最佳实�?
 #### 1. 模型设计
 
 ```python
@@ -97,8 +84,7 @@ class Problem(models.Model):
 
 #### 2. 视图设计
 
-使用 DRF 的 ViewSet：
-
+使用 DRF �?ViewSet�?
 ```python
 from rest_framework import viewsets, permissions
 
@@ -140,14 +126,14 @@ class ProblemSerializer(serializers.ModelSerializer):
 ```
 ZJOJ-backend/
 ├── apps/                  # 应用模块
-│   ├── ojauth/           # 用户认证
-│   ├── problem/          # 题目管理
-│   ├── submission/       # 提交记录
-│   └── ai_assistant/     # AI助手
+�?  ├── ojauth/           # 用户认证
+�?  ├── problem/          # 题目管理
+�?  ├── submission/       # 提交记录
+�?  └── ai_assistant/     # AI助手
 ├── ZJOJ/                 # 项目配置
-│   ├── settings.py       # 基础配置
-│   ├── urls.py           # URL路由
-│   └── wsgi.py           # WSGI入口
+�?  ├── settings.py       # 基础配置
+�?  ├── urls.py           # URL路由
+�?  └── wsgi.py           # WSGI入口
 ├── deploy/               # 部署脚本
 ├── docs/                 # 文档
 ├── manage.py             # Django管理命令
@@ -156,8 +142,7 @@ ZJOJ-backend/
 
 ---
 
-## API 开发规范
-
+## API 开发规�?
 ### RESTful 设计
 
 | 方法 | 路径 | 说明 |
@@ -170,8 +155,7 @@ ZJOJ-backend/
 
 ### 响应格式
 
-**成功响应**：
-```json
+**成功响应**�?```json
 {
   "count": 100,
   "next": "http://api.example.com/problems/?page=2",
@@ -180,12 +164,11 @@ ZJOJ-backend/
 }
 ```
 
-**错误响应**：
-```json
+**错误响应**�?```json
 {
   "error": "验证失败",
   "details": {
-    "title": ["此字段必填"]
+    "title": ["此字段必�?]
   }
 }
 ```
@@ -196,8 +179,7 @@ ZJOJ-backend/
 from rest_framework.permissions import IsAuthenticated
 
 class SubmissionViewSet(viewsets.ModelViewSet):
-    permission_classes = [IsAuthenticated]  # 需要登录
-```
+    permission_classes = [IsAuthenticated]  # 需要登�?```
 
 #### 角色权限控制
 
@@ -212,8 +194,7 @@ class ClassView(APIView):
 
 详见：[权限系统文档](06-MODULES/permission-system.md)
 
-公开接口需显式豁免：
-
+公开接口需显式豁免�?
 ```python
 from rest_framework.permissions import AllowAny
 
@@ -245,26 +226,21 @@ class ProblemTestCase(TestCase):
         self.assertEqual(problem.title, 'Test Problem')
 ```
 
-运行测试：
-```bash
+运行测试�?```bash
 python manage.py test
 ```
 
 ---
 
-## Git 工作流
-
+## Git 工作�?
 ### 分支策略
 
-- `main` - 主分支（生产环境）
-- `develop` - 开发分支
-- `feature/*` - 功能分支
-- `hotfix/*` - 紧急修复
-
+- `main` - 主分支（生产环境�?- `develop` - 开发分�?- `feature/*` - 功能分支
+- `hotfix/*` - 紧急修�?
 ### 提交规范
 
 ```bash
-# 格式：<type>: <subject>
+# 格式�?type>: <subject>
 
 # 示例
 git commit -m "feat: add problem search feature"
@@ -272,28 +248,22 @@ git commit -m "fix: resolve login timeout issue"
 git commit -m "docs: update API documentation"
 ```
 
-**Type 类型**：
-- `feat`: 新功能
-- `fix`: 修复bug
+**Type 类型**�?- `feat`: 新功�?- `fix`: 修复bug
 - `docs`: 文档更新
 - `style`: 代码格式
 - `refactor`: 重构
 - `test`: 测试相关
-- `chore`: 构建/工具链
-
+- `chore`: 构建/工具�?
 ---
 
-## 调试技巧
-
+## 调试技�?
 ### Django Debug Toolbar
 
-安装：
-```bash
+安装�?```bash
 pip install django-debug-toolbar
 ```
 
-配置 `settings.py`：
-```python
+配置 `settings.py`�?```python
 INSTALLED_APPS = [
     'debug_toolbar',
 ]
@@ -326,19 +296,17 @@ LOGGING = {
 
 ## 性能优化
 
-### 数据库查询优化
-
+### 数据库查询优�?
 ```python
-# ❌ N+1 查询问题
+# �?N+1 查询问题
 problems = Problem.objects.all()
 for p in problems:
     print(p.creator.username)  # 每次循环都查询数据库
 
-# ✅ 使用 select_related
+# �?使用 select_related
 problems = Problem.objects.select_related('creator').all()
 for p in problems:
-    print(p.creator.username)  # 只查询一次
-```
+    print(p.creator.username)  # 只查询一�?```
 
 ### 缓存
 
@@ -358,10 +326,9 @@ def get_problem_list():
 
 ## 常见问题
 
-### 1. 数据库连接失败
-
+### 1. 数据库连接失�?
 ```bash
-# 检查 MySQL 是否运行
+# 检�?MySQL 是否运行
 sudo systemctl status mysql
 
 # 测试连接
@@ -377,7 +344,7 @@ python manage.py makemigrations
 python manage.py migrate
 ```
 
-### 3. 静态文件 404
+### 3. 静态文�?404
 
 ```bash
 python manage.py collectstatic

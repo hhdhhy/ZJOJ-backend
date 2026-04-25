@@ -159,9 +159,9 @@ CELERY_TIMEZONE = 'Asia/Shanghai'  # 时区
 CELERY_TASK_TRACK_STARTED = True  # 跟踪任务开始状态
 CELERY_TASK_TIME_LIMIT = 30 * 60  # 任务超时时间（30分钟）
 
-# HydroJudge Configuration
-HYDRO_JUDGE_URL = 'http://localhost:5050'  # HydroJudge 服务地址
-HYDRO_JUDGE_TIMEOUT = 30  # 超时时间（秒）
+# go-judge Configuration
+GO_JUDGE_URL = 'http://localhost:5050'  # go-judge 服务地址
+GO_JUDGE_TIMEOUT = 30  # 超时时间（秒）
 
 # AI Assistant Configuration
 EMBEDDING_CACHE_DIR = os.getenv('EMBEDDING_CACHE_DIR', 'E:/ai_models/cache')

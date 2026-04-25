@@ -1,5 +1,5 @@
 """
-HydroJudge API 客户端
+go-judge API 客户端
 负责与评测适配器通信
 """
 import requests
@@ -9,12 +9,12 @@ from django.conf import settings
 from .adapter import judge_adapter
 
 
-class HydroJudgeClient:
+class GoJudgeClient:
     """
-    HydroJudge 评测客户端
+    go-judge 评测客户端
     
     使用示例：
-        client = HydroJudgeClient()
+        client = GoJudgeClient()
         result = client.judge(submission)
     """
     
@@ -138,45 +138,3 @@ class HydroJudgeClient:
             raise e
         
         return test_cases
-        """
-        根据所有测试点结果确定最终评测结果
-        
-        优先级：CE > SE > RE > TLE > MLE > WA > AC
-        
-        Args:
-            test_cases: 测试点结果列表
-            
-        Returns:
-            str: 最终评测结果
-        """
-        if not test_cases:
-            return 'SE'  # System Error
-        
-        # 检查是否有编译错误或系统错误
-        for tc in test_cases:
-            status = tc.get('status', '')
-            if status in ['CE', 'SE']:
-                return status
-        
-        # 检查是否有运行时错误
-        has_re = any(tc.get('status') == 'RE' for tc in test_cases)
-        if has_re:
-            return 'RE'
-        
-        # 检查是否有超时
-        has_tle = any(tc.get('status') == 'TLE' for tc in test_cases)
-        if has_tle:
-            return 'TLE'
-        
-        # 检查是否有超内存
-        has_mle = any(tc.get('status') == 'MLE' for tc in test_cases)
-        if has_mle:
-            return 'MLE'
-        
-        # 检查是否有答案错误
-        has_wa = any(tc.get('status') == 'WA' for tc in test_cases)
-        if has_wa:
-            return 'WA'
-        
-        # 全部通过
-        return 'AC'

@@ -40,7 +40,7 @@ int main() {
             maxVal = num;   // 更新擂主
         }
     }
-    cout << "最大值: " << maxVal << endl;
+    cout << "最大�? " << maxVal << endl;
 
     return 0;
 }

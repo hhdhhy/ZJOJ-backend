@@ -135,7 +135,11 @@
       <workItem from="1776615357317" duration="8426000" />
       <workItem from="1776668582359" duration="22331000" />
       <workItem from="1776776607297" duration="16527000" />
-      <workItem from="1776962004655" duration="6789000" />
+      <workItem from="1776962004655" duration="9622000" />
+      <workItem from="1777046520275" duration="2000" />
+      <workItem from="1777134811187" duration="56000" />
+      <workItem from="1777134995225" duration="515000" />
+      <workItem from="1777135753675" duration="7716000" />
     </task>
     <task id="LOCAL-00001" summary="chore(project): 初始化 Django 项目配置&#10;&#10;- 添加了 .idea 目录下的项目配置文件（misc.xml, modules.xml, profiles_settings.xml, vcs.xml, workspace.xml, ZJOJ.iml）&#10;- 创建了 apps/ojauth 应用的基本文件结构（admin.py, apps.py, models.py, tests.py, views.py）&#10;- 添加了 Django 项目的主配置文件（asgi.py, wsgi.py, settings.py, urls.py）&#10;- 配置了数据库连接（MySQL）和 CORS 设置&#10;- 设置了 Django 管理命令入口文件 manage.py&#10;- 配置了 Django 模板目录和静态文件设置&#10;- 添加了 Python 3.13 运行环境配置">
       <option name="closed" value="true" />

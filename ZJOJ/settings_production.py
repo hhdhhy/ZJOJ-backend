@@ -115,9 +115,9 @@ LOGGING = {
 EMBEDDING_CACHE_DIR = '/home/ubuntu/ai_models/cache'
 CHROMA_DB_PATH = '/home/ubuntu/ai_data/chroma_db'
 
-# HydroJudge配置
-HYDRO_JUDGE_URL = 'http://localhost:5050'
-HYDRO_JUDGE_TIMEOUT = 30
+# go-judge配置
+GO_JUDGE_URL = 'http://localhost:5050'
+GO_JUDGE_TIMEOUT = 30
 
 # ==================== Celery配置 ====================
 # 生产环境使用Redis

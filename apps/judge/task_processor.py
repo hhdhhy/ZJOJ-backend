@@ -6,7 +6,7 @@ import logging
 from datetime import datetime
 from django.db import transaction
 from apps.problem.models import Submission, TestCaseResult
-from apps.judge.hydro_client import HydroJudgeClient
+from apps.judge.gojudge_client import GoJudgeClient
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +21,7 @@ class JudgeTaskProcessor:
     """
     
     def __init__(self):
-        self.client = HydroJudgeClient()
+        self.client = GoJudgeClient()
     
     def process(self, submission_id):
         """
@@ -42,7 +42,7 @@ class JudgeTaskProcessor:
             
             logger.info(f'开始评测试卷 #{submission_id}')
             
-            # 调用 HydroJudge 进行评测
+            # 调用 go-judge 进行评测
             result = self.client.judge(submission)
             
             if result['status'] == 'success':

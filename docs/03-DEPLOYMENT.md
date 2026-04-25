@@ -11,33 +11,24 @@
 - [传统部署](#传统部署)
 - [部署架构](#部署架构)
 - [系统要求](#系统要求)
-- [快速部署](#快速部署)
+- [快速部署](#快速部�?
 - [详细步骤](#详细步骤)
 - [进程管理](#进程管理)
-- [监控与日志](#监控与日志)
+- [监控与日志](#监控与日�?
 - [常见问题](#常见问题)
 
 ---
 
 ## 🎯 部署方式选择
 
-ZJOJ 提供两种部署方式：
-
-### 方式一：Docker Compose 部署（⭐ 推荐）
-
-**优点**：
-- ✅ 一键部署，5分钟完成
-- ✅ 环境隔离，无依赖冲突
-- ✅ 易于维护和升级
-- ✅ 自动管理数据库和静态文件
-
-**适用场景**：
-- 快速部署测试环境
-- 生产环境（推荐）
-- 不熟悉 Linux 系统管理的用户
-
-**快速开始**：
-```bash
+ZJOJ 提供两种部署方式�?
+### 方式一：Docker Compose 部署（⭐ 推荐�?
+**优点**�?- �?一键部署，5分钟完成
+- �?环境隔离，无依赖冲突
+- �?易于维护和升�?- �?自动管理数据库和静态文�?
+**适用场景**�?- 快速部署测试环�?- 生产环境（推荐）
+- 不熟�?Linux 系统管理的用�?
+**快速开�?*�?```bash
 git clone git@github.com:hhdhhy/ZJOJ-backend.git
 cd ZJOJ-backend
 ./deploy/setup_env.sh
@@ -51,63 +42,32 @@ docker compose up -d
 
 ### 方式二：传统手动部署
 
-**优点**：
-- ✅ 完全控制每个组件
-- ✅ 可定制化程度高
-- ✅ 适合学习和理解系统架构
+**优点**�?- �?完全控制每个组件
+- �?可定制化程度�?- �?适合学习和理解系统架�?
+**缺点**�?- �?配置复杂，耗时�?- �?需要手动管理依�?- �?维护成本�?
+**适用场景**�?- 学习系统架构
+- 特殊定制需�?- 已有成熟运维体系
 
-**缺点**：
-- ❌ 配置复杂，耗时长
-- ❌ 需要手动管理依赖
-- ❌ 维护成本高
-
-**适用场景**：
-- 学习系统架构
-- 特殊定制需求
-- 已有成熟运维体系
-
-**快速开始**：见下方[详细步骤](#详细步骤)
+**快速开�?*：见下方[详细步骤](#详细步骤)
 
 ---
 
-> 💡 **建议**：大多数场景推荐使用 Docker 部署，简单高效且易于维护。
-
+> 💡 **建议**：大多数场景推荐使用 Docker 部署，简单高效且易于维护�?
 ---
 
-## 🏗️ 部署架构
+## 🏗�?部署架构
 
 ```
-                    ┌─────────────┐
-                    │   Client    │
-                    │  (Browser)  │
-                    └──────┬──────┘
-                           │ HTTPS
-                    ┌──────▼──────┐
-                    │   Nginx     │
-                    │  (Reverse   │
-                    │   Proxy)    │
-                    └──────┬──────┘
-                           │
-              ┌────────────┼────────────┐
-              │            │            │
-     ┌────────▼────┐ ┌────▼─────┐ ┌───▼────────┐
-     │  Gunicorn   │ │ go-judge │ │  ChromaDB  │
-     │  (Django)   │ │Sandbox   │ │ (Vector DB)│
-     └────────┬────┘ └────┬─────┘ └────────────┘
-              │            │
-     ┌────────▼────────────▼────────┐
-     │         MySQL 5.7+           │
-     │      (Primary Database)      │
-     └──────────────────────────────┘
-```
+                    ┌─────────────�?                    �?  Client    �?                    �? (Browser)  �?                    └──────┬──────�?                           �?HTTPS
+                    ┌──────▼──────�?                    �?  Nginx     �?                    �? (Reverse   �?                    �?  Proxy)    �?                    └──────┬──────�?                           �?              ┌────────────┼────────────�?              �?           �?           �?     ┌────────▼────�?┌────▼─────�?┌───▼────────�?     �? Gunicorn   �?�?go-judge �?�? ChromaDB  �?     �? (Django)   �?│Sandbox   �?�?(Vector DB)�?     └────────┬────�?└────┬─────�?└────────────�?              �?           �?     ┌────────▼────────────▼────────�?     �?        MySQL 5.7+           �?     �?     (Primary Database)      �?     └──────────────────────────────�?```
 
 ### 组件说明
 
-| 组件 | 用途 | 端口 |
+| 组件 | 用�?| 端口 |
 |------|------|------|
 | **Nginx** | 反向代理、静态文件、SSL | 8000/8443 |
 | **Gunicorn** | WSGI 服务器，运行 Django | 8000 (内部) |
-| **MySQL** | 主数据库 | 3306 (仅内部) |
+| **MySQL** | 主数据库 | 3306 (仅内�? |
 
 ---
 
@@ -115,9 +75,9 @@ docker compose up -d
 
 ### 硬件要求
 
-| 配置项 | 最低配置 | 推荐配置 |
+| 配置�?| 最低配�?| 推荐配置 |
 |--------|---------|---------|
-| **CPU** | 2核 | 4核+ |
+| **CPU** | 2�?| 4�? |
 | **内存** | 4GB | 8GB+ |
 | **磁盘** | 20GB | 50GB+ SSD |
 | **网络** | 1Mbps | 10Mbps+ |
@@ -134,15 +94,13 @@ docker compose up -d
 
 ---
 
-## 🚀 快速部署
-
-### Ubuntu 20.04 一键部署
-
+## 🚀 快速部�?
+### Ubuntu 20.04 一键部�?
 ```bash
 #!/bin/bash
 set -e
 
-echo "🚀 开始部署 ZJOJ..."
+echo "🚀 开始部�?ZJOJ..."
 
 # 1. 更新系统
 sudo apt update && sudo apt upgrade -y
@@ -174,14 +132,13 @@ cp .env.example .env
 python manage.py migrate
 python manage.py createsuperuser
 
-# 9. 收集静态文件
-python manage.py collectstatic --noinput
+# 9. 收集静态文�?python manage.py collectstatic --noinput
 
 # 10. 启动服务
 sudo systemctl start zjoj
 sudo systemctl enable zjoj
 
-echo "✅ 部署完成！"
+echo "�?部署完成�?
 echo "访问: http://your-server-ip"
 ```
 
@@ -189,8 +146,7 @@ echo "访问: http://your-server-ip"
 
 ## 📝 详细步骤
 
-### 1. 服务器准备
-
+### 1. 服务器准�?
 #### 1.1 更新系统
 
 ```bash
@@ -229,8 +185,7 @@ python3.10 --version
 # Ubuntu
 sudo apt install -y mysql-server
 
-# 启动并设置开机自启
-sudo systemctl start mysql
+# 启动并设置开机自�?sudo systemctl start mysql
 sudo systemctl enable mysql
 
 # 安全配置
@@ -259,10 +214,8 @@ npm --version
 
 ---
 
-### 3. 配置数据库
-
-#### 3.1 创建数据库
-
+### 3. 配置数据�?
+#### 3.1 创建数据�?
 ```bash
 mysql -u root -p
 ```
@@ -330,8 +283,7 @@ cp .env.example .env
 nano .env
 ```
 
-关键配置：
-```env
+关键配置�?```env
 DEBUG=False
 SECRET_KEY=your-secret-key-here
 ALLOWED_HOSTS=yourdomain.com,www.yourdomain.com
@@ -361,8 +313,7 @@ python manage.py collectstatic --noinput
 # 使用 Hydro OJ 官方脚本
 sudo su -c 'LANG=zh . <(curl https://hydro.ac/setup.sh) --judge'
 
-# 检查服务状态
-sudo pm2 status | grep hydro-sandbox
+# 检查服务状�?sudo pm2 status | grep go-judge
 
 # 测试 API
 curl -s http://localhost:5050/run -X POST \
@@ -381,8 +332,7 @@ server {
     listen 80;
     server_name yourdomain.com www.yourdomain.com;
 
-    # 静态文件
-    location /static/ {
+    # 静态文�?    location /static/ {
         alias /opt/zjoj/staticfiles/;
         expires 30d;
     }
@@ -404,8 +354,7 @@ server {
 }
 ```
 
-启用配置：
-
+启用配置�?
 ```bash
 sudo ln -s /etc/nginx/sites-available/zjoj /etc/nginx/sites-enabled/
 sudo nginx -t
@@ -443,8 +392,7 @@ RestartSec=5
 WantedBy=multi-user.target
 ```
 
-启动服务：
-
+启动服务�?
 ```bash
 sudo systemctl daemon-reload
 sudo systemctl start zjoj
@@ -471,14 +419,13 @@ sudo certbot renew --dry-run
 
 ## 🔧 进程管理
 
-### 查看服务状态
-
+### 查看服务状�?
 ```bash
 # Django (Gunicorn)
 sudo systemctl status zjoj
 
 # go-judge
-sudo pm2 status | grep hydro-sandbox
+sudo pm2 status | grep go-judge
 
 # Nginx
 sudo systemctl status nginx
@@ -494,7 +441,7 @@ sudo systemctl status mysql
 sudo systemctl restart zjoj
 
 # 重启 go-judge
-sudo pm2 restart hydro-sandbox
+sudo pm2 restart go-judge
 
 # 重启 Nginx
 sudo systemctl restart nginx
@@ -507,7 +454,7 @@ sudo systemctl restart nginx
 sudo journalctl -u zjoj -f
 
 # go-judge 日志
-sudo pm2 logs hydro-sandbox
+sudo pm2 logs go-judge
 
 # Nginx 日志
 sudo tail -f /var/log/nginx/access.log
@@ -516,13 +463,11 @@ sudo tail -f /var/log/nginx/error.log
 
 ---
 
-## 📊 监控与日志
-
+## 📊 监控与日�?
 ### 系统监控
 
 ```bash
-# CPU 和内存
-htop
+# CPU 和内�?htop
 
 # 磁盘使用
 df -h
@@ -535,7 +480,7 @@ ss -tulpn | grep :5050
 ### 应用监控
 
 ```python
-# Django Debug Toolbar (仅开发环境)
+# Django Debug Toolbar (仅开发环�?
 INSTALLED_APPS = [
     'debug_toolbar',
 ]
@@ -570,8 +515,7 @@ LOGGING = {
 
 ## 🔄 备份策略
 
-### 数据库备份
-
+### 数据库备�?
 ```bash
 #!/bin/bash
 # backup.sh
@@ -582,7 +526,7 @@ mkdir -p $BACKUP_DIR
 
 mysqldump -u root -p zjoj > $BACKUP_DIR/zjoj_$DATE.sql
 
-# 保留最近 7 天的备份
+# 保留最�?7 天的备份
 find $BACKUP_DIR -name "zjoj_*.sql" -mtime +7 -delete
 ```
 
@@ -595,12 +539,12 @@ find $BACKUP_DIR -name "zjoj_*.sql" -mtime +7 -delete
 
 ---
 
-## ⚡ 性能优化
+## �?性能优化
 
 ### Gunicorn 优化
 
 ```ini
---workers 3              # CPU 核心数 * 2 + 1
+--workers 3              # CPU 核心�?* 2 + 1
 --threads 2              # 每个 worker 的线程数
 --worker-class gthread   # 使用线程 worker
 --keep-alive 5           # Keep-Alive 超时
@@ -633,29 +577,27 @@ gzip_types text/plain text/css application/json application/javascript;
 
 ### Q1: Gunicorn 启动失败
 
-**检查日志**:
+**检查日�?*:
 ```bash
 sudo journalctl -u zjoj -n 50
 ```
 
 **常见原因**:
-- 端口被占用
-- 权限问题
-- 依赖未安装
-
+- 端口被占�?- 权限问题
+- 依赖未安�?
 ---
 
 ### Q2: go-judge 无法访问
 
-**检查服务**:
+**检查服�?*:
 ```bash
-sudo pm2 status | grep hydro-sandbox
-sudo pm2 logs hydro-sandbox
+sudo pm2 status | grep go-judge
+sudo pm2 logs go-judge
 ```
 
 **重启服务**:
 ```bash
-sudo pm2 restart hydro-sandbox
+sudo pm2 restart go-judge
 ```
 
 ---
@@ -666,10 +608,10 @@ sudo pm2 restart hydro-sandbox
 
 **解决**:
 ```bash
-# 检查 Gunicorn
+# 检�?Gunicorn
 sudo systemctl status zjoj
 
-# 检查 Nginx 配置
+# 检�?Nginx 配置
 sudo nginx -t
 
 # 查看错误日志
@@ -678,9 +620,8 @@ sudo tail -f /var/log/nginx/error.log
 
 ---
 
-### Q4: 数据库连接失败
-
-**检查**:
+### Q4: 数据库连接失�?
+**检�?*:
 ```bash
 # MySQL 是否运行
 sudo systemctl status mysql
@@ -688,20 +629,18 @@ sudo systemctl status mysql
 # 用户权限
 mysql -u zjoj_user -p -h localhost zjoj
 
-# 防火墙
-sudo ufw status
+# 防火�?sudo ufw status
 ```
 
 ---
 
-### Q5: 静态文件 404
+### Q5: 静态文�?404
 
 **解决**:
 ```bash
-# 重新收集静态文件
-python manage.py collectstatic --noinput
+# 重新收集静态文�?python manage.py collectstatic --noinput
 
-# 检查 Nginx 配置
+# 检�?Nginx 配置
 ls -la /opt/zjoj/staticfiles/
 ```
 
@@ -709,17 +648,16 @@ ls -la /opt/zjoj/staticfiles/
 
 ## 📞 获取帮助
 
-遇到问题？
-
+遇到问题�?
 1. 📖 查看[完整文档](README.md)
 2. 🔍 搜索 Issue
 3. 💬 加入社区
-4. 📝 提交新 Issue
+4. 📝 提交�?Issue
 
 ---
 
 <div align="center">
 
-**继续阅读 →** [API 参考](04-API_REFERENCE.md)
+**继续阅读 �?* [API 参考](04-API_REFERENCE.md)
 
 </div>
