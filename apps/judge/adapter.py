@@ -143,7 +143,7 @@ class JudgeAdapter:
         # 运行代码
         try:
             result = self._run_code(
-                run_cmd, language, input_data, time_limit, memory_limit, file_id
+                run_cmd, language, input_data, time_limit, memory_limit, file_id, code
             )
         finally:
             # 清理缓存文件
@@ -344,7 +344,7 @@ class JudgeAdapter:
             'file_id': file_id
         }
     
-    def _run_code(self, run_cmd, language, input_data, time_limit, memory_limit, file_id=None):
+    def _run_code(self, run_cmd, language, input_data, time_limit, memory_limit, file_id=None, code=None):
         """
         运行代码
         
@@ -355,6 +355,7 @@ class JudgeAdapter:
             time_limit: 时间限制 (ms)
             memory_limit: 内存限制 (MB)
             file_id: 缓存文件的 ID（如果需要）
+            code: 源代码（仅用于不需要编译的语言）
             
         Returns:
             dict: {'status': str, 'time': int, 'memory': int, 'stdout': str, 'stderr': str}
