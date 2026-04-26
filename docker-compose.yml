@@ -31,6 +31,7 @@ services:
     volumes:
       - /tmp:/w
       - /usr:/host-usr:ro
+      - /usr/lib:/host-usr-lib:ro
       - /lib:/host-lib:ro
       - /lib64:/host-lib64:ro
       - /bin:/host-bin:ro

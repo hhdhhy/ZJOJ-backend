@@ -16,6 +16,10 @@ mount:
     target: /usr
     readonly: true
   - type: bind
+    source: /host-usr-lib
+    target: /usr/lib
+    readonly: true
+  - type: bind
     source: /host-ld-cache
     target: /etc/ld.so.cache
     readonly: true
