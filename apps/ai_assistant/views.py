@@ -181,10 +181,6 @@ class StudentLearningReportView(APIView):
         days = int(request.query_params.get('days', 7))
         
         # 检查权限：只有学生可以查看自己的报告
-        if not request.user.is_student():
-            return Response({
-                'error': '只有学生可以查看学情报告'
-            }, status=403)
         
         try:
             report = LearningAnalyticsService.get_or_generate_student_report(

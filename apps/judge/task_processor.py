@@ -102,15 +102,15 @@ class JudgeTaskProcessor:
             submission.test_case_results.all().delete()
             
             # 保存每个测试点的详细结果
-            for tc_data in result.get('test_cases', []):
+            for idx, tc_data in enumerate(result.get('test_cases', [])):
                 TestCaseResult.objects.create(
                     submission=submission,
-                    test_case_id=tc_data['id'],
+                    test_case_id=tc_data.get('id', idx + 1),  # 使用索引+1作为默认值
                     status=tc_data.get('status', 'SE'),
                     execution_time=tc_data.get('time', 0),
                     memory_usage=tc_data.get('memory', 0),
                     score=tc_data.get('score', 0),
-                    message=tc_data.get('message', ''),
+                    message=tc_data.get('error', '') or tc_data.get('message', ''),
                 )
     
     def _mark_as_error(self, submission, error_message):

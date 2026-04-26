@@ -3,6 +3,7 @@ Judge Adapter - 评测适配器
 提供简化的 HTTP API，封装 go-judge 的复杂逻辑
 支持多测试点、输出比较、状态判断等功能
 """
+from django.conf import settings
 import requests
 import json
 import zipfile
@@ -23,9 +24,9 @@ class JudgeAdapter:
     5. 返回聚合结果
     """
     
-    def __init__(self, go_judge_url='http://localhost:5050'):
-        self.go_judge_url = go_judge_url
-        self.timeout = 60
+    def __init__(self, go_judge_url=None):
+        self.go_judge_url = go_judge_url or getattr(settings, 'GO_JUDGE_URL', 'http://localhost:5050')
+        self.timeout = getattr(settings, 'GO_JUDGE_TIMEOUT', 60)
     
     def judge(self, code, language, test_cases, time_limit, memory_limit):
         """
@@ -78,13 +79,17 @@ class JudgeAdapter:
                 total_score += result.get('score', 0)
                 
             except Exception as e:
+                import traceback
+                error_traceback = traceback.format_exc()
+                print(f"ERROR in test case {i+1}: {str(e)}")
+                print(error_traceback)
                 results.append({
                     'id': i + 1,
                     'status': 'SE',
                     'score': 0,
                     'time': 0,
                     'memory': 0,
-                    'error': str(e)
+                    'error': f'{str(e)}\n{error_traceback}'
                 })
         
         # 确定最终结果（最差的评测状态）
@@ -114,27 +119,54 @@ class JudgeAdapter:
         Returns:
             dict: 测试结果
         """
-        # 构建 go-judge 请求
-        payload = {
-            'cmd': [{
-                'args': self._get_compiler_and_runner_args(language),
+        # 构建 go-judge 请求（编译 + 运行）
+        compile_cmd = self._get_compile_command(language)
+        run_cmd = self._get_run_command(language)
+        
+        cmd_list = []
+        
+        # 添加编译命令（如果需要）
+        if compile_cmd:
+            cmd_list.append({
+                'args': compile_cmd,
                 'env': ['PATH=/usr/bin:/bin', 'HOME=/w'],
-                'files': [
-                    {'content': input_data},  # stdin
-                    {'name': 'stdout', 'max': 10485760},  # stdout, 10MB
-                    {'name': 'stderr', 'max': 10485760}   # stderr, 10MB
-                ],
-                'cpuLimit': time_limit * 1000000,  # ms -> ns
-                'memoryLimit': memory_limit * 1024 * 1024,  # MB -> bytes
-                'procLimit': 50,
+                'cpuLimit': 5000000000,  # 编译限时5秒
+                'memoryLimit': 536870912,  # 512MB
                 'copyIn': {
                     f'main.{self._get_file_extension(language)}': {
-                        'content': code.encode('utf-8')
+                        'content': code  # 直接使用字符串，不要 encode
                     }
                 },
-                'copyOut': ['stdout', 'stderr'],
-            }]
+            })
+        
+        # 添加运行命令
+        files_config = [
+            {'content': input_data},  # stdin
+            {'name': 'stdout', 'max': 10485760},  # stdout, 10MB
+            {'name': 'stderr', 'max': 10485760}   # stderr, 10MB
+        ]
+        
+        run_command_config = {
+            'args': run_cmd,
+            'env': ['PATH=/usr/bin:/bin', 'HOME=/w'],
+            'files': files_config,
+            'cpuLimit': time_limit * 1000000,  # ms -> ns
+            'memoryLimit': memory_limit * 1024 * 1024,  # MB -> bytes
+            'procLimit': 50,
+            'copyOut': ['stdout', 'stderr'],
         }
+        
+        # 如果不需要编译，添加 copyIn
+        if not compile_cmd:
+            run_command_config['copyIn'] = {
+                f'main.{self._get_file_extension(language)}': {
+                    'content': code  # 直接使用字符串，不要 encode
+                }
+            }
+        
+        cmd_list.append(run_command_config)
+        
+        payload = {'cmd': cmd_list}
         
         # 调用 go-judge
         response = requests.post(
@@ -146,7 +178,22 @@ class JudgeAdapter:
         if response.status_code != 200:
             raise Exception(f"go-judge error: {response.text}")
         
-        result = response.json()[0]
+        results = response.json()
+        
+        # 检查编译是否成功
+        if compile_cmd and len(results) > 0:
+            compile_result = results[0]
+            if compile_result.get('exitStatus', 0) != 0:
+                return {
+                    'status': 'CE',
+                    'score': 0,
+                    'time': 0,
+                    'memory': 0,
+                    'stderr': compile_result.get('files', {}).get('stderr', {}).get('content', 'Compilation failed'),
+                }
+        
+        # 获取运行结果
+        result = results[-1]  # 最后一个命令是运行
         
         # 解析结果
         exit_status = result.get('exitStatus', -1)
@@ -160,11 +207,21 @@ class JudgeAdapter:
         # 获取实际输出
         actual_output = ''
         if 'files' in result and 'stdout' in result['files']:
-            actual_output = result['files']['stdout'].get('content', '')
+            stdout_data = result['files']['stdout']
+            # go-judge 可能返回字符串或字典
+            if isinstance(stdout_data, dict):
+                actual_output = stdout_data.get('content', '')
+            else:
+                actual_output = str(stdout_data)
         
         stderr_output = ''
         if 'files' in result and 'stderr' in result['files']:
-            stderr_output = result['files']['stderr'].get('content', '')
+            stderr_data = result['files']['stderr']
+            # go-judge 可能返回字符串或字典
+            if isinstance(stderr_data, dict):
+                stderr_output = stderr_data.get('content', '')
+            else:
+                stderr_output = str(stderr_data)
         
         # 判断状态
         status = self._judge_status(status_raw, exit_status, time_ms, memory_kb, time_limit, memory_limit)
@@ -256,14 +313,29 @@ class JudgeAdapter:
         return worst_status
     
     def _get_compiler_and_runner_args(self, language):
-        """获取编译和运行命令"""
+        """获取编译和运行命令（已废弃，保留兼容）"""
+        return self._get_run_command(language)
+    
+    def _get_compile_command(self, language):
+        """获取编译命令（返回 None 表示不需要编译）"""
         commands = {
-            'cpp': ['/bin/bash', '-c', 'g++ -std=c++17 -O2 -o main main.cpp && ./main'],
-            'c': ['/bin/bash', '-c', 'gcc -std=c11 -O2 -o main main.c && ./main'],
-            'python': ['/usr/bin/python3', 'main.py'],
-            'java': ['/bin/bash', '-c', 'javac Main.java && java Main'],
+            'cpp': ['/usr/bin/g++', '-std=c++17', '-O2', '-o', '/w/main', '/w/main.cpp'],
+            'c': ['/usr/bin/gcc', '-std=c11', '-O2', '-o', '/w/main', '/w/main.c'],
+            'java': ['/usr/bin/javac', '/w/Main.java'],
         }
-        return commands.get(language, ['/bin/bash', '-c', 'echo "Unsupported language"'])
+        return commands.get(language, None)
+    
+    def _get_run_command(self, language):
+        """获取运行命令"""
+        commands = {
+            'cpp': ['/w/main'],
+            'c': ['/w/main'],
+            'python': ['/usr/bin/python3', '/w/main.py'],
+            'python3': ['/usr/bin/python3', '/w/main.py'],
+            'python2': ['/usr/bin/python2', '/w/main.py'],
+            'java': ['/usr/bin/java', '-cp', '/w', 'Main'],
+        }
+        return commands.get(language, ['/bin/echo', 'Unsupported language'])
     
     def _get_file_extension(self, language):
         """获取文件扩展名"""
@@ -271,6 +343,8 @@ class JudgeAdapter:
             'cpp': 'cpp',
             'c': 'c',
             'python': 'py',
+            'python3': 'py',
+            'python2': 'py',
             'java': 'java',
         }
         return extensions.get(language, 'txt')

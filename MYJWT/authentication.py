@@ -12,9 +12,9 @@ from apps.ojauth.models import OJUser
 class JWTAuthentication(BaseAuthentication):
     """
     JWT Token 认证类
-    客户端应在 Authorization header 中提供: jwt <token>
+    客户端应在 Authorization header 中提供: Bearer <token> 或 jwt <token>
     """
-    keyword = 'jwt'
+    keywords = ['bearer', 'jwt']  # 支持多种关键词
     algorithm = 'HS256'
     
     def authenticate(self, request):
@@ -32,7 +32,8 @@ class JWTAuthentication(BaseAuthentication):
         if len(parts) == 0:
             return None
         
-        if parts[0].lower() != self.keyword.lower():
+        # 支持 Bearer 和 jwt 两种格式
+        if parts[0].lower() not in self.keywords:
             return None
         
         if len(parts) != 2:
@@ -95,4 +96,4 @@ class JWTAuthentication(BaseAuthentication):
         """
         返回WWW-Authenticate header的值
         """
-        return self.keyword
+        return 'Bearer'

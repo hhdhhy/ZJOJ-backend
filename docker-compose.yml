@@ -18,18 +18,29 @@ services:
       retries: 5
       start_period: 10s
 
-  # go-judge 评测沙箱服务（运行在宿主机网络）
+  # go-judge 评测沙箱服务
   gojudge:
     image: criyle/go-judge:latest
     container_name: zjoj-gojudge
     restart: always
     privileged: true
     shm_size: 256m
-    network_mode: host
+    ports:
+      - "5050:5050"
+    command: ["./go-judge", "-mount-conf", "/opt/mount.yaml"]
     volumes:
       - /tmp:/w
+      - /usr:/host-usr:ro
+      - /lib:/host-lib:ro
+      - /lib64:/host-lib64:ro
+      - /bin:/host-bin:ro
+      - /etc/ld.so.cache:/host-ld-cache:ro
+      - /etc/alternatives:/host-alternatives:ro
+      - ./deploy/gojudge-mount.yaml:/opt/mount.yaml:ro
     environment:
       - GO_JUDGE_HTTP_ADDR=0.0.0.0:5050
+    networks:
+      - zjoj-network
 
   # MySQL 数据库
   db:
@@ -74,7 +85,7 @@ services:
       - DB_PORT=3306
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-      - GO_JUDGE_URL=http://host.docker.internal:5050
+      - GO_JUDGE_URL=http://gojudge:5050
       - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
       - DJANGO_SETTINGS_MODULE=ZJOJ.settings_production
       - PYTHONUNBUFFERED=1
@@ -105,7 +116,7 @@ services:
       - DB_PORT=3306
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-      - GO_JUDGE_URL=http://host.docker.internal:5050
+      - GO_JUDGE_URL=http://gojudge:5050
       - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
       - DJANGO_SETTINGS_MODULE=ZJOJ.settings_production
       - PYTHONUNBUFFERED=1
