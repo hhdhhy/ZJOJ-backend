@@ -319,8 +319,8 @@ class JudgeAdapter:
     def _get_compile_command(self, language):
         """获取编译命令（返回 None 表示不需要编译）"""
         commands = {
-            'cpp': ['/host-usr/bin/g++', '-std=c++17', '-O2', '-o', '/w/main', '/w/main.cpp'],
-            'c': ['/host-usr/bin/gcc', '-std=c11', '-O2', '-o', '/w/main', '/w/main.c'],
+            'cpp': ['/host-usr/bin/x86_64-linux-gnu-g++-13', '-std=c++17', '-O2', '-o', '/w/main', '/w/main.cpp'],
+            'c': ['/host-usr/bin/x86_64-linux-gnu-gcc-13', '-std=c11', '-O2', '-o', '/w/main', '/w/main.c'],
             'java': ['/host-usr/bin/javac', '/w/Main.java'],
         }
         return commands.get(language, None)
