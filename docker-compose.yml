@@ -29,7 +29,7 @@ services:
     shm_size: 256m
     ports:
       - "5050:5050"
-    command: ["./go-judge", "-extra-memory-limit", "64m"]
+    command: ["-extra-memory-limit", "64m"]
     volumes:
       - /tmp:/w
     environment:
