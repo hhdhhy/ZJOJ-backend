@@ -475,14 +475,24 @@ class KnowledgeBaseView(APIView):
             vector_id = doc.vector_id  # 保存 vector_id
             doc.delete()
             
-            # 从向量数据库删除
+            # 从向量数据库删除（异步执行，不阻塞主请求）
             try:
-                from .rag_engine import RAGEngine
-                engine = RAGEngine()
-                engine.vector_store.delete_document(doc_id=vector_id)
-                print(f"✅ 知识库文档已从向量数据库删除: {vector_id}")
+                import threading
+                def delete_from_vector():
+                    try:
+                        from .rag_engine import RAGEngine
+                        engine = RAGEngine()
+                        engine.vector_store.delete_document(doc_id=vector_id)
+                        print(f"✅ 知识库文档已从向量数据库删除: {vector_id}")
+                    except Exception as e:
+                        print(f"⚠️ 向量数据库删除失败: {e}")
+                
+                # 在后台线程中执行
+                thread = threading.Thread(target=delete_from_vector)
+                thread.daemon = True
+                thread.start()
             except Exception as e:
-                print(f"⚠️ 向量数据库删除失败: {e}")
+                print(f"⚠️ 启动向量数据库删除线程失败: {e}")
             
             return Response({
                 'message': '知识库文档删除成功'
