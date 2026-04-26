@@ -19,5 +19,5 @@ RUN apt-get update && apt-get install -y \
 # 验证安装
 RUN g++ --version && gcc --version && python3 --version
 
-# 切换回 go-judge 用户
-USER 1536
+# 保持 root 用户（go-judge 需要 root 权限来创建沙箱容器）
+# USER 1536  # 注释掉，不使用非 root 用户
