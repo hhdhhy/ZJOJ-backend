@@ -123,108 +123,41 @@ class JudgeAdapter:
         compile_cmd = self._get_compile_command(language)
         run_cmd = self._get_run_command(language)
         
-        cmd_list = []
-        
-        # 添加编译命令（如果需要）
+        # 如果需要编译，先编译并缓存
+        file_id = None
         if compile_cmd:
-            cmd_list.append({
-                'args': compile_cmd,
-                'env': ['PATH=/usr/bin:/bin', 'HOME=/w'],
-                'cpuLimit': 5000000000,  # 编译限时5秒
-                'memoryLimit': 536870912,  # 512MB
-                'copyIn': {
-                    f'main.{self._get_file_extension(language)}': {
-                        'content': code  # 直接使用字符串，不要 encode
-                    }
-                },
-            })
-        
-        # 添加运行命令
-        files_config = [
-            {'content': input_data},  # stdin
-            {'name': 'stdout', 'max': 10485760},  # stdout, 10MB
-            {'name': 'stderr', 'max': 10485760}   # stderr, 10MB
-        ]
-        
-        run_command_config = {
-            'args': run_cmd,
-            'env': ['PATH=/usr/bin:/bin', 'HOME=/w'],
-            'files': files_config,
-            'cpuLimit': time_limit * 1000000,  # ms -> ns
-            'memoryLimit': memory_limit * 1024 * 1024,  # MB -> bytes
-            'procLimit': 50,
-            'copyOut': ['stdout', 'stderr'],
-        }
-        
-        # 如果不需要编译，添加 copyIn
-        if not compile_cmd:
-            run_command_config['copyIn'] = {
-                f'main.{self._get_file_extension(language)}': {
-                    'content': code  # 直接使用字符串，不要 encode
-                }
-            }
-        
-        cmd_list.append(run_command_config)
-        
-        payload = {'cmd': cmd_list}
-        
-        # 调用 go-judge
-        response = requests.post(
-            f'{self.go_judge_url}/run',
-            json=payload,
-            timeout=self.timeout
-        )
-        
-        if response.status_code != 200:
-            raise Exception(f"go-judge error: {response.text}")
-        
-        results = response.json()
-        
-        # 检查编译是否成功
-        if compile_cmd and len(results) > 0:
-            compile_result = results[0]
-            if compile_result.get('exitStatus', 0) != 0:
+            try:
+                compile_result = self._compile_code(code, language, compile_cmd)
+                if compile_result['status'] == 'CE':
+                    return compile_result
+                file_id = compile_result.get('file_id')
+            except Exception as e:
                 return {
-                    'status': 'CE',
+                    'status': 'SE',
                     'score': 0,
                     'time': 0,
                     'memory': 0,
-                    'stderr': compile_result.get('files', {}).get('stderr', {}).get('content', 'Compilation failed'),
+                    'error': f'Compilation error: {str(e)}'
                 }
         
-        # 获取运行结果
-        result = results[-1]  # 最后一个命令是运行
-        
-        # 解析结果
-        exit_status = result.get('exitStatus', -1)
-        time_ns = result.get('time', 0)
-        memory_bytes = result.get('memory', 0)
-        status_raw = result.get('status', '')
-        
-        time_ms = time_ns // 1000000  # ns -> ms
-        memory_kb = memory_bytes // 1024  # bytes -> KB
+        # 运行代码
+        try:
+            result = self._run_code(
+                run_cmd, language, input_data, time_limit, memory_limit, file_id
+            )
+        finally:
+            # 清理缓存文件
+            if file_id:
+                self._delete_cached_file(file_id)
         
         # 获取实际输出
-        actual_output = ''
-        if 'files' in result and 'stdout' in result['files']:
-            stdout_data = result['files']['stdout']
-            # go-judge 可能返回字符串或字典
-            if isinstance(stdout_data, dict):
-                actual_output = stdout_data.get('content', '')
-            else:
-                actual_output = str(stdout_data)
-        
-        stderr_output = ''
-        if 'files' in result and 'stderr' in result['files']:
-            stderr_data = result['files']['stderr']
-            # go-judge 可能返回字符串或字典
-            if isinstance(stderr_data, dict):
-                stderr_output = stderr_data.get('content', '')
-            else:
-                stderr_output = str(stderr_data)
+        actual_output = result.get('stdout', '')
+        stderr_output = result.get('stderr', '')
         
         # 判断状态
-        status = self._judge_status(status_raw, exit_status, time_ms, memory_kb, time_limit, memory_limit)
+        status = result.get('status', 'SE')
+        time_ms = result.get('time', 0)
+        memory_kb = result.get('memory', 0)
         
         # 如果 AC，比较输出
         score = 0
@@ -336,6 +269,172 @@ class JudgeAdapter:
             'java': ['/usr/bin/java', '-cp', '/w', 'Main'],
         }
         return commands.get(language, ['/bin/echo', 'Unsupported language'])
+    
+    def _get_file_extension(self, language):
+        """获取文件扩展名"""
+        extensions = {
+            'cpp': 'cpp',
+            'c': 'c',
+            'python': 'py',
+            'python3': 'py',
+            'python2': 'py',
+            'java': 'java',
+        }
+        return extensions.get(language, 'txt')
+    
+    def _compile_code(self, code, language, compile_cmd):
+        """
+        编译代码并缓存编译后的文件
+        
+        Returns:
+            dict: {'status': 'CE' or 'success', 'file_id': str, 'stderr': str}
+        """
+        payload = {
+            'cmd': [{
+                'args': compile_cmd,
+                'env': ['PATH=/usr/bin:/bin', 'HOME=/w'],
+                'files': [
+                    {'content': ''},
+                    {'name': 'stdout', 'max': 10240},
+                    {'name': 'stderr', 'max': 10240}
+                ],
+                'cpuLimit': 10000000000,  # 10秒
+                'memoryLimit': 536870912,  # 512MB
+                'procLimit': 50,
+                'copyIn': {
+                    f'main.{self._get_file_extension(language)}': {
+                        'content': code
+                    }
+                },
+                'copyOut': ['stdout', 'stderr'],
+                'copyOutCached': ['main']  # 缓存编译后的文件
+            }]
+        }
+        
+        response = requests.post(
+            f'{self.go_judge_url}/run',
+            json=payload,
+            timeout=self.timeout
+        )
+        
+        if response.status_code != 200:
+            raise Exception(f"go-judge compile error: {response.text}")
+        
+        results = response.json()
+        result = results[0]
+        
+        # 检查编译是否成功
+        if result.get('exitStatus', 0) != 0:
+            stderr_data = result.get('files', {}).get('stderr', {})
+            stderr_content = stderr_data.get('content', 'Compilation failed') if isinstance(stderr_data, dict) else str(stderr_data)
+            return {
+                'status': 'CE',
+                'stderr': stderr_content
+            }
+        
+        # 获取 file_id
+        file_ids = result.get('fileIds', {})
+        file_id = file_ids.get('main')
+        
+        if not file_id:
+            raise Exception("No file_id returned from compilation")
+        
+        return {
+            'status': 'success',
+            'file_id': file_id
+        }
+    
+    def _run_code(self, run_cmd, language, input_data, time_limit, memory_limit, file_id=None):
+        """
+        运行代码
+        
+        Args:
+            run_cmd: 运行命令
+            language: 编程语言
+            input_data: 输入数据
+            time_limit: 时间限制 (ms)
+            memory_limit: 内存限制 (MB)
+            file_id: 缓存文件的 ID（如果需要）
+            
+        Returns:
+            dict: {'status': str, 'time': int, 'memory': int, 'stdout': str, 'stderr': str}
+        """
+        # 构建 copyIn
+        copy_in = {}
+        if file_id:
+            # 使用缓存的编译文件
+            copy_in['main'] = {'fileId': file_id}
+        elif not self._get_compile_command(language):
+            # 如果不需要编译，复制源代码
+            copy_in[f'main.{self._get_file_extension(language)}'] = {'content': code}
+        
+        payload = {
+            'cmd': [{
+                'args': run_cmd,
+                'env': ['PATH=/usr/bin:/bin', 'HOME=/w'],
+                'files': [
+                    {'content': input_data},
+                    {'name': 'stdout', 'max': 10485760},
+                    {'name': 'stderr', 'max': 10485760}
+                ],
+                'cpuLimit': time_limit * 1000000,  # ms -> ns
+                'memoryLimit': memory_limit * 1024 * 1024,  # MB -> bytes
+                'procLimit': 50,
+                'copyIn': copy_in if copy_in else None,
+                'copyOut': ['stdout', 'stderr']
+            }]
+        }
+        
+        # 移除 None 值
+        if not copy_in:
+            del payload['cmd'][0]['copyIn']
+        
+        response = requests.post(
+            f'{self.go_judge_url}/run',
+            json=payload,
+            timeout=self.timeout
+        )
+        
+        if response.status_code != 200:
+            raise Exception(f"go-judge run error: {response.text}")
+        
+        results = response.json()
+        result = results[0]
+        
+        # 解析状态
+        status_raw = result.get('status', '')
+        exit_status = result.get('exitStatus', -1)
+        time_ns = result.get('time', 0)
+        memory_bytes = result.get('memory', 0)
+        
+        time_ms = time_ns // 1000000  # ns -> ms
+        memory_kb = memory_bytes // 1024  # bytes -> KB
+        
+        # 获取输出
+        stdout_data = result.get('files', {}).get('stdout', {})
+        stderr_data = result.get('files', {}).get('stderr', {})
+        
+        stdout_content = stdout_data.get('content', '') if isinstance(stdout_data, dict) else str(stdout_data)
+        stderr_content = stderr_data.get('content', '') if isinstance(stderr_data, dict) else str(stderr_data)
+        
+        # 判断状态
+        status = self._judge_status(status_raw, exit_status, time_ms, memory_kb, time_limit, memory_limit)
+        
+        return {
+            'status': status,
+            'time': time_ms,
+            'memory': memory_kb,
+            'stdout': stdout_content,
+            'stderr': stderr_content
+        }
+    
+    def _delete_cached_file(self, file_id):
+        """删除缓存的文件"""
+        try:
+            requests.delete(f'{self.go_judge_url}/file/{file_id}', timeout=5)
+        except Exception as e:
+            # 静默失败，不影响主流程
+            pass
     
     def _get_file_extension(self, language):
         """获取文件扩展名"""
