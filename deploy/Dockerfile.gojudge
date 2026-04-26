@@ -1,7 +1,8 @@
-# 基于官方 go-judge 镜像构建包含编译器的版本
-FROM criyle/go-judge:latest
+# 多阶段构建：基于官方 go-judge 镜像
+FROM criyle/go-judge:latest AS go-judge
 
-USER root
+# 第二阶段：基于 Debian 安装编译器
+FROM debian:latest
 
 # 更换为阿里云镜像源加速下载
 RUN sed -i 's/deb.debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list.d/debian.sources || \
@@ -16,8 +17,13 @@ RUN apt-get update && apt-get install -y \
     default-jdk \
     && rm -rf /var/lib/apt/lists/*
 
-# 验证安装
-RUN g++ --version && gcc --version && python3 --version
+# 从第一阶段复制 go-judge 二进制文件和配置文件
+WORKDIR /opt
+COPY --from=go-judge /opt/go-judge /opt/
+COPY --from=go-judge /opt/mount.yaml /opt/
 
-# 保持 root 用户（go-judge 需要 root 权限来创建沙箱容器）
-# USER 1536  # 注释掉，不使用非 root 用户
+# 暴露端口
+EXPOSE 5050/tcp 5051/tcp 5052/tcp
+
+# 设置入口点
+ENTRYPOINT ["./go-judge"]
