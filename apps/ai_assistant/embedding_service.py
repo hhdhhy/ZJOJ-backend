@@ -41,9 +41,23 @@ class EmbeddingService:
         self.model_name = model_name
         self.cache_dir = cache_dir
         
-        # 加载模型（首次运行会自动从镜像下载）
+        # 加载模型（优先使用本地已下载的模型）
         print(f"Loading embedding model: {model_name}")
         print(f"Cache directory: {cache_dir}")
+        
+        # 检查本地是否已有 ModelScope 下载的模型
+        modelscope_model_path = os.path.join(cache_dir, 'AI-ModelScope', 'paraphrase-multilingual-MiniLM-L12-v2')
+        if os.path.exists(modelscope_model_path):
+            print(f"✅ Found local model at: {modelscope_model_path}")
+            try:
+                self.model = SentenceTransformer(modelscope_model_path)
+                self.dimension = self.model.get_sentence_embedding_dimension()
+                print(f"✅ Model loaded from local cache, dimension: {self.dimension}")
+                return
+            except Exception as e:
+                print(f"⚠️ Failed to load from local cache: {e}, will try downloading...")
+        
+        # 尝试从 HuggingFace Mirror 下载
         try:
             self.model = SentenceTransformer(model_name, cache_folder=cache_dir)
             self.dimension = self.model.get_sentence_embedding_dimension()
