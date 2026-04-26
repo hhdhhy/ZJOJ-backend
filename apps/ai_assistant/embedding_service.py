@@ -18,39 +18,52 @@ class EmbeddingService:
             model_name: 模型名称（默认使用 paraphrase-multilingual-MiniLM-L12-v2）
             cache_dir: 模型缓存目录
         """
-        # 设置模型缓存目录
+        # 设置模型缓存目录（使用项目内的 ai_data 目录）
         if cache_dir is None:
-            cache_dir = getattr(settings, 'EMBEDDING_CACHE_DIR', '/tmp/ai_models')
+            import os
+            base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+            cache_dir = os.path.join(base_dir, 'ai_data', 'embedding_models')
         
         # 确保目录存在
         os.makedirs(cache_dir, exist_ok=True)
         
-        # 设置环境变量，使用国内镜像
+        # 设置环境变量，使用 ModelScope 镜像（国内加速）
         os.environ['HF_HOME'] = cache_dir
         os.environ['TRANSFORMERS_CACHE'] = cache_dir
-        os.environ['HF_ENDPOINT'] = 'https://hf-mirror.com'
+        os.environ['HUGGINGFACE_HUB_CACHE'] = cache_dir
+        # 优先使用 ModelScope，如果失败再回退到 hf-mirror
+        os.environ['HF_ENDPOINT'] = os.environ.get('HF_ENDPOINT', 'https://hf-mirror.com')
         
         # 默认使用多语言轻量级模型（支持中文）
         if model_name is None:
-            # 使用已下载的模型路径
-            model_name = '/tmp/ai_models/models--sentence-transformers--paraphrase-multilingual-MiniLM-L12-v2/snapshots'
-            # 查找最新的 snapshot 目录
-            import glob
-            snapshots = glob.glob(f'{model_name}/*')
-            if snapshots:
-                model_name = snapshots[0]  # 使用第一个（最新的）snapshot
-            else:
-                # 如果没有找到 snapshot，回退到模型名称
-                model_name = 'paraphrase-multilingual-MiniLM-L12-v2'
+            model_name = 'sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2'
         
         self.model_name = model_name
         self.cache_dir = cache_dir
         
         # 加载模型（首次运行会自动从镜像下载）
         print(f"Loading embedding model: {model_name}")
-        self.model = SentenceTransformer(model_name, cache_folder=cache_dir)
-        self.dimension = self.model.get_sentence_embedding_dimension()
-        print(f"Model loaded successfully, dimension: {self.dimension}")
+        print(f"Cache directory: {cache_dir}")
+        try:
+            self.model = SentenceTransformer(model_name, cache_folder=cache_dir)
+            self.dimension = self.model.get_sentence_embedding_dimension()
+            print(f"✅ Model loaded successfully, dimension: {self.dimension}")
+        except Exception as e:
+            print(f"⚠️ Failed to load model from HuggingFace: {e}")
+            print("Trying ModelScope...")
+            # 如果 HuggingFace 失败，尝试使用 ModelScope
+            try:
+                from modelscope import snapshot_download
+                model_path = snapshot_download(
+                    'AI-ModelScope/paraphrase-multilingual-MiniLM-L12-v2',
+                    cache_dir=cache_dir
+                )
+                self.model = SentenceTransformer(model_path)
+                self.dimension = self.model.get_sentence_embedding_dimension()
+                print(f"✅ Model loaded from ModelScope, dimension: {self.dimension}")
+            except Exception as e2:
+                print(f"❌ Failed to load model from ModelScope: {e2}")
+                raise
     
     def encode(self, text: str) -> list:
         """

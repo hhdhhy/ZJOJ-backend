@@ -390,6 +390,33 @@ class KnowledgeBaseView(APIView):
         if serializer.is_valid():
             doc = serializer.save()
             
+            # 异步同步到向量数据库
+            try:
+                import threading
+                def sync_to_vector():
+                    try:
+                        from .rag_engine import RAGEngine
+                        engine = RAGEngine()
+                        engine.vector_store.add_document(
+                            doc_id=doc.vector_id,
+                            text=doc.content,
+                            metadata={
+                                'title': doc.title,
+                                'type': doc.doc_type,
+                                'doc_id': doc.id,
+                                'error_type': doc.error_type or '',
+                                'source': doc.source or '',
+                            }
+                        )
+                    except Exception as e:
+                        print(f"⚠️ 向量数据库同步失败: {e}")
+                
+                thread = threading.Thread(target=sync_to_vector)
+                thread.daemon = True
+                thread.start()
+            except Exception as e:
+                print(f"⚠️ 启动向量同步线程失败: {e}")
+            
             return Response({
                 'message': '知识库文档创建成功',
                 'data': KnowledgeBaseSerializer(doc).data
@@ -416,6 +443,33 @@ class KnowledgeBaseView(APIView):
         if serializer.is_valid():
             doc = serializer.save()
             
+            # 异步更新向量数据库
+            try:
+                import threading
+                def update_vector():
+                    try:
+                        from .rag_engine import RAGEngine
+                        engine = RAGEngine()
+                        engine.vector_store.update_document(
+                            doc_id=doc.vector_id,
+                            text=doc.content,
+                            metadata={
+                                'title': doc.title,
+                                'type': doc.doc_type,
+                                'doc_id': doc.id,
+                                'error_type': doc.error_type or '',
+                                'source': doc.source or '',
+                            }
+                        )
+                    except Exception as e:
+                        print(f"⚠️ 向量数据库更新失败: {e}")
+                
+                thread = threading.Thread(target=update_vector)
+                thread.daemon = True
+                thread.start()
+            except Exception as e:
+                print(f"⚠️ 启动向量更新线程失败: {e}")
+            
             return Response({
                 'message': '知识库文档更新成功',
                 'data': KnowledgeBaseSerializer(doc).data
@@ -433,7 +487,25 @@ class KnowledgeBaseView(APIView):
         
         try:
             doc = KnowledgeBase.objects.get(id=kb_id)
+            vector_id = doc.vector_id
             doc.delete()
+            
+            # 异步从向量数据库删除
+            try:
+                import threading
+                def delete_from_vector():
+                    try:
+                        from .rag_engine import RAGEngine
+                        engine = RAGEngine()
+                        engine.vector_store.delete_document(doc_id=vector_id)
+                    except Exception as e:
+                        print(f"⚠️ 向量数据库删除失败: {e}")
+                
+                thread = threading.Thread(target=delete_from_vector)
+                thread.daemon = True
+                thread.start()
+            except Exception as e:
+                print(f"⚠️ 启动向量删除线程失败: {e}")
             
             return Response({
                 'message': '知识库文档删除成功'
