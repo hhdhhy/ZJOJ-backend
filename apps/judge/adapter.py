@@ -319,9 +319,9 @@ class JudgeAdapter:
     def _get_compile_command(self, language):
         """获取编译命令（返回 None 表示不需要编译）"""
         commands = {
-            'cpp': ['/host-usr/bin/x86_64-linux-gnu-g++-13', '-std=c++17', '-O2', '-o', '/w/main', '/w/main.cpp'],
-            'c': ['/host-usr/bin/x86_64-linux-gnu-gcc-13', '-std=c11', '-O2', '-o', '/w/main', '/w/main.c'],
-            'java': ['/host-usr/bin/javac', '/w/Main.java'],
+            'cpp': ['/usr/bin/g++', '-std=c++17', '-O2', '-o', '/w/main', '/w/main.cpp'],
+            'c': ['/usr/bin/gcc', '-std=c11', '-O2', '-o', '/w/main', '/w/main.c'],
+            'java': ['/usr/bin/javac', '/w/Main.java'],
         }
         return commands.get(language, None)
     
@@ -330,10 +330,10 @@ class JudgeAdapter:
         commands = {
             'cpp': ['/w/main'],
             'c': ['/w/main'],
-            'python': ['/host-usr/bin/python3', '/w/main.py'],
-            'python3': ['/host-usr/bin/python3', '/w/main.py'],
-            'python2': ['/host-usr/bin/python2', '/w/main.py'],
-            'java': ['/host-usr/bin/java', '-cp', '/w', 'Main'],
+            'python': ['/usr/bin/python3', '/w/main.py'],
+            'python3': ['/usr/bin/python3', '/w/main.py'],
+            'python2': ['/usr/bin/python2', '/w/main.py'],
+            'java': ['/usr/bin/java', '-cp', '/w', 'Main'],
         }
         return commands.get(language, ['/bin/echo', 'Unsupported language'])
     
