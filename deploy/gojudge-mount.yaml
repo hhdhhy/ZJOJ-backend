@@ -1,0 +1,52 @@
+mount:
+  - type: bind
+    source: /host-bin
+    target: /bin
+    readonly: true
+  - type: bind
+    source: /host-lib
+    target: /lib
+    readonly: true
+  - type: bind
+    source: /host-lib64
+    target: /lib64
+    readonly: true
+  - type: bind
+    source: /host-usr
+    target: /usr
+    readonly: true
+  - type: bind
+    source: /host-ld-cache
+    target: /etc/ld.so.cache
+    readonly: true
+  - type: bind
+    source: /host-alternatives
+    target: /etc/alternatives
+    readonly: true
+  - type: bind
+    source: /dev/null
+    target: /dev/null
+  - type: bind
+    source: /dev/urandom
+    target: /dev/urandom
+  - type: bind
+    source: /dev/random
+    target: /dev/random
+  - type: bind
+    source: /dev/zero
+    target: /dev/zero
+  - type: bind
+    source: /dev/full
+    target: /dev/full
+  - type: tmpfs
+    target: /w
+    data: size=128m,nr_inodes=4k
+  - type: tmpfs
+    target: /tmp
+    data: size=128m,nr_inodes=4k
+proc: true
+workDir: /w
+hostName: go-judge
+domainName: go-judge
+uid: 1536
+gid: 1536

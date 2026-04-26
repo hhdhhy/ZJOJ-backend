@@ -1,60 +1,60 @@
-# 快速开�?
-> ⏱️ 预计阅读时间�?分钟
+# 蹇�€熷紑濮?
+> 鈴憋笍 棰勮�闃呰�鏃堕棿锛?鍒嗛挓
 
-本文档帮助你快速了�?ZJOJ 项目并运行起来�?
+鏈�枃妗ｅ府鍔╀綘蹇�€熶簡瑙?ZJOJ 椤圭洰骞惰繍琛岃捣鏉ャ€?
 ---
 
-## 🎯 学习目标
+## 馃幆 瀛︿範鐩�爣
 
-完成本文档后，你将能够：
-- �?理解 ZJOJ 的核心功�?- �?在本地运行开发环�?- �?提交第一道题�?- �?调用 API 接口
+瀹屾垚鏈�枃妗ｅ悗锛屼綘灏嗚兘澶燂細
+- 鉁?鐞嗚В ZJOJ 鐨勬牳蹇冨姛鑳?- 鉁?鍦ㄦ湰鍦拌繍琛屽紑鍙戠幆澧?- 鉁?鎻愪氦绗�竴閬撻�鐩?- 鉁?璋冪敤 API 鎺ュ彛
 
 ---
 
-## 📋 前置要求
+## 馃搵 鍓嶇疆瑕佹眰
 
-### 必需软件
+### 蹇呴渶杞�欢
 
-| 软件 | 版本 | 用�?|
+| 杞�欢 | 鐗堟湰 | 鐢ㄩ€?|
 |------|------|------|
-| Python | 3.8+ | Django 运行环境 |
-| MySQL | 5.7+ | 数据�?|
-| Node.js | 16+ | go-judge 依赖 |
-| Git | Latest | 代码管理 |
+| Python | 3.8+ | Django 杩愯�鐜�� |
+| MySQL | 5.7+ | 鏁版嵁搴?|
+| Node.js | 16+ | go-judge 渚濊禆 |
+| Git | Latest | 浠ｇ爜绠＄悊 |
 
-### 推荐工具
+### 鎺ㄨ崘宸ュ叿
 
-- VS Code / PyCharm - 代码编辑�?- Postman / Insomnia - API 测试
-- DBeaver / Navicat - 数据库管�?
+- VS Code / PyCharm - 浠ｇ爜缂栬緫鍣?- Postman / Insomnia - API 娴嬭瘯
+- DBeaver / Navicat - 鏁版嵁搴撶�鐞?
 ---
 
-## 🚀 5分钟快速启�?
-### 步骤 1: 克隆项目
+## 馃殌 5鍒嗛挓蹇�€熷惎鍔?
+### 姝ラ� 1: 鍏嬮殕椤圭洰
 
 ```bash
 git clone https://github.com/your-repo/ZJOJ.git
 cd ZJOJ
 ```
 
-### 步骤 2: 安装依赖
+### 姝ラ� 2: 瀹夎�渚濊禆
 
 ```bash
-# 创建虚拟环境
+# 鍒涘缓铏氭嫙鐜��
 python -m venv .venv
 source .venv/bin/activate  # Linux/Mac
 # .venv\Scripts\activate   # Windows
 
-# 安装 Python 依赖
+# 瀹夎� Python 渚濊禆
 pip install -r requirements.txt
 ```
 
-### 步骤 3: 配置数据�?
+### 姝ラ� 3: 閰嶇疆鏁版嵁搴?
 ```bash
-# 创建数据�?mysql -u root -p
+# 鍒涘缓鏁版嵁搴?mysql -u root -p
 CREATE DATABASE zjoj CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 exit;
 
-# 修改 ZJOJ/settings.py 中的数据库配�?DATABASES = {
+# 淇�敼 ZJOJ/settings.py 涓�殑鏁版嵁搴撻厤缃?DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'zjoj',
@@ -66,36 +66,36 @@ exit;
 }
 ```
 
-### 步骤 4: 初始化数据库
+### 姝ラ� 4: 鍒濆�鍖栨暟鎹�簱
 
 ```bash
 python manage.py makemigrations
 python manage.py migrate
-python manage.py createsuperuser  # 创建管理员账�?```
+python manage.py createsuperuser  # 鍒涘缓绠＄悊鍛樿处鍙?```
 
-### 步骤 5: 启动服务
+### 姝ラ� 5: 鍚�姩鏈嶅姟
 
 ```bash
-# 终端 1: 启动 Django
+# 缁堢� 1: 鍚�姩 Django
 python manage.py runserver 8000
 
-# 访问 http://localhost:8000/admin
+# 璁块棶 http://localhost:8000/admin
 ```
 
-🎉 **恭喜！ZJOJ 已经运行起来了！**
+馃帀 **鎭�枩锛乑JOJ 宸茬粡杩愯�璧锋潵浜嗭紒**
 
 ---
 
-## 🧪 第一次评�?
-### 1. 创建题目
+## 馃И 绗�竴娆¤瘎娴?
+### 1. 鍒涘缓棰樼洰
 
-登录 Admin 后台 (`http://localhost:8000/admin`)�?- 进入 "Problems" �?"Add Problem"
-- 填写题目信息（标题、描述、时间限制、内存限制）
-- 上传测试用例 ZIP 文件
+鐧诲綍 Admin 鍚庡彴 (`http://localhost:8000/admin`)锛?- 杩涘叆 "Problems" 鈫?"Add Problem"
+- 濉�啓棰樼洰淇℃伅锛堟爣棰樸€佹弿杩般€佹椂闂撮檺鍒躲€佸唴瀛橀檺鍒讹級
+- 涓婁紶娴嬭瘯鐢ㄤ緥 ZIP 鏂囦欢
 
-### 2. 提交代码
+### 2. 鎻愪氦浠ｇ爜
 
-使用 API 提交代码�?
+浣跨敤 API 鎻愪氦浠ｇ爜锛?
 ```bash
 curl -X POST http://localhost:8000/api/submissions/submit/ \
   -H "Authorization: jwt YOUR_TOKEN" \
@@ -107,14 +107,14 @@ curl -X POST http://localhost:8000/api/submissions/submit/ \
   }'
 ```
 
-### 3. 查看结果
+### 3. 鏌ョ湅缁撴灉
 
 ```bash
 curl http://localhost:8000/api/submissions/SUBMISSION_ID/ \
   -H "Authorization: jwt YOUR_TOKEN"
 ```
 
-预期返回�?```json
+棰勬湡杩斿洖锛?```json
 {
   "status": "ACCEPTED",
   "score": 100,
@@ -125,69 +125,69 @@ curl http://localhost:8000/api/submissions/SUBMISSION_ID/ \
 
 ---
 
-## 📚 下一步学�?
-根据你的角色选择学习路径�?
-### 👨‍�?开发�?- [系统架构](02-ARCHITECTURE.md) - 了解技术设�?- [开发指南](05-DEVELOPMENT.md) - 代码规范和最佳实�?- [模块详解](06-MODULES/) - 深入各个功能模块
+## 馃摎 涓嬩竴姝ュ�涔?
+鏍规嵁浣犵殑瑙掕壊閫夋嫨瀛︿範璺�緞锛?
+### 馃懆鈥嶐煉?寮€鍙戣€?- [绯荤粺鏋舵瀯](02-ARCHITECTURE.md) - 浜嗚В鎶€鏈��璁?- [寮€鍙戞寚鍗梋(05-DEVELOPMENT.md) - 浠ｇ爜瑙勮寖鍜屾渶浣冲疄璺?- [妯″潡璇﹁В](06-MODULES/) - 娣卞叆鍚勪釜鍔熻兘妯″潡
 
-### 🔧 运维工程�?- [部署指南](03-DEPLOYMENT.md) - 生产环境部署
-- [监控和日志](03-DEPLOYMENT.md#监控) - 系统监控配置
+### 馃敡 杩愮淮宸ョ▼甯?- [閮ㄧ讲鎸囧崡](03-DEPLOYMENT.md) - 鐢熶骇鐜��閮ㄧ讲
+- [鐩戞帶鍜屾棩蹇梋(03-DEPLOYMENT.md#鐩戞帶) - 绯荤粺鐩戞帶閰嶇疆
 
-### 🎓 API 使用�?- [API 参考](04-API_REFERENCE.md) - 完整的接口文�?- [认证说明](06-MODULES/auth.md) - JWT Token 使用
+### 馃帗 API 浣跨敤鑰?- [API 鍙傝€僝(04-API_REFERENCE.md) - 瀹屾暣鐨勬帴鍙ｆ枃妗?- [璁よ瘉璇存槑](06-MODULES/auth.md) - JWT Token 浣跨敤
 
 ---
 
-## �?常见问题
+## 鉂?甯歌�闂��
 
-### Q1: 如何获取 JWT Token�?
+### Q1: 濡備綍鑾峰彇 JWT Token锛?
 ```bash
 curl -X POST http://localhost:8000/auth/login/ \
   -H "Content-Type: application/json" \
   -d '{"username": "admin", "password": "your_password"}'
 ```
 
-返回�?`token` 字段即为 JWT Token�?
-### Q2: 评测服务未运行？
+杩斿洖鐨?`token` 瀛楁�鍗充负 JWT Token銆?
+### Q2: 璇勬祴鏈嶅姟鏈�繍琛岋紵
 
-确保 go-judge 正在运行�?
+纭�繚 go-judge 姝ｅ湪杩愯�锛?
 ```bash
-# 检查状�?sudo pm2 status | grep go-judge
+# 妫€鏌ョ姸鎬?sudo pm2 status | grep go-judge
 
-# 启动服务
+# 鍚�姩鏈嶅姟
 sudo pm2 start go-judge
 ```
 
-### Q3: 数据库连接失败？
+### Q3: 鏁版嵁搴撹繛鎺ュけ璐ワ紵
 
-检查：
-1. MySQL 服务是否启动
-2. 数据库配置是否正�?3. 用户权限是否足够
+妫€鏌ワ細
+1. MySQL 鏈嶅姟鏄�惁鍚�姩
+2. 鏁版嵁搴撻厤缃�槸鍚︽�纭?3. 鐢ㄦ埛鏉冮檺鏄�惁瓒冲�
 
 ```bash
-# 测试连接
+# 娴嬭瘯杩炴帴
 mysql -u root -p -h localhost zjoj
 ```
 
-### Q4: 导入依赖时出错？
+### Q4: 瀵煎叆渚濊禆鏃跺嚭閿欙紵
 
-确保使用正确�?Python 版本�?
+纭�繚浣跨敤姝ｇ‘鐨?Python 鐗堟湰锛?
 ```bash
-python --version  # 应该 >= 3.8
-pip --version     # 应该对应 Python 3.8+
+python --version  # 搴旇� >= 3.8
+pip --version     # 搴旇�瀵瑰簲 Python 3.8+
 ```
 
 ---
 
-## 🆘 获取帮助
+## 馃啒 鑾峰彇甯�姪
 
-遇到问题�?
-1. 📖 查看[完整文档](README.md)
-2. 🔍 搜索已有 Issue
-3. 💬 加入社区讨论�?4. 📝 提交�?Issue
+閬囧埌闂��锛?
+1. 馃摉 鏌ョ湅[瀹屾暣鏂囨。](README.md)
+2. 馃攳 鎼滅储宸叉湁 Issue
+3. 馃挰 鍔犲叆绀惧尯璁ㄨ�缇?4. 馃摑 鎻愪氦鏂?Issue
 
 ---
 
 <div align="center">
 
-**继续学习 �?* [系统架构](02-ARCHITECTURE.md)
+**缁х画瀛︿範 鈫?* [绯荤粺鏋舵瀯](02-ARCHITECTURE.md)
 
 </div>

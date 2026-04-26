@@ -371,6 +371,25 @@ class KnowledgeBaseView(APIView):
                 'error': '只有教练或管理员可以添加知识库文档'
             }, status=403)
         
+        # 幂等性检查：检查是否已存在相同标题+类型+错误类型的文档
+        title = request.data.get('title')
+        doc_type = request.data.get('doc_type')
+        error_type = request.data.get('error_type', '')
+        
+        if title and doc_type:
+            existing_doc = KnowledgeBase.objects.filter(
+                title=title,
+                doc_type=doc_type,
+                error_type=error_type
+            ).first()
+            
+            if existing_doc:
+                return Response({
+                    'message': '该知识库文档已存在',
+                    'data': KnowledgeBaseSerializer(existing_doc).data,
+                    'is_duplicate': True
+                }, status=200)
+        
         serializer = KnowledgeBaseSerializer(data=request.data)
         if serializer.is_valid():
             doc = serializer.save()

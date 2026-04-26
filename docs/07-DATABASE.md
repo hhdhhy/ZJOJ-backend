@@ -1,200 +1,200 @@
-# 数据库设�?
-> 🗄�?ZJOJ 数据库核心设计概�?
+# 鏁版嵁搴撹�璁?
+> 馃梽锔?ZJOJ 鏁版嵁搴撴牳蹇冭�璁℃�瑙?
 ---
 
-## 数据库环�?
-- **类型**: MySQL 8.0
-- **字符�?*: utf8mb4
-- **引擎**: InnoDB
-- **用户模型**: 自定�?OJUser (uid 为主�?
-
----
-
-## 核心数据�?
-### 1. 用户模块
-
-#### ojauth_ojuser（用户表�?
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| uid | VARCHAR(22) | Short UUID 主键 |
-| username | VARCHAR(150) | 用户名（唯一�?|
-| email | VARCHAR(254) | 邮箱（登录账号，唯一�?|
-| telephone | VARCHAR(20) | 手机号（唯一�?|
-| realname | VARCHAR(150) | 真实姓名 |
-| password | VARCHAR(128) | 密码哈希 |
-| role | INT | 角色�?-学生, 2-教练, 3-管理�?|
-| is_superuser | TINYINT | 是否超级用户 |
-| is_staff | TINYINT | 是否工作人员 |
-| status | INT | 状态：1-激�? 2-未激�? 3-锁定 |
-| avatar | VARCHAR(200) | 头像URL |
-| bio | TEXT | 个人简�?|
-| date_joined | DATETIME | 注册时间 |
-
-**特点**�?- 使用 Short UUID 避免信息泄露
-- 邮箱作为登录账号
-- PBKDF2 加密存储密码
-- 支持三种角色：学生、教练、管理员
+## 鏁版嵁搴撶幆澧?
+- **绫诲瀷**: MySQL 8.0
+- **瀛楃�闆?*: utf8mb4
+- **寮曟搸**: InnoDB
+- **鐢ㄦ埛妯″瀷**: 鑷�畾涔?OJUser (uid 涓轰富閿?
 
 ---
 
-### 2. 题目模块
+## 鏍稿績鏁版嵁琛?
+### 1. 鐢ㄦ埛妯″潡
 
-#### problem_problem（题目表�?
-| 字段 | 类型 | 说明 |
+#### ojauth_ojuser锛堢敤鎴疯〃锛?
+| 瀛楁� | 绫诲瀷 | 璇存槑 |
 |------|------|------|
-| problem_id | VARCHAR(20) | 题目编号（主键，�?P1001�?|
-| title | VARCHAR(100) | 题目标题 |
-| description | LONGTEXT | 题目描述（Markdown�?|
-| time_limit | INT | 时间限制（毫秒） |
-| memory_limit | INT | 内存限制（MB�?|
-| creator_id | VARCHAR(255) | 创建者（外键，SET NULL�?|
+| uid | VARCHAR(22) | Short UUID 涓婚敭 |
+| username | VARCHAR(150) | 鐢ㄦ埛鍚嶏紙鍞�竴锛?|
+| email | VARCHAR(254) | 閭��锛堢櫥褰曡处鍙凤紝鍞�竴锛?|
+| telephone | VARCHAR(20) | 鎵嬫満鍙凤紙鍞�竴锛?|
+| realname | VARCHAR(150) | 鐪熷疄濮撳悕 |
+| password | VARCHAR(128) | 瀵嗙爜鍝堝笇 |
+| role | INT | 瑙掕壊锛?-瀛︾敓, 2-鏁欑粌, 3-绠＄悊鍛?|
+| is_superuser | TINYINT | 鏄�惁瓒呯骇鐢ㄦ埛 |
+| is_staff | TINYINT | 鏄�惁宸ヤ綔浜哄憳 |
+| status | INT | 鐘舵€侊細1-婵€娲? 2-鏈�縺娲? 3-閿佸畾 |
+| avatar | VARCHAR(200) | 澶村儚URL |
+| bio | TEXT | 涓�汉绠€浠?|
+| date_joined | DATETIME | 娉ㄥ唽鏃堕棿 |
 
-#### problem_tag（标签表�?
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| id | BIGINT | 自增主键 |
-| name | VARCHAR(50) | 标签名（唯一�?|
-
-**关系**：Problem �?Tag（多对多�?
----
-
-### 3. 提交记录模块
-
-#### submission（提交表�?
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| id | BIGINT | 自增主键 |
-| problem_id | VARCHAR(20) | 题目（外键） |
-| user_id | VARCHAR(255) | 用户（外键） |
-| language | VARCHAR(20) | 编程语言（cpp/c/java/python3�?|
-| code | LONGTEXT | 提交的代�?|
-| code_length | INT | 代码长度（字节） |
-| status | INT | 评测状态（0-4�?|
-| result | VARCHAR(10) | 评测结果（AC/WA/TLE等） |
-| score | INT | 得分 |
-| execution_time | INT | 运行时间（毫秒） |
-| memory_usage | INT | 内存使用（KB�?|
-| submit_time | DATETIME | 提交时间 |
-| judge_time | DATETIME | 评测时间 |
-
-**评测状�?*�?- 0: 等待评测
-- 1: 评测�?- 2: 已完�?- 3: 编译错误
-- 4: 系统错误
-
-**评测结果**�?- AC: Accepted（通过�?- WA: Wrong Answer（答案错误）
-- TLE: Time Limit Exceeded（超时）
-- MLE: Memory Limit Exceeded（超内存�?- RE: Runtime Error（运行错误）
-- CE: Compilation Error（编译错误）
-- SE: System Error（系统错误）
-
-#### test_case_result（测试点结果表）
-
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| id | BIGINT | 自增主键 |
-| submission_id | BIGINT | 提交记录（外键） |
-| test_case_id | INT | 测试用例ID |
-| status | VARCHAR(10) | 测试点状态（AC/WA/TLE/MLE/RE�?|
-| execution_time | INT | 用时（毫秒） |
-| memory_usage | INT | 内存（KB�?|
-| score | INT | 该测试点得分 |
-| message | TEXT | 详细信息 |
+**鐗圭偣**锛?- 浣跨敤 Short UUID 閬垮厤淇℃伅娉勯湶
+- 閭��浣滀负鐧诲綍璐﹀彿
+- PBKDF2 鍔犲瘑瀛樺偍瀵嗙爜
+- 鏀�寔涓夌�瑙掕壊锛氬�鐢熴€佹暀缁冦€佺�鐞嗗憳
 
 ---
 
-### 4. 班级管理模块
+### 2. 棰樼洰妯″潡
 
-#### ojauth_class（班级表�?
-| 字段 | 类型 | 说明 |
+#### problem_problem锛堥�鐩�〃锛?
+| 瀛楁� | 绫诲瀷 | 璇存槑 |
 |------|------|------|
-| id | BIGINT | 自增主键 |
-| name | VARCHAR(100) | 班级名称（唯一�?|
-| coach_id | VARCHAR(22) | 班主�?教练（外键，SET NULL�?|
-| description | TEXT | 班级描述 |
-| create_time | DATETIME | 创建时间 |
+| problem_id | VARCHAR(20) | 棰樼洰缂栧彿锛堜富閿�紝濡?P1001锛?|
+| title | VARCHAR(100) | 棰樼洰鏍囬� |
+| description | LONGTEXT | 棰樼洰鎻忚堪锛圡arkdown锛?|
+| time_limit | INT | 鏃堕棿闄愬埗锛堟�绉掞級 |
+| memory_limit | INT | 鍐呭瓨闄愬埗锛圡B锛?|
+| creator_id | VARCHAR(255) | 鍒涘缓鑰咃紙澶栭敭锛孲ET NULL锛?|
 
-#### ojauth_class_member（班级成员表�?
-| 字段 | 类型 | 说明 |
+#### problem_tag锛堟爣绛捐〃锛?
+| 瀛楁� | 绫诲瀷 | 璇存槑 |
 |------|------|------|
-| id | BIGINT | 自增主键 |
-| class_obj_id | BIGINT | 班级（外键） |
-| user_id | VARCHAR(22) | 学生（外键） |
-| join_time | DATETIME | 加入时间 |
+| id | BIGINT | 鑷��涓婚敭 |
+| name | VARCHAR(50) | 鏍囩�鍚嶏紙鍞�竴锛?|
 
-**关系**�?- Class �?OJUser (coach): 多对一
-- Class �?OJUser (members): 多对多（通过 ClassMember�?
+**鍏崇郴**锛歅roblem 鈫?Tag锛堝�瀵瑰�锛?
 ---
 
-### 5. AI 助手模块
+### 3. 鎻愪氦璁板綍妯″潡
 
-#### ai_assistant_knowledgebase（知识库�?
-| 字段 | 类型 | 说明 |
+#### submission锛堟彁浜よ〃锛?
+| 瀛楁� | 绫诲瀷 | 璇存槑 |
 |------|------|------|
-| id | BIGINT | 自增主键 |
-| title | VARCHAR(200) | 文档标题 |
-| content | LONGTEXT | 文档内容 |
-| embedding | JSON | 向量嵌入 |
-| problem_id | VARCHAR(20) | 关联题目（可选） |
+| id | BIGINT | 鑷��涓婚敭 |
+| problem_id | VARCHAR(20) | 棰樼洰锛堝�閿�級 |
+| user_id | VARCHAR(255) | 鐢ㄦ埛锛堝�閿�級 |
+| language | VARCHAR(20) | 缂栫▼璇�█锛坈pp/c/java/python3锛?|
+| code | LONGTEXT | 鎻愪氦鐨勪唬鐮?|
+| code_length | INT | 浠ｇ爜闀垮害锛堝瓧鑺傦級 |
+| status | INT | 璇勬祴鐘舵€侊紙0-4锛?|
+| result | VARCHAR(10) | 璇勬祴缁撴灉锛圓C/WA/TLE绛夛級 |
+| score | INT | 寰楀垎 |
+| execution_time | INT | 杩愯�鏃堕棿锛堟�绉掞級 |
+| memory_usage | INT | 鍐呭瓨浣跨敤锛圞B锛?|
+| submit_time | DATETIME | 鎻愪氦鏃堕棿 |
+| judge_time | DATETIME | 璇勬祴鏃堕棿 |
 
-#### ai_assistant_chathistory（对话历史）
+**璇勬祴鐘舵€?*锛?- 0: 绛夊緟璇勬祴
+- 1: 璇勬祴涓?- 2: 宸插畬鎴?- 3: 缂栬瘧閿欒�
+- 4: 绯荤粺閿欒�
 
-| 字段 | 类型 | 说明 |
+**璇勬祴缁撴灉**锛?- AC: Accepted锛堥€氳繃锛?- WA: Wrong Answer锛堢瓟妗堥敊璇�級
+- TLE: Time Limit Exceeded锛堣秴鏃讹級
+- MLE: Memory Limit Exceeded锛堣秴鍐呭瓨锛?- RE: Runtime Error锛堣繍琛岄敊璇�級
+- CE: Compilation Error锛堢紪璇戦敊璇�級
+- SE: System Error锛堢郴缁熼敊璇�級
+
+#### test_case_result锛堟祴璇曠偣缁撴灉琛�級
+
+| 瀛楁� | 绫诲瀷 | 璇存槑 |
 |------|------|------|
-| id | BIGINT | 自增主键 |
-| user_id | VARCHAR(255) | 用户（外键） |
-| messages | JSON | 对话消息列表 |
-| created_at | DATETIME | 创建时间 |
-
-#### ai_assistant_userprofile（用户AI配置�?
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| id | BIGINT | 自增主键 |
-| user_id | VARCHAR(22) | 用户（一对一�?|
-| api_key | VARCHAR(255) | 用户自定�?API Key |
-| model | VARCHAR(50) | 偏好模型 |
-
-#### ai_assistant_ratelimit（频率限制）
-
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| id | BIGINT | 自增主键 |
-| user_id | VARCHAR(22) | 用户（外键） |
-| request_count | INT | 今日请求次数 |
-| last_request | DATETIME | 最后请求时�?|
+| id | BIGINT | 鑷��涓婚敭 |
+| submission_id | BIGINT | 鎻愪氦璁板綍锛堝�閿�級 |
+| test_case_id | INT | 娴嬭瘯鐢ㄤ緥ID |
+| status | VARCHAR(10) | 娴嬭瘯鐐圭姸鎬侊紙AC/WA/TLE/MLE/RE锛?|
+| execution_time | INT | 鐢ㄦ椂锛堟�绉掞級 |
+| memory_usage | INT | 鍐呭瓨锛圞B锛?|
+| score | INT | 璇ユ祴璇曠偣寰楀垎 |
+| message | TEXT | 璇︾粏淇℃伅 |
 
 ---
 
-## ER 关系�?
+### 4. 鐝�骇绠＄悊妯″潡
+
+#### ojauth_class锛堢彮绾ц〃锛?
+| 瀛楁� | 绫诲瀷 | 璇存槑 |
+|------|------|------|
+| id | BIGINT | 鑷��涓婚敭 |
+| name | VARCHAR(100) | 鐝�骇鍚嶇О锛堝敮涓€锛?|
+| coach_id | VARCHAR(22) | 鐝�富浠?鏁欑粌锛堝�閿�紝SET NULL锛?|
+| description | TEXT | 鐝�骇鎻忚堪 |
+| create_time | DATETIME | 鍒涘缓鏃堕棿 |
+
+#### ojauth_class_member锛堢彮绾ф垚鍛樿〃锛?
+| 瀛楁� | 绫诲瀷 | 璇存槑 |
+|------|------|------|
+| id | BIGINT | 鑷��涓婚敭 |
+| class_obj_id | BIGINT | 鐝�骇锛堝�閿�級 |
+| user_id | VARCHAR(22) | 瀛︾敓锛堝�閿�級 |
+| join_time | DATETIME | 鍔犲叆鏃堕棿 |
+
+**鍏崇郴**锛?- Class 鈫?OJUser (coach): 澶氬�涓€
+- Class 鈫?OJUser (members): 澶氬�澶氾紙閫氳繃 ClassMember锛?
+---
+
+### 5. AI 鍔╂墜妯″潡
+
+#### ai_assistant_knowledgebase锛堢煡璇嗗簱锛?
+| 瀛楁� | 绫诲瀷 | 璇存槑 |
+|------|------|------|
+| id | BIGINT | 鑷��涓婚敭 |
+| title | VARCHAR(200) | 鏂囨。鏍囬� |
+| content | LONGTEXT | 鏂囨。鍐呭� |
+| embedding | JSON | 鍚戦噺宓屽叆 |
+| problem_id | VARCHAR(20) | 鍏宠仈棰樼洰锛堝彲閫夛級 |
+
+#### ai_assistant_chathistory锛堝�璇濆巻鍙诧級
+
+| 瀛楁� | 绫诲瀷 | 璇存槑 |
+|------|------|------|
+| id | BIGINT | 鑷��涓婚敭 |
+| user_id | VARCHAR(255) | 鐢ㄦ埛锛堝�閿�級 |
+| messages | JSON | 瀵硅瘽娑堟伅鍒楄〃 |
+| created_at | DATETIME | 鍒涘缓鏃堕棿 |
+
+#### ai_assistant_userprofile锛堢敤鎴稟I閰嶇疆锛?
+| 瀛楁� | 绫诲瀷 | 璇存槑 |
+|------|------|------|
+| id | BIGINT | 鑷��涓婚敭 |
+| user_id | VARCHAR(22) | 鐢ㄦ埛锛堜竴瀵逛竴锛?|
+| api_key | VARCHAR(255) | 鐢ㄦ埛鑷�畾涔?API Key |
+| model | VARCHAR(50) | 鍋忓ソ妯″瀷 |
+
+#### ai_assistant_ratelimit锛堥�鐜囬檺鍒讹級
+
+| 瀛楁� | 绫诲瀷 | 璇存槑 |
+|------|------|------|
+| id | BIGINT | 鑷��涓婚敭 |
+| user_id | VARCHAR(22) | 鐢ㄦ埛锛堝�閿�級 |
+| request_count | INT | 浠婃棩璇锋眰娆℃暟 |
+| last_request | DATETIME | 鏈€鍚庤�姹傛椂闂?|
+
+---
+
+## ER 鍏崇郴鍥?
 ```
-┌──────────────�?      ┌─────────────────�?�? OJUser      �?      �?  Problem       �?│──────────────�?      │─────────────────�?�?uid (PK)     │◄──────�?creator_id (FK) �?�?username     �?      �?problem_id (PK) �?�?email        �?      �?title           �?�?role         �?      �?description     �?�?telephone    �?      └────────┬────────�?└──────┬───────�?               �?       �?                       �?       �?             ┌─────────▼────────�?       �?             �?  Submission     �?       �?             │──────────────────�?       �?             �?id (PK)          �?       �?             �?user_id (FK)     �?       �?             �?problem_id (FK)  �?       �?             �?result           �?       �?             �?code             �?       �?             └────────┬─────────�?       �?                      �?       �?             ┌────────▼──────────────�?       �?             �?TestCaseResult        �?       �?             │───────────────────────�?       �?             �?submission_id (FK)    �?       �?             �?test_case_id          �?       �?             �?result                �?       �?             └───────────────────────�?       �?       �?             ┌──────────────────────�?       �?             �?  Class              �?       �?             │──────────────────────�?       �?             �?id (PK)              �?       �?             �?coach_id (FK) ◄──────�?       �?             �?name                 �?       �?             └────────┬─────────────�?       �?                      �?       �?             ┌────────▼──────────────�?       �?             �?ClassMember           �?       �?             │───────────────────────�?       �?             �?class_obj_id (FK)     �?       �?             �?user_id (FK) ◄────────�?       �?             └───────────────────────�?       �?       �?             ┌──────────────────────�?       �?             �?ChatHistory          �?       �?             │──────────────────────�?       �?             �?user_id (FK)         �?       �?             �?messages (JSON)      �?       �?             └──────────────────────�?```
+鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?      鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?鈹? OJUser      鈹?      鈹?  Problem       鈹?鈹傗攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?      鈹傗攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?鈹?uid (PK)     鈹傗梽鈹€鈹€鈹€鈹€鈹€鈹€鈹?creator_id (FK) 鈹?鈹?username     鈹?      鈹?problem_id (PK) 鈹?鈹?email        鈹?      鈹?title           鈹?鈹?role         鈹?      鈹?description     鈹?鈹?telephone    鈹?      鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹�攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹�攢鈹€鈹€鈹€鈹€鈹€鈹€鈹?               鈹?       鈹?                       鈹?       鈹?             鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈻尖攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?       鈹?             鈹?  Submission     鈹?       鈹?             鈹傗攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?       鈹?             鈹?id (PK)          鈹?       鈹?             鈹?user_id (FK)     鈹?       鈹?             鈹?problem_id (FK)  鈹?       鈹?             鈹?result           鈹?       鈹?             鈹?code             鈹?       鈹?             鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹�攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?       鈹?                      鈹?       鈹?             鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈻尖攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?       鈹?             鈹?TestCaseResult        鈹?       鈹?             鈹傗攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?       鈹?             鈹?submission_id (FK)    鈹?       鈹?             鈹?test_case_id          鈹?       鈹?             鈹?result                鈹?       鈹?             鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?       鈹?       鈹?             鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?       鈹?             鈹?  Class              鈹?       鈹?             鈹傗攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?       鈹?             鈹?id (PK)              鈹?       鈹?             鈹?coach_id (FK) 鈼勨攢鈹€鈹€鈹€鈹€鈹€鈹?       鈹?             鈹?name                 鈹?       鈹?             鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹�攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?       鈹?                      鈹?       鈹?             鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈻尖攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?       鈹?             鈹?ClassMember           鈹?       鈹?             鈹傗攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?       鈹?             鈹?class_obj_id (FK)     鈹?       鈹?             鈹?user_id (FK) 鈼勨攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?       鈹?             鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?       鈹?       鈹?             鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?       鈹?             鈹?ChatHistory          鈹?       鈹?             鈹傗攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?       鈹?             鈹?user_id (FK)         鈹?       鈹?             鈹?messages (JSON)      鈹?       鈹?             鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?```
 
 ---
 
-## 索引优化建议
+## 绱㈠紩浼樺寲寤鸿�
 
-### 必建索引
+### 蹇呭缓绱㈠紩
 
-1. **用户�?*：username, email, telephone（唯一索引�?2. **题目�?*：problem_id（主键）
-3. **提交�?*：user_id, problem_id, submit_time（联合查询优化）
-4. **测试点结�?*：submission_id（外键查询）
-5. **班级�?*：name（唯一索引�?6. **班级成员**：class_obj_id, user_id（联合唯一索引�?
-### 性能优化
+1. **鐢ㄦ埛琛?*锛歶sername, email, telephone锛堝敮涓€绱㈠紩锛?2. **棰樼洰琛?*锛歱roblem_id锛堜富閿�級
+3. **鎻愪氦琛?*锛歶ser_id, problem_id, submit_time锛堣仈鍚堟煡璇�紭鍖栵級
+4. **娴嬭瘯鐐圭粨鏋?*锛歴ubmission_id锛堝�閿�煡璇�級
+5. **鐝�骇琛?*锛歯ame锛堝敮涓€绱㈠紩锛?6. **鐝�骇鎴愬憳**锛歝lass_obj_id, user_id锛堣仈鍚堝敮涓€绱㈠紩锛?
+### 鎬ц兘浼樺寲
 
-1. **分页查询**：在 submit_time 上建立索�?2. **标签筛�?*：problem_tag 中间表建立联合索�?3. **搜索功能**：考虑使用全文索引�?Elasticsearch
+1. **鍒嗛〉鏌ヨ�**锛氬湪 submit_time 涓婂缓绔嬬储寮?2. **鏍囩�绛涢€?*锛歱roblem_tag 涓�棿琛ㄥ缓绔嬭仈鍚堢储寮?3. **鎼滅储鍔熻兘**锛氳€冭檻浣跨敤鍏ㄦ枃绱㈠紩鎴?Elasticsearch
 
 ---
 
-## 注意事项
+## 娉ㄦ剰浜嬮」
 
-1. **外键约束**：creator_id、coach_id 使用 SET NULL，删除用户时保留数据
-2. **大字�?*：description、code、content、bio 使用 LONGTEXT/TEXT
-3. **JSON 字段**：messages、embedding 使用 JSON 类型（MySQL 5.7+�?4. **时间�?*：使�?DATETIME(6) 支持微秒精度
-5. **唯一�?*：班级名称全局唯一，避免重�?
+1. **澶栭敭绾︽潫**锛歝reator_id銆乧oach_id 浣跨敤 SET NULL锛屽垹闄ょ敤鎴锋椂淇濈暀鏁版嵁
+2. **澶у瓧娈?*锛歞escription銆乧ode銆乧ontent銆乥io 浣跨敤 LONGTEXT/TEXT
+3. **JSON 瀛楁�**锛歮essages銆乪mbedding 浣跨敤 JSON 绫诲瀷锛圡ySQL 5.7+锛?4. **鏃堕棿鎴?*锛氫娇鐢?DATETIME(6) 鏀�寔寰��绮惧害
+5. **鍞�竴鎬?*锛氱彮绾у悕绉板叏灞€鍞�竴锛岄伩鍏嶉噸澶?
 ---
 
-## 相关文件
+## 鐩稿叧鏂囦欢
 
-- 用户模型：`apps/ojauth/models.py`
-- 题目模型：`apps/problem/models.py`
-- 提交模型：`apps/problem/models.py`（Submission, TestCaseResult�?- AI 模型：`apps/ai_assistant/models.py`
-- 权限系统文档：`docs/06-MODULES/permission-system.md`
+- 鐢ㄦ埛妯″瀷锛歚apps/ojauth/models.py`
+- 棰樼洰妯″瀷锛歚apps/problem/models.py`
+- 鎻愪氦妯″瀷锛歚apps/problem/models.py`锛圫ubmission, TestCaseResult锛?- AI 妯″瀷锛歚apps/ai_assistant/models.py`
+- 鏉冮檺绯荤粺鏂囨。锛歚docs/06-MODULES/permission-system.md`

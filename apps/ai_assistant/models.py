@@ -43,6 +43,13 @@ class KnowledgeBase(models.Model):
         verbose_name = '知识库文档'
         verbose_name_plural = '知识库文档'
         ordering = ['-created_at']
+        # 添加唯一性约束：同一标题+类型+错误类型的文档只能有一个
+        constraints = [
+            models.UniqueConstraint(
+                fields=['title', 'doc_type', 'error_type'],
+                name='unique_knowledge_doc'
+            )
+        ]
     
     def __str__(self):
         return self.title

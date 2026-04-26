@@ -1,17 +1,17 @@
-# 开发指�?
-> 🛠�?ZJOJ 项目开发规范和最佳实�?
+# 寮€鍙戞寚鍗?
+> 馃洜锔?ZJOJ 椤圭洰寮€鍙戣�鑼冨拰鏈€浣冲疄璺?
 ---
 
-## 快速开�?
-### 环境要求
+## 蹇�€熷紑濮?
+### 鐜��瑕佹眰
 
 - **Python**: 3.8+
 - **Django**: 6.0+
 - **MySQL**: 8.0+
-- **Docker**: 20.10+（推荐）
+- **Docker**: 20.10+锛堟帹鑽愶級
 
-### 开发环境搭�?
-#### 方式一：Docker（推荐）
+### 寮€鍙戠幆澧冩惌寤?
+#### 鏂瑰紡涓€锛欴ocker锛堟帹鑽愶級
 
 ```bash
 git clone git@github.com:hhdhhy/ZJOJ-backend.git
@@ -20,53 +20,53 @@ cd ZJOJ-backend
 docker compose up -d
 ```
 
-#### 方式二：本地开�?
+#### 鏂瑰紡浜岋細鏈�湴寮€鍙?
 ```bash
-# 1. 克隆项目
+# 1. 鍏嬮殕椤圭洰
 git clone git@github.com:hhdhhy/ZJOJ-backend.git
 cd ZJOJ-backend
 
-# 2. 创建虚拟环境
+# 2. 鍒涘缓铏氭嫙鐜��
 python -m venv .venv
 source .venv/bin/activate  # Linux/Mac
 # .venv\Scripts\activate   # Windows
 
-# 3. 安装依赖
+# 3. 瀹夎�渚濊禆
 pip install -r requirements.txt
 
-# 4. 配置数据�?# 编辑 ZJOJ/settings.py 或创�?.env 文件
+# 4. 閰嶇疆鏁版嵁搴?# 缂栬緫 ZJOJ/settings.py 鎴栧垱寤?.env 鏂囦欢
 
-# 5. 数据迁移
+# 5. 鏁版嵁杩佺Щ
 python manage.py migrate
 
-# 6. 创建管理�?python manage.py createsuperuser
+# 6. 鍒涘缓绠＄悊鍛?python manage.py createsuperuser
 
-# 7. 启动服务
+# 7. 鍚�姩鏈嶅姟
 python manage.py runserver
 ```
 
 ---
 
-## 代码规范
+## 浠ｇ爜瑙勮寖
 
-### Python 代码风格
+### Python 浠ｇ爜椋庢牸
 
-遵循 PEP 8 规范�?
+閬靛惊 PEP 8 瑙勮寖锛?
 ```python
-# �?好的命名
+# 鉁?濂界殑鍛藉悕
 def get_user_profile(user_id: str) -> dict:
-    """获取用户资料"""
+    """鑾峰彇鐢ㄦ埛璧勬枡"""
     pass
 
-# �?不好的命�?def getUser(u):
+# 鉂?涓嶅ソ鐨勫懡鍚?def getUser(u):
     pass
 ```
 
-**要点**�?- 使用 snake_case 命名函数和变�?- 使用 PascalCase 命名�?- 添加类型注解
-- 编写 docstring
+**瑕佺偣**锛?- 浣跨敤 snake_case 鍛藉悕鍑芥暟鍜屽彉閲?- 浣跨敤 PascalCase 鍛藉悕绫?- 娣诲姞绫诲瀷娉ㄨВ
+- 缂栧啓 docstring
 
-### Django 最佳实�?
-#### 1. 模型设计
+### Django 鏈€浣冲疄璺?
+#### 1. 妯″瀷璁捐�
 
 ```python
 class Problem(models.Model):
@@ -75,16 +75,16 @@ class Problem(models.Model):
     
     class Meta:
         db_table = 'problem_problem'
-        verbose_name = '题目'
-        verbose_name_plural = '题目'
+        verbose_name = '棰樼洰'
+        verbose_name_plural = '棰樼洰'
     
     def __str__(self):
         return f"{self.problem_id}: {self.title}"
 ```
 
-#### 2. 视图设计
+#### 2. 瑙嗗浘璁捐�
 
-使用 DRF �?ViewSet�?
+浣跨敤 DRF 鐨?ViewSet锛?
 ```python
 from rest_framework import viewsets, permissions
 
@@ -101,7 +101,7 @@ class ProblemViewSet(viewsets.ModelViewSet):
         return queryset
 ```
 
-#### 3. 序列化器
+#### 3. 搴忓垪鍖栧櫒
 
 ```python
 from rest_framework import serializers
@@ -121,41 +121,41 @@ class ProblemSerializer(serializers.ModelSerializer):
 
 ---
 
-## 项目结构
+## 椤圭洰缁撴瀯
 
 ```
 ZJOJ-backend/
-├── apps/                  # 应用模块
-�?  ├── ojauth/           # 用户认证
-�?  ├── problem/          # 题目管理
-�?  ├── submission/       # 提交记录
-�?  └── ai_assistant/     # AI助手
-├── ZJOJ/                 # 项目配置
-�?  ├── settings.py       # 基础配置
-�?  ├── urls.py           # URL路由
-�?  └── wsgi.py           # WSGI入口
-├── deploy/               # 部署脚本
-├── docs/                 # 文档
-├── manage.py             # Django管理命令
-└── requirements.txt      # Python依赖
+鈹溾攢鈹€ apps/                  # 搴旂敤妯″潡
+鈹?  鈹溾攢鈹€ ojauth/           # 鐢ㄦ埛璁よ瘉
+鈹?  鈹溾攢鈹€ problem/          # 棰樼洰绠＄悊
+鈹?  鈹溾攢鈹€ submission/       # 鎻愪氦璁板綍
+鈹?  鈹斺攢鈹€ ai_assistant/     # AI鍔╂墜
+鈹溾攢鈹€ ZJOJ/                 # 椤圭洰閰嶇疆
+鈹?  鈹溾攢鈹€ settings.py       # 鍩虹�閰嶇疆
+鈹?  鈹溾攢鈹€ urls.py           # URL璺�敱
+鈹?  鈹斺攢鈹€ wsgi.py           # WSGI鍏ュ彛
+鈹溾攢鈹€ deploy/               # 閮ㄧ讲鑴氭湰
+鈹溾攢鈹€ docs/                 # 鏂囨。
+鈹溾攢鈹€ manage.py             # Django绠＄悊鍛戒护
+鈹斺攢鈹€ requirements.txt      # Python渚濊禆
 ```
 
 ---
 
-## API 开发规�?
-### RESTful 设计
+## API 寮€鍙戣�鑼?
+### RESTful 璁捐�
 
-| 方法 | 路径 | 说明 |
+| 鏂规硶 | 璺�緞 | 璇存槑 |
 |------|------|------|
-| GET | /api/problems/ | 获取题目列表 |
-| POST | /api/problems/ | 创建题目 |
-| GET | /api/problems/{id}/ | 获取题目详情 |
-| PUT | /api/problems/{id}/ | 更新题目 |
-| DELETE | /api/problems/{id}/ | 删除题目 |
+| GET | /api/problems/ | 鑾峰彇棰樼洰鍒楄〃 |
+| POST | /api/problems/ | 鍒涘缓棰樼洰 |
+| GET | /api/problems/{id}/ | 鑾峰彇棰樼洰璇︽儏 |
+| PUT | /api/problems/{id}/ | 鏇存柊棰樼洰 |
+| DELETE | /api/problems/{id}/ | 鍒犻櫎棰樼洰 |
 
-### 响应格式
+### 鍝嶅簲鏍煎紡
 
-**成功响应**�?```json
+**鎴愬姛鍝嶅簲**锛?```json
 {
   "count": 100,
   "next": "http://api.example.com/problems/?page=2",
@@ -164,49 +164,49 @@ ZJOJ-backend/
 }
 ```
 
-**错误响应**�?```json
+**閿欒�鍝嶅簲**锛?```json
 {
-  "error": "验证失败",
+  "error": "楠岃瘉澶辫触",
   "details": {
-    "title": ["此字段必�?]
+    "title": ["姝ゅ瓧娈靛繀濉?]
   }
 }
 ```
 
-### 权限控制
+### 鏉冮檺鎺у埗
 
 ```python
 from rest_framework.permissions import IsAuthenticated
 
 class SubmissionViewSet(viewsets.ModelViewSet):
-    permission_classes = [IsAuthenticated]  # 需要登�?```
+    permission_classes = [IsAuthenticated]  # 闇€瑕佺櫥褰?```
 
-#### 角色权限控制
+#### 瑙掕壊鏉冮檺鎺у埗
 
 ```python
 from Middleware.PermissionCheck import coach_required, student_required
 
 class ClassView(APIView):
-    @coach_required  # 仅教练可访问
+    @coach_required  # 浠呮暀缁冨彲璁块棶
     def post(self, request):
         pass
 ```
 
-详见：[权限系统文档](06-MODULES/permission-system.md)
+璇﹁�锛歔鏉冮檺绯荤粺鏂囨。](06-MODULES/permission-system.md)
 
-公开接口需显式豁免�?
+鍏�紑鎺ュ彛闇€鏄惧紡璞佸厤锛?
 ```python
 from rest_framework.permissions import AllowAny
 
 class LoginView(APIView):
-    permission_classes = [AllowAny]  # 无需登录
+    permission_classes = [AllowAny]  # 鏃犻渶鐧诲綍
 ```
 
 ---
 
-## 测试
+## 娴嬭瘯
 
-### 单元测试
+### 鍗曞厓娴嬭瘯
 
 ```python
 from django.test import TestCase
@@ -226,44 +226,44 @@ class ProblemTestCase(TestCase):
         self.assertEqual(problem.title, 'Test Problem')
 ```
 
-运行测试�?```bash
+杩愯�娴嬭瘯锛?```bash
 python manage.py test
 ```
 
 ---
 
-## Git 工作�?
-### 分支策略
+## Git 宸ヤ綔娴?
+### 鍒嗘敮绛栫暐
 
-- `main` - 主分支（生产环境�?- `develop` - 开发分�?- `feature/*` - 功能分支
-- `hotfix/*` - 紧急修�?
-### 提交规范
+- `main` - 涓诲垎鏀�紙鐢熶骇鐜��锛?- `develop` - 寮€鍙戝垎鏀?- `feature/*` - 鍔熻兘鍒嗘敮
+- `hotfix/*` - 绱ф€ヤ慨澶?
+### 鎻愪氦瑙勮寖
 
 ```bash
-# 格式�?type>: <subject>
+# 鏍煎紡锛?type>: <subject>
 
-# 示例
+# 绀轰緥
 git commit -m "feat: add problem search feature"
 git commit -m "fix: resolve login timeout issue"
 git commit -m "docs: update API documentation"
 ```
 
-**Type 类型**�?- `feat`: 新功�?- `fix`: 修复bug
-- `docs`: 文档更新
-- `style`: 代码格式
-- `refactor`: 重构
-- `test`: 测试相关
-- `chore`: 构建/工具�?
+**Type 绫诲瀷**锛?- `feat`: 鏂板姛鑳?- `fix`: 淇��bug
+- `docs`: 鏂囨。鏇存柊
+- `style`: 浠ｇ爜鏍煎紡
+- `refactor`: 閲嶆瀯
+- `test`: 娴嬭瘯鐩稿叧
+- `chore`: 鏋勫缓/宸ュ叿閾?
 ---
 
-## 调试技�?
+## 璋冭瘯鎶€宸?
 ### Django Debug Toolbar
 
-安装�?```bash
+瀹夎�锛?```bash
 pip install django-debug-toolbar
 ```
 
-配置 `settings.py`�?```python
+閰嶇疆 `settings.py`锛?```python
 INSTALLED_APPS = [
     'debug_toolbar',
 ]
@@ -275,7 +275,7 @@ MIDDLEWARE = [
 INTERNAL_IPS = ['127.0.0.1']
 ```
 
-### 日志配置
+### 鏃ュ織閰嶇疆
 
 ```python
 LOGGING = {
@@ -294,21 +294,21 @@ LOGGING = {
 
 ---
 
-## 性能优化
+## 鎬ц兘浼樺寲
 
-### 数据库查询优�?
+### 鏁版嵁搴撴煡璇�紭鍖?
 ```python
-# �?N+1 查询问题
+# 鉂?N+1 鏌ヨ�闂��
 problems = Problem.objects.all()
 for p in problems:
-    print(p.creator.username)  # 每次循环都查询数据库
+    print(p.creator.username)  # 姣忔�寰�幆閮芥煡璇㈡暟鎹�簱
 
-# �?使用 select_related
+# 鉁?浣跨敤 select_related
 problems = Problem.objects.select_related('creator').all()
 for p in problems:
-    print(p.creator.username)  # 只查询一�?```
+    print(p.creator.username)  # 鍙�煡璇�竴娆?```
 
-### 缓存
+### 缂撳瓨
 
 ```python
 from django.core.cache import cache
@@ -318,33 +318,33 @@ def get_problem_list():
     data = cache.get(cache_key)
     if not data:
         data = list(Problem.objects.all())
-        cache.set(cache_key, data, 300)  # 缓存5分钟
+        cache.set(cache_key, data, 300)  # 缂撳瓨5鍒嗛挓
     return data
 ```
 
 ---
 
-## 常见问题
+## 甯歌�闂��
 
-### 1. 数据库连接失�?
+### 1. 鏁版嵁搴撹繛鎺ュけ璐?
 ```bash
-# 检�?MySQL 是否运行
+# 妫€鏌?MySQL 鏄�惁杩愯�
 sudo systemctl status mysql
 
-# 测试连接
+# 娴嬭瘯杩炴帴
 mysql -u root -p
 ```
 
-### 2. 迁移冲突
+### 2. 杩佺Щ鍐茬獊
 
 ```bash
-# 重置迁移
+# 閲嶇疆杩佺Щ
 python manage.py migrate --fake zero
 python manage.py makemigrations
 python manage.py migrate
 ```
 
-### 3. 静态文�?404
+### 3. 闈欐€佹枃浠?404
 
 ```bash
 python manage.py collectstatic
@@ -352,8 +352,8 @@ python manage.py collectstatic
 
 ---
 
-## 相关文档
+## 鐩稿叧鏂囨。
 
-- [API 参考](04-API_REFERENCE.md)
-- [数据库设计](07-DATABASE.md)
-- [部署指南](03-DEPLOYMENT.md)
+- [API 鍙傝€僝(04-API_REFERENCE.md)
+- [鏁版嵁搴撹�璁�(07-DATABASE.md)
+- [閮ㄧ讲鎸囧崡](03-DEPLOYMENT.md)

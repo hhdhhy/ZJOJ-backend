@@ -1,38 +1,38 @@
-# 评测系统模块
+# 璇勬祴绯荤粺妯″潡
 
-> �?基于 go-judge 的代码自动评测系�?
+> 鈿?鍩轰簬 go-judge 鐨勪唬鐮佽嚜鍔ㄨ瘎娴嬬郴缁?
 ---
 
-## 📋 概述
+## 馃搵 姒傝堪
 
-评测系统�?ZJOJ 的核心功能，负责�?- 编译和执行用户提交的代码
-- 限制资源使用（时间、内存）
-- 比较输出并评�?- 返回评测结果
+璇勬祴绯荤粺鏄?ZJOJ 鐨勬牳蹇冨姛鑳斤紝璐熻矗锛?- 缂栬瘧鍜屾墽琛岀敤鎴锋彁浜ょ殑浠ｇ爜
+- 闄愬埗璧勬簮浣跨敤锛堟椂闂淬€佸唴瀛橈級
+- 姣旇緝杈撳嚭骞惰瘎鍒?- 杩斿洖璇勬祴缁撴灉
 
-**技术栈**: go-judge v1.11.4 + Python Adapter
+**鎶€鏈�爤**: go-judge v1.11.4 + Python Adapter
 
 ---
 
-## 🏗�?架构设计
+## 馃彈锔?鏋舵瀯璁捐�
 
 ```
-┌─────────────────────────────────────�?�?     ZJOJ (Django Backend)          �?�?                                    �?�? ┌──────────────────────────────�? �?�? �? Submission View             �? �?�? └──────────┬───────────────────�? �?�?            �?                      �?�? ┌──────────▼───────────────────�? �?�? �? GoJudgeClient            �? �?�? �? - 读取测试用例 ZIP          �? �?�? �? - 提取输入/输出数据         �? �?�? └──────────┬───────────────────�? �?�?            �?                      �?�? ┌──────────▼──────────────────�?  �?�? �? JudgeAdapter (Python)     �?  �?�? �? - 遍历测试�?             �?  �?�? �? - 构建 go-judge 请求      �?  �?�? �? - 比较输出                �?  �?�? �? - 计算分数                �?  �?�? └──────────┬──────────────────�?  �?└─────────────┼──────────────────────�?              �?HTTP POST /run
-┌─────────────▼──────────────────────�?�? go-judge (go-judge)          �?�? localhost:5050                    �?�?                                   �?�? - 编译代码                        �?�? - 沙箱执行                        �?�? - 资源限制 (CPU/内存/进程)        �?�? - 捕获 stdout/stderr              �?└────────────────────────────────────�?```
+鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?鈹?     ZJOJ (Django Backend)          鈹?鈹?                                    鈹?鈹? 鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹? 鈹?鈹? 鈹? Submission View             鈹? 鈹?鈹? 鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹�攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹? 鈹?鈹?            鈹?                      鈹?鈹? 鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈻尖攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹? 鈹?鈹? 鈹? GoJudgeClient            鈹? 鈹?鈹? 鈹? - 璇诲彇娴嬭瘯鐢ㄤ緥 ZIP          鈹? 鈹?鈹? 鈹? - 鎻愬彇杈撳叆/杈撳嚭鏁版嵁         鈹? 鈹?鈹? 鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹�攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹? 鈹?鈹?            鈹?                      鈹?鈹? 鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈻尖攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?  鈹?鈹? 鈹? JudgeAdapter (Python)     鈹?  鈹?鈹? 鈹? - 閬嶅巻娴嬭瘯鐐?             鈹?  鈹?鈹? 鈹? - 鏋勫缓 go-judge 璇锋眰      鈹?  鈹?鈹? 鈹? - 姣旇緝杈撳嚭                鈹?  鈹?鈹? 鈹? - 璁＄畻鍒嗘暟                鈹?  鈹?鈹? 鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹�攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?  鈹?鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹尖攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?              鈹?HTTP POST /run
+鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈻尖攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?鈹? go-judge (go-judge)          鈹?鈹? localhost:5050                    鈹?鈹?                                   鈹?鈹? - 缂栬瘧浠ｇ爜                        鈹?鈹? - 娌欑�鎵ц�                        鈹?鈹? - 璧勬簮闄愬埗 (CPU/鍐呭瓨/杩涚▼)        鈹?鈹? - 鎹曡幏 stdout/stderr              鈹?鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?```
 
 ---
 
-## 📦 核心组件
+## 馃摝 鏍稿績缁勪欢
 
 ### 1. go-judge (go-judge)
 
-**服务信息**:
-- **端口**: 5050
-- **进程管理**: PM2 (`go-judge`)
-- **配置文件**: `/root/.hydro/mount.yaml`
+**鏈嶅姟淇℃伅**:
+- **绔�彛**: 5050
+- **杩涚▼绠＄悊**: PM2 (`go-judge`)
+- **閰嶇疆鏂囦欢**: `/root/.hydro/mount.yaml`
 
-**功能**:
-- 安全的代码执行环境（chroot + namespace�?- 资源限制（cgroup�?- 支持多种编程语言
-- 文件系统隔离
+**鍔熻兘**:
+- 瀹夊叏鐨勪唬鐮佹墽琛岀幆澧冿紙chroot + namespace锛?- 璧勬簮闄愬埗锛坈group锛?- 鏀�寔澶氱�缂栫▼璇�█
+- 鏂囦欢绯荤粺闅旂�
 
 **API**:
 ```http
@@ -43,15 +43,15 @@ Content-Type: application/json
   "cmd": [{
     "args": ["/bin/bash", "-c", "g++ -o main main.cpp && ./main"],
     "files": [
-      {"content": "输入数据"},
+      {"content": "杈撳叆鏁版嵁"},
       {"name": "stdout", "max": 10485760},
       {"name": "stderr", "max": 10485760}
     ],
-    "cpuLimit": 1000000000,      // 1�?(纳秒)
-    "memoryLimit": 268435456,    // 256MB (字节)
+    "cpuLimit": 1000000000,      // 1绉?(绾崇�)
+    "memoryLimit": 268435456,    // 256MB (瀛楄妭)
     "procLimit": 50,
     "copyIn": {
-      "main.cpp": {"content": "源代�?}
+      "main.cpp": {"content": "婧愪唬鐮?}
     },
     "copyOut": ["stdout", "stderr"]
   }]
@@ -62,82 +62,82 @@ Content-Type: application/json
 
 ### 2. JudgeAdapter (Python)
 
-**文件**: `apps/judge/adapter.py`
+**鏂囦欢**: `apps/judge/adapter.py`
 
-**职责**:
-- 封装 go-judge 的复杂调用逻辑
-- 多测试点自动遍历
-- 输出比较（规范化空白字符�?- 状态判断和评分
+**鑱岃矗**:
+- 灏佽� go-judge 鐨勫�鏉傝皟鐢ㄩ€昏緫
+- 澶氭祴璇曠偣鑷�姩閬嶅巻
+- 杈撳嚭姣旇緝锛堣�鑼冨寲绌虹櫧瀛楃�锛?- 鐘舵€佸垽鏂�拰璇勫垎
 
-**主要方法**:
+**涓昏�鏂规硶**:
 
 ```python
 class JudgeAdapter:
     def judge(code, language, test_cases, time_limit, memory_limit):
         """
-        执行评测
+        鎵ц�璇勬祴
         
         Args:
-            code: 源代码字符串
-            language: 编程语言 (cpp/c/python/java)
+            code: 婧愪唬鐮佸瓧绗︿覆
+            language: 缂栫▼璇�█ (cpp/c/python/java)
             test_cases: [{'input': '...', 'output': '...'}]
-            time_limit: 时间限制 (ms)
-            memory_limit: 内存限制 (MB)
+            time_limit: 鏃堕棿闄愬埗 (ms)
+            memory_limit: 鍐呭瓨闄愬埗 (MB)
         
         Returns:
             {
                 'status': 'success',
                 'result': 'AC/WA/TLE/MLE/RE/CE',
-                'score': 总分 (0-100),
-                'time': 最大运行时�?(ms),
-                'memory': 最大内存使�?(KB),
+                'score': 鎬诲垎 (0-100),
+                'time': 鏈€澶ц繍琛屾椂闂?(ms),
+                'memory': 鏈€澶у唴瀛樹娇鐢?(KB),
                 'test_cases': [...]
             }
         """
     
     def _compare_output(actual, expected):
         """
-        比较输出（规范化空白字符�?        
-        规则:
-        1. 去除首尾空白
-        2. 将所有连续空白替换为单个空格
-        3. 比较规范化后的字符串
+        姣旇緝杈撳嚭锛堣�鑼冨寲绌虹櫧瀛楃�锛?        
+        瑙勫垯:
+        1. 鍘婚櫎棣栧熬绌虹櫧
+        2. 灏嗘墍鏈夎繛缁�┖鐧芥浛鎹�负鍗曚釜绌烘牸
+        3. 姣旇緝瑙勮寖鍖栧悗鐨勫瓧绗︿覆
         
-        示例:
-        - "1  2\n3" == "1 2 3"  �?        - "hello   world" == "hello world"  �?        """
+        绀轰緥:
+        - "1  2\n3" == "1 2 3"  鉁?        - "hello   world" == "hello world"  鉁?        """
 ```
 
-**输出比较规则**:
+**杈撳嚭姣旇緝瑙勫垯**:
 
-| 实际输出 | 预期输出 | 结果 | 说明 |
+| 瀹為檯杈撳嚭 | 棰勬湡杈撳嚭 | 缁撴灉 | 璇存槑 |
 |---------|---------|------|------|
-| `"8\n"` | `"8"` | �?AC | 忽略末尾换行 |
-| `"1  2"` | `"1 2"` | �?AC | 忽略多余空格 |
-| `"1\n2\n3"` | `"1 2 3"` | �?AC | 换行视为空格 |
-| `"8"` | `"9"` | �?WA | 答案错误 |
+| `"8\n"` | `"8"` | 鉁?AC | 蹇界暐鏈�熬鎹㈣� |
+| `"1  2"` | `"1 2"` | 鉁?AC | 蹇界暐澶氫綑绌烘牸 |
+| `"1\n2\n3"` | `"1 2 3"` | 鉁?AC | 鎹㈣�瑙嗕负绌烘牸 |
+| `"8"` | `"9"` | 鉂?WA | 绛旀�閿欒� |
 
 ---
 
 ### 3. GoJudgeClient (Django)
 
-**文件**: `apps/judge/gojudge_client.py`
+**鏂囦欢**: `apps/judge/gojudge_client.py`
 
-**职责**:
-- �?Django 模型集成
-- 读取测试用例 ZIP 文件
-- 调用 JudgeAdapter
-- 返回标准化结�?
-**使用示例**:
+**鑱岃矗**:
+- 涓?Django 妯″瀷闆嗘垚
+- 璇诲彇娴嬭瘯鐢ㄤ緥 ZIP 鏂囦欢
+- 璋冪敤 JudgeAdapter
+- 杩斿洖鏍囧噯鍖栫粨鏋?
+**浣跨敤绀轰緥**:
 
 ```python
 from apps.judge.gojudge_client import GoJudgeClient
 
-# 创建客户�?client = GoJudgeClient()
+# 鍒涘缓瀹㈡埛绔?client = GoJudgeClient()
 
-# 执行评测
+# 鎵ц�璇勬祴
 result = client.judge(submission)
 
-# 结果格式
+# 缁撴灉鏍煎紡
 {
     'status': 'success',
     'result': 'AC',
@@ -160,53 +160,53 @@ result = client.judge(submission)
 
 ---
 
-## 🔄 评测流程
+## 馃攧 璇勬祴娴佺▼
 
-### 完整流程�?
+### 瀹屾暣娴佺▼鍥?
 ```
-1. 用户提交代码
-        �?2. 创建 Submission 记录 (status=PENDING)
-        �?3. GoJudgeClient.judge(submission)
-        �?4. 读取测试用例 ZIP 文件
-        �?5. 解压到临时目�?        �?6. 遍历每个测试�?
-   ├─ 读取 input/output 文件
-   ├─ 调用 JudgeAdapter.judge()
-   ├─ 构建 go-judge 请求
-   ├─ 执行代码（沙箱）
-   ├─ 捕获输出
-   ├─ 比较输出
-   └─ 记录结果
-        �?7. 聚合所有测试点结果
-        �?8. 更新 Submission (status=ACCEPTED/WA/...)
-        �?9. 清理临时文件
-        �?10. 返回结果给用�?```
+1. 鐢ㄦ埛鎻愪氦浠ｇ爜
+        鈫?2. 鍒涘缓 Submission 璁板綍 (status=PENDING)
+        鈫?3. GoJudgeClient.judge(submission)
+        鈫?4. 璇诲彇娴嬭瘯鐢ㄤ緥 ZIP 鏂囦欢
+        鈫?5. 瑙ｅ帇鍒颁复鏃剁洰褰?        鈫?6. 閬嶅巻姣忎釜娴嬭瘯鐐?
+   鈹溾攢 璇诲彇 input/output 鏂囦欢
+   鈹溾攢 璋冪敤 JudgeAdapter.judge()
+   鈹溾攢 鏋勫缓 go-judge 璇锋眰
+   鈹溾攢 鎵ц�浠ｇ爜锛堟矙绠憋級
+   鈹溾攢 鎹曡幏杈撳嚭
+   鈹溾攢 姣旇緝杈撳嚭
+   鈹斺攢 璁板綍缁撴灉
+        鈫?7. 鑱氬悎鎵€鏈夋祴璇曠偣缁撴灉
+        鈫?8. 鏇存柊 Submission (status=ACCEPTED/WA/...)
+        鈫?9. 娓呯悊涓存椂鏂囦欢
+        鈫?10. 杩斿洖缁撴灉缁欑敤鎴?```
 
-### 代码示例
+### 浠ｇ爜绀轰緥
 
 ```python
 # views.py
 class SubmissionCreateView(APIView):
     def post(self, request):
-        # 1. 验证请求
+        # 1. 楠岃瘉璇锋眰
         serializer = SubmissionSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         
-        # 2. 创建提交记录
+        # 2. 鍒涘缓鎻愪氦璁板綍
         submission = serializer.save(user=request.user)
         
-        # 3. 执行评测
+        # 3. 鎵ц�璇勬祴
         from apps.judge.gojudge_client import GoJudgeClient
         client = GoJudgeClient()
         result = client.judge(submission)
         
-        # 4. 更新提交记录
+        # 4. 鏇存柊鎻愪氦璁板綍
         submission.status = result['result']
         submission.score = result['score']
         submission.time_used = result['time']
         submission.memory_used = result['memory']
         submission.save()
         
-        # 5. 返回结果
+        # 5. 杩斿洖缁撴灉
         return Response({
             'submission_id': submission.id,
             'status': submission.status,
@@ -216,25 +216,25 @@ class SubmissionCreateView(APIView):
 
 ---
 
-## 📊 评测状�?
-| 状态码 | 含义 | 触发条件 |
+## 馃搳 璇勬祴鐘舵€?
+| 鐘舵€佺爜 | 鍚�箟 | 瑙﹀彂鏉′欢 |
 |--------|------|----------|
-| `AC` | Accepted | 所有测试点通过 |
-| `WA` | Wrong Answer | 输出不匹�?|
-| `TLE` | Time Limit Exceeded | 超过时间限制 |
-| `MLE` | Memory Limit Exceeded | 超过内存限制 |
-| `RE` | Runtime Error | 运行时错误（段错误、除零等�?|
-| `CE` | Compilation Error | 编译失败 |
-| `SE` | System Error | 系统错误（沙箱异常） |
+| `AC` | Accepted | 鎵€鏈夋祴璇曠偣閫氳繃 |
+| `WA` | Wrong Answer | 杈撳嚭涓嶅尮閰?|
+| `TLE` | Time Limit Exceeded | 瓒呰繃鏃堕棿闄愬埗 |
+| `MLE` | Memory Limit Exceeded | 瓒呰繃鍐呭瓨闄愬埗 |
+| `RE` | Runtime Error | 杩愯�鏃堕敊璇�紙娈甸敊璇�€侀櫎闆剁瓑锛?|
+| `CE` | Compilation Error | 缂栬瘧澶辫触 |
+| `SE` | System Error | 绯荤粺閿欒�锛堟矙绠卞紓甯革級 |
 
-**状态优先级**: SE > CE > RE > TLE > MLE > WA > AC
+**鐘舵€佷紭鍏堢骇**: SE > CE > RE > TLE > MLE > WA > AC
 
-最终结果取所有测试点中最差的状态�?
+鏈€缁堢粨鏋滃彇鎵€鏈夋祴璇曠偣涓�渶宸�殑鐘舵€併€?
 ---
 
-## 🔧 配置说明
+## 馃敡 閰嶇疆璇存槑
 
-### go-judge 关键参数
+### go-judge 鍏抽敭鍙傛暟
 
 ```python
 # adapter.py
@@ -242,45 +242,45 @@ payload = {
     'cmd': [{
         'cpuLimit': time_limit * 1000000,      # ms -> ns
         'memoryLimit': memory_limit * 1024 * 1024,  # MB -> bytes
-        'procLimit': 50,  # 进程数限�?        ...
+        'procLimit': 50,  # 杩涚▼鏁伴檺鍒?        ...
     }]
 }
 ```
 
-**为什�?procLimit=50?**
-- C/C++ 编译�?g++ 会创建多个子进程
-- procLimit=1 会导�?"fork: Resource temporarily unavailable"
-- 50 是安全值，足够编译使用
+**涓轰粈涔?procLimit=50?**
+- C/C++ 缂栬瘧鏃?g++ 浼氬垱寤哄�涓�瓙杩涚▼
+- procLimit=1 浼氬�鑷?"fork: Resource temporarily unavailable"
+- 50 鏄�畨鍏ㄥ€硷紝瓒冲�缂栬瘧浣跨敤
 
-### 测试用例格式
+### 娴嬭瘯鐢ㄤ緥鏍煎紡
 
-**ZIP 文件结构**:
+**ZIP 鏂囦欢缁撴瀯**:
 ```
 testcases.zip
-└── testdata/
-    ├── 1.in
-    ├── 1.out
-    ├── 2.in
-    ├── 2.out
-    └── ...
+鈹斺攢鈹€ testdata/
+    鈹溾攢鈹€ 1.in
+    鈹溾攢鈹€ 1.out
+    鈹溾攢鈹€ 2.in
+    鈹溾攢鈹€ 2.out
+    鈹斺攢鈹€ ...
 ```
 
-**存储位置**: `media/problems/{problem_id}/testcases.zip`
+**瀛樺偍浣嶇疆**: `media/problems/{problem_id}/testcases.zip`
 
 ---
 
-## 🚀 部署指南
+## 馃殌 閮ㄧ讲鎸囧崡
 
-### 1. 安装 go-judge
+### 1. 瀹夎� go-judge
 
 ```bash
-# 使用 Hydro OJ 官方脚本
+# 浣跨敤 Hydro OJ 瀹樻柟鑴氭湰
 sudo su -c 'LANG=zh . <(curl https://hydro.ac/setup.sh) --judge'
 
-# 检查服务状�?sudo pm2 status | grep go-judge
+# 妫€鏌ユ湇鍔＄姸鎬?sudo pm2 status | grep go-judge
 ```
 
-### 2. 验证 go-judge
+### 2. 楠岃瘉 go-judge
 
 ```bash
 curl -s http://localhost:5050/run -X POST \
@@ -288,7 +288,7 @@ curl -s http://localhost:5050/run -X POST \
   -d '{"cmd":[{"args":["/bin/echo","Hello"]}]}' | python3 -m json.tool
 ```
 
-预期输出�?```json
+棰勬湡杈撳嚭锛?```json
 {
   "status": "Accepted",
   "exitStatus": 0,
@@ -298,7 +298,7 @@ curl -s http://localhost:5050/run -X POST \
 }
 ```
 
-### 3. 测试评测功能
+### 3. 娴嬭瘯璇勬祴鍔熻兘
 
 ```python
 # Django shell
@@ -315,66 +315,66 @@ python manage.py shell
 
 ---
 
-## 🐛 常见问题
+## 馃悰 甯歌�闂��
 
-### Q1: go-judge 返回 "Time Limit Exceeded" �?exitStatus=0
+### Q1: go-judge 杩斿洖 "Time Limit Exceeded" 浣?exitStatus=0
 
-**原因**: cgroup v1 内存限制问题  
-**解决**: adapter.py 中自行判断时间和内存，不依赖 go-judge �?status 字段
+**鍘熷洜**: cgroup v1 鍐呭瓨闄愬埗闂��  
+**瑙ｅ喅**: adapter.py 涓�嚜琛屽垽鏂�椂闂村拰鍐呭瓨锛屼笉渚濊禆 go-judge 鐨?status 瀛楁�
 
-### Q2: C++ 编译失败 "fork: Resource temporarily unavailable"
+### Q2: C++ 缂栬瘧澶辫触 "fork: Resource temporarily unavailable"
 
-**原因**: procLimit 设置太小  
-**解决**: 已设置为 50
+**鍘熷洜**: procLimit 璁剧疆澶�皬  
+**瑙ｅ喅**: 宸茶�缃�负 50
 
-### Q3: 输出比较过于严格
+### Q3: 杈撳嚭姣旇緝杩囦簬涓ユ牸
 
-**原因**: 学生输出有多余空格或换行  
-**解决**: adapter.py 使用规范化空白字符比�?
-### Q4: 测试用例文件找不�?
-**检�?*:
+**鍘熷洜**: 瀛︾敓杈撳嚭鏈夊�浣欑┖鏍兼垨鎹㈣�  
+**瑙ｅ喅**: adapter.py 浣跨敤瑙勮寖鍖栫┖鐧藉瓧绗︽瘮杈?
+### Q4: 娴嬭瘯鐢ㄤ緥鏂囦欢鎵句笉鍒?
+**妫€鏌?*:
 ```bash
-# 确认 ZIP 文件存在
+# 纭�� ZIP 鏂囦欢瀛樺湪
 ls -la /home/ubuntu/ZJOJ/media/problems/A001/testcases.zip
 
-# 确认解压后的结构
+# 纭��瑙ｅ帇鍚庣殑缁撴瀯
 unzip -l /home/ubuntu/ZJOJ/media/problems/A001/testcases.zip
 ```
 
 ---
 
-## 🔒 安全考虑
+## 馃敀 瀹夊叏鑰冭檻
 
-### go-judge 安全措施
+### go-judge 瀹夊叏鎺�柦
 
-1. **文件系统隔离**: chroot + mount namespace
-2. **资源限制**: CPU、内存、进程数严格限制
-3. **网络禁用**: 沙箱内无法访问网�?4. **用户权限**: 以非 root 用户运行 (uid: 1536)
+1. **鏂囦欢绯荤粺闅旂�**: chroot + mount namespace
+2. **璧勬簮闄愬埗**: CPU銆佸唴瀛樸€佽繘绋嬫暟涓ユ牸闄愬埗
+3. **缃戠粶绂佺敤**: 娌欑�鍐呮棤娉曡�闂�綉缁?4. **鐢ㄦ埛鏉冮檺**: 浠ラ潪 root 鐢ㄦ埛杩愯� (uid: 1536)
 
-### ZJOJ 安全措施
+### ZJOJ 瀹夊叏鎺�柦
 
-1. **代码审查**: 提交前可进行代码审查
-2. **频率限制**: 防止恶意提交
-3. **日志记录**: 所有评测操作都有日�?
+1. **浠ｇ爜瀹℃煡**: 鎻愪氦鍓嶅彲杩涜�浠ｇ爜瀹℃煡
+2. **棰戠巼闄愬埗**: 闃叉�鎭舵剰鎻愪氦
+3. **鏃ュ織璁板綍**: 鎵€鏈夎瘎娴嬫搷浣滈兘鏈夋棩蹇?
 ---
 
-## 📈 性能优化建议
+## 馃搱 鎬ц兘浼樺寲寤鸿�
 
-1. **缓存编译结果**: 相同代码不需要重复编�?2. **并行评测**: 多个测试点可以并行执�?3. **异步处理**: 使用 Celery 异步评测（可选）
-4. **监控指标**: 记录评测耗时，优化瓶�?
+1. **缂撳瓨缂栬瘧缁撴灉**: 鐩稿悓浠ｇ爜涓嶉渶瑕侀噸澶嶇紪璇?2. **骞惰�璇勬祴**: 澶氫釜娴嬭瘯鐐瑰彲浠ュ苟琛屾墽琛?3. **寮傛�澶勭悊**: 浣跨敤 Celery 寮傛�璇勬祴锛堝彲閫夛級
+4. **鐩戞帶鎸囨爣**: 璁板綍璇勬祴鑰楁椂锛屼紭鍖栫摱棰?
 ---
 
-## 🔗 相关文档
+## 馃敆 鐩稿叧鏂囨。
 
-- [快速开始](../01-GETTING_STARTED.md)
-- [系统架构](../02-ARCHITECTURE.md)
-- [部署指南](../03-DEPLOYMENT.md)
-- [API 参考](../04-API_REFERENCE.md)
+- [蹇�€熷紑濮媇(../01-GETTING_STARTED.md)
+- [绯荤粺鏋舵瀯](../02-ARCHITECTURE.md)
+- [閮ㄧ讲鎸囧崡](../03-DEPLOYMENT.md)
+- [API 鍙傝€僝(../04-API_REFERENCE.md)
 
 ---
 
 <div align="center">
 
-**返回模块列表** �?[README](../README.md)
+**杩斿洖妯″潡鍒楄〃** 鈫?[README](../README.md)
 
 </div>

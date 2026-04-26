@@ -1,20 +1,38 @@
 """
-DRF JWT 认证类
+DRF JWT 认证类和 Token 生成工具
 """
+import time
+import jwt
 from rest_framework.authentication import BaseAuthentication
 from rest_framework.exceptions import AuthenticationFailed
 from django.utils.translation import gettext_lazy as _
-import jwt
 from ZJOJ import settings
 from apps.ojauth.models import OJUser
+
+# TOKEN有效期（14天）
+TOKEN_EXPIRATION_SECONDS = 60 * 24 * 14
+
+
+def get_token(user):
+    """
+    为用户生成 JWT Token
+    :param user: OJUser 实例
+    :return: JWT Token 字符串
+    """
+    exp_time = time.time() + TOKEN_EXPIRATION_SECONDS
+    return jwt.encode(
+        {"userid": user.uid, "exp": exp_time},
+        settings.SECRET_KEY,
+        algorithm="HS256"
+    )
 
 
 class JWTAuthentication(BaseAuthentication):
     """
     JWT Token 认证类
-    客户端应在 Authorization header 中提供: jwt <token>
+    客户端应在 Authorization header 中提供: Bearer <token> 或 jwt <token>
     """
-    keyword = 'jwt'
+    keywords = ['bearer', 'jwt']  # 支持多种关键词
     algorithm = 'HS256'
     
     def authenticate(self, request):
@@ -32,7 +50,8 @@ class JWTAuthentication(BaseAuthentication):
         if len(parts) == 0:
             return None
         
-        if parts[0].lower() != self.keyword.lower():
+        # 支持 Bearer 和 jwt 两种格式
+        if parts[0].lower() not in self.keywords:
             return None
         
         if len(parts) != 2:
@@ -95,4 +114,4 @@ class JWTAuthentication(BaseAuthentication):
         """
         返回WWW-Authenticate header的值
         """
-        return self.keyword
+        return 'Bearer'

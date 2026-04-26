@@ -6,10 +6,9 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
-from MYJWT.myjwt import get_token
+from MYJWT.authentication import get_token
 from .models import OJUser, Class, ClassMember
 from .seriallizers import LoginSerializer, UerSerializer, RegisterSerializer, UserProfileSerializer, UserProfileUpdateSerializer
-import MYJWT.myjwt
 
 
 class LoginView(APIView):
@@ -310,10 +309,52 @@ class ClassDetailView(APIView):
 class ClassMemberView(APIView):
     """
     班级成员管理接口
+    GET /api/classes/{id}/members/ - 获取成员列表
     POST /api/classes/{id}/members/ - 添加成员（教练）
     DELETE /api/classes/{id}/members/ - 移除成员（教练）
     """
     permission_classes = [IsAuthenticated]
+    
+    def get(self, request, class_id):
+        """获取班级成员列表"""
+        try:
+            cls = Class.objects.get(id=class_id)
+        except Class.DoesNotExist:
+            return Response({
+                "code": 404,
+                "message": "班级不存在"
+            }, status=status.HTTP_404_NOT_FOUND)
+        
+        # 权限检查：只有教练或班级成员可以查看
+        user = request.user
+        if not (user.is_coach() and cls.coach == user) and \
+           not ClassMember.objects.filter(class_obj=cls, user=user).exists() and \
+           not user.is_admin_user():
+            return Response({
+                "code": 403,
+                "message": "无权查看此班级成员"
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        # 获取成员列表
+        members = ClassMember.objects.filter(class_obj=cls).select_related('user')
+        member_list = [{
+            'uid': m.user.uid,
+            'username': m.user.username,
+            'realname': m.user.realname,
+            'email': m.user.email,
+            'join_time': m.join_time
+        } for m in members]
+        
+        return Response({
+            "code": 200,
+            "message": "获取成功",
+            "data": {
+                'class_id': cls.id,
+                'class_name': cls.name,
+                'member_count': len(member_list),
+                'members': member_list
+            }
+        })
     
     def post(self, request, class_id):
         """添加班级成员（仅教练）"""

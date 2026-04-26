@@ -116,8 +116,8 @@ EMBEDDING_CACHE_DIR = '/home/ubuntu/ai_models/cache'
 CHROMA_DB_PATH = '/home/ubuntu/ai_data/chroma_db'
 
 # go-judge配置
-GO_JUDGE_URL = 'http://localhost:5050'
-GO_JUDGE_TIMEOUT = 30
+GO_JUDGE_URL = os.getenv('GO_JUDGE_URL', 'http://localhost:5050')
+GO_JUDGE_TIMEOUT = int(os.getenv('GO_JUDGE_TIMEOUT', '30'))
 
 # ==================== Celery配置 ====================
 # 生产环境使用Redis

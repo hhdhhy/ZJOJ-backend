@@ -159,20 +159,29 @@ bash deploy/docker-restore.sh backups/backup_xxx.tar.gz
 ```
 ZJOJ/
 ├── apps/                 # 应用目录
-│   ├── ojauth/          # 用户认证模块
+│   ├── ojauth/          # 用户认证模块（登录、注册、班级管理）
 │   ├── problem/         # 题目管理模块
-│   └── judge/           # 代码评测模块
+│   ├── judge/           # 代码评测模块（Celery异步任务）
+│   └── ai_assistant/    # AI助手模块（RAG问答、学情分析）
+├── MYJWT/               # JWT认证模块
+│   └── authentication.py  # JWT Token生成和验证
+├── Middleware/          # 中间件
+│   ├── LoginCheck.py      # 登录检查中间件
+│   └── PermissionCheck.py # 权限检查装饰器
 ├── deploy/              # 部署相关文件
-│   ├── docker-deploy.sh    # Docker 部署脚本
-│   ├── docker-backup.sh    # 备份脚本
-│   ├── docker-restore.sh   # 恢复脚本
+│   ├── docker-deploy.sh    # Docker一键部署脚本
+│   ├── docker-backup.sh    # 数据备份脚本
+│   ├── docker-restore.sh   # 数据恢复脚本
 │   ├── system-init.sh      # 系统初始化脚本
-│   └── nginx.conf          # Nginx 配置
+│   ├── nginx.conf          # Nginx配置
+│   └── gojudge-mount.yaml  # go-judge文件系统挂载配置
 ├── docs/                # 文档目录
-├── docker-compose.yml   # Docker 编排配置
-├── Dockerfile           # Django 镜像构建
-├── requirements.txt     # Python 依赖
-└── manage.py           # Django 管理脚本
+├── tests/               # 测试脚本
+├── ZJOJ/                # Django项目配置
+├── docker-compose.yml   # Docker编排配置
+├── Dockerfile           # Django镜像构建
+├── requirements.txt     # Python依赖
+└── manage.py           # Django管理脚本
 ```
 
 ---

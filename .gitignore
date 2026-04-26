@@ -59,6 +59,12 @@ backups/
 *.swp
 Thumbs.db
 
+# Test scripts (keep only essential tests)
+test_*.py
+!tests/test_*.py
+create_*.py
+upload_*.py
+
 # OS
 .DS_Store
 desktop.ini
