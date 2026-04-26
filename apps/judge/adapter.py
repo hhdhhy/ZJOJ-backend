@@ -323,6 +323,12 @@ class JudgeAdapter:
         results = response.json()
         result = results[0]
         
+        # 调试日志：打印完整的编译结果
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f"Compile result: status={result.get('status')}, exitStatus={result.get('exitStatus')}, fileIds={result.get('fileIds')}")
+        logger.info(f"Compile files: {result.get('files')}")
+        
         # 检查编译是否成功
         if result.get('exitStatus', 0) != 0:
             stderr_data = result.get('files', {}).get('stderr', {})
