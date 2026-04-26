@@ -20,7 +20,9 @@ services:
 
   # go-judge 评测沙箱服务
   gojudge:
-    image: criyle/go-judge:latest
+    build:
+      context: .
+      dockerfile: deploy/Dockerfile.gojudge
     container_name: zjoj-gojudge
     restart: always
     privileged: true
