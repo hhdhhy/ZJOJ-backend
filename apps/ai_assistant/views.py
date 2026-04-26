@@ -18,6 +18,16 @@ from .limits import AILimitChecker
 from .learning_analytics import LearningAnalyticsService
 from .error_pusher import ErrorSolutionPusher
 
+# 全局 RAG 引擎单例（避免每次请求都重新加载模型）
+_rag_engine_instance = None
+
+def get_rag_engine():
+    """获取全局 RAG 引擎单例"""
+    global _rag_engine_instance
+    if _rag_engine_instance is None:
+        _rag_engine_instance = RAGEngine()
+    return _rag_engine_instance
+
 
 class AIChatView(APIView):
     """AI 智能问答"""
@@ -40,8 +50,8 @@ class AIChatView(APIView):
         use_rag = serializer.validated_data.get('use_rag', True)
         
         try:
-            # 4. 调用 RAG 引擎或简单对话
-            engine = RAGEngine()
+            # 4. 调用 RAG 引擎或简单对话（使用全局单例）
+            engine = get_rag_engine()
             
             if use_rag:
                 result = engine.ask(question, top_k=top_k)
