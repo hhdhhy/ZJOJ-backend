@@ -59,9 +59,12 @@ backups/
 *.swp
 Thumbs.db
 
-# Test scripts (keep only essential tests)
+# Test scripts (keep only essential tests in tests/ directory)
 test_*.py
+test_*.sh
 !tests/test_*.py
+!tests/scripts/test_*.py
+!tests/scripts/test_*.sh
 create_*.py
 upload_*.py
 
