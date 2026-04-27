@@ -2,9 +2,24 @@
 RAG 检索增强生成引擎
 结合向量检索和LLM生成答案
 """
-from .vector_store import VectorStore
+from .vector_store import get_vector_store
 from .llm_client import LLMClient
 from .prompts import RAG_PROMPT
+
+# 全局单例
+_rag_engine_instance = None
+
+def get_rag_engine():
+    """
+    获取共享的 RAGEngine 单例
+    
+    Returns:
+        RAGEngine 实例
+    """
+    global _rag_engine_instance
+    if _rag_engine_instance is None:
+        _rag_engine_instance = RAGEngine()
+    return _rag_engine_instance
 
 
 class RAGEngine:
@@ -12,7 +27,8 @@ class RAGEngine:
     
     def __init__(self):
         """初始化 RAG 引擎"""
-        self.vector_store = VectorStore()
+        # 使用共享的 VectorStore 单例
+        self.vector_store = get_vector_store()
         self.llm_client = LLMClient()
     
     def ask(self, question: str, top_k=5) -> dict:

@@ -5,7 +5,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
-from .rag_engine import RAGEngine
+from .rag_engine import get_rag_engine
 from .models import ChatHistory, UserProfile, LearningReport, KnowledgeBase
 from .serializers import (
     ChatRequestSerializer,
@@ -17,16 +17,6 @@ from .serializers import (
 from .limits import AILimitChecker
 from .learning_analytics import LearningAnalyticsService
 from .error_pusher import ErrorSolutionPusher
-
-# 全局 RAG 引擎单例（避免每次请求都重新加载模型）
-_rag_engine_instance = None
-
-def get_rag_engine():
-    """获取全局 RAG 引擎单例"""
-    global _rag_engine_instance
-    if _rag_engine_instance is None:
-        _rag_engine_instance = RAGEngine()
-    return _rag_engine_instance
 
 
 class AIChatView(APIView):

@@ -6,6 +6,24 @@ from chromadb.config import Settings
 from django.conf import settings
 from .embedding_service import EmbeddingService
 
+# 全局单例
+_vector_store_instance = None
+
+def get_vector_store(collection_name='knowledge_base'):
+    """
+    获取共享的 VectorStore 单例
+    
+    Args:
+        collection_name: 集合名称
+    
+    Returns:
+        VectorStore 实例
+    """
+    global _vector_store_instance
+    if _vector_store_instance is None:
+        _vector_store_instance = VectorStore(collection_name)
+    return _vector_store_instance
+
 
 class VectorStore:
     """ChromaDB 向量数据库"""
