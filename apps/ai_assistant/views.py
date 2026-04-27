@@ -267,7 +267,7 @@ class ErrorSolutionView(APIView):
         user = request.user
         
         # 检查配额（与 AI 问答共用）
-        quota_check = AIUsageTracker.check_daily_quota(user)
+        quota_check = AILimitChecker.check_daily_quota(user)
         if not quota_check['allowed']:
             return Response({
                 'error': f'今日配额已用完 ({quota_check["used"]}/{quota_check["daily_quota"]})',
@@ -279,14 +279,11 @@ class ErrorSolutionView(APIView):
             solutions = ErrorSolutionPusher.push_on_judge_failure(submission_id)
             
             # 记录使用情况
-            AIUsageTracker.record_usage(
-                user=user,
-                tokens_used=0,  # 错误解决方案不消耗 token
-                chat_id=None
-            )
+            AILimitChecker.increment_usage(user)
             
             # 获取剩余配额
-            remaining = AIUsageTracker.get_remaining_quota(user)
+            profile, _ = UserProfile.objects.get_or_create(user=user)
+            remaining = profile.daily_quota - profile.used_today
             
             return Response({
                 'submission_id': submission_id,
