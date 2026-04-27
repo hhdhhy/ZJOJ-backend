@@ -34,9 +34,9 @@ class EmbeddingService:
         # 优先使用 ModelScope，如果失败再回退到 hf-mirror
         os.environ['HF_ENDPOINT'] = os.environ.get('HF_ENDPOINT', 'https://hf-mirror.com')
         
-        # 默认使用多语言轻量级模型（支持中文）
+        # 默认使用中文优化的轻量级模型
         if model_name is None:
-            model_name = 'sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2'
+            model_name = 'shibing624/text2vec-base-chinese'
         
         self.model_name = model_name
         self.cache_dir = cache_dir
@@ -46,7 +46,7 @@ class EmbeddingService:
         print(f"Cache directory: {cache_dir}")
         
         # 检查本地是否已有 ModelScope 下载的模型
-        modelscope_model_path = os.path.join(cache_dir, 'AI-ModelScope', 'paraphrase-multilingual-MiniLM-L12-v2')
+        modelscope_model_path = os.path.join(cache_dir, 'shibing624', 'text2vec-base-chinese')
         if os.path.exists(modelscope_model_path):
             print(f"✅ Found local model at: {modelscope_model_path}")
             try:
@@ -69,7 +69,7 @@ class EmbeddingService:
             try:
                 from modelscope import snapshot_download
                 model_path = snapshot_download(
-                    'AI-ModelScope/paraphrase-multilingual-MiniLM-L12-v2',
+                    'shibing624/text2vec-base-chinese',
                     cache_dir=cache_dir
                 )
                 self.model = SentenceTransformer(model_path)
