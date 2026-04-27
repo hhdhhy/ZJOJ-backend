@@ -4,6 +4,7 @@ AI助手 API 视图
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.exceptions import Throttled
 from django.utils import timezone
 from .rag_engine import get_rag_engine
 from .models import ChatHistory, UserProfile, LearningReport, KnowledgeBase
@@ -267,10 +268,11 @@ class ErrorSolutionView(APIView):
         user = request.user
         
         # 检查配额（与 AI 问答共用）
-        quota_check = AILimitChecker.check_daily_quota(user)
-        if not quota_check['allowed']:
+        try:
+            profile = AILimitChecker.check_daily_quota(user)
+        except Throttled as e:
             return Response({
-                'error': f'今日配额已用完 ({quota_check["used"]}/{quota_check["daily_quota"]})',
+                'error': str(e.detail),
                 'remaining': 0,
                 'reset_time': '明天 00:00'
             }, status=429)
