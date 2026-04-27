@@ -10,45 +10,46 @@ class AIAssistantConfig(AppConfig):
     
     def ready(self):
         """
-        应用启动时预加载 RAG 引擎
-        避免首次请求时的长时间等待
+        应用启动时触发 ChromaDB 异步初始化
+        避免多进程并发冲突
         """
         import os
         
-        # 检查是否已经预加载过（避免重复加载）
-        if hasattr(self, '_rag_loaded'):
+        # 检查是否已经触发过（避免重复触发）
+        if hasattr(self, '_init_triggered'):
             return
         
         try:
             print("=" * 60)
-            print("预加载 AI 助手 RAG 引擎...")
+            print("准备异步初始化 ChromaDB...")
             print("=" * 60)
             
-            # 导入并初始化 RAG 引擎（触发模型加载）
-            from apps.ai_assistant.rag_engine import get_rag_engine
+            # 只在主进程中触发（避免在 manage.py 命令中触发）
+            if os.environ.get('RUN_MAIN') != 'true':
+                print("⚠️ 非主进程，跳过初始化")
+                return
             
-            # 异步加载，不阻塞应用启动
-            import threading
+            # 延迟导入，确保 Celery 已就绪
+            from celery import current_app
             
-            def load_rag_engine():
-                try:
-                    engine = get_rag_engine()
-                    print("✅ RAG 引擎预加载完成！")
-                    print(f"   - Embedding 模型: {engine.embedding_model.model_name}")
-                    print(f"   - 向量维度: {engine.embedding_model.dimension}")
-                    print(f"   - ChromaDB 集合: {engine.collection.name}")
-                except Exception as e:
-                    print(f"⚠️ RAG 引擎预加载失败: {e}")
-                    print("   将在首次请求时重试...")
+            # 检查 Celery 是否可用
+            if not current_app:
+                print("⚠️ Celery 未就绪，将在首次请求时初始化")
+                return
             
-            # 在后台线程中加载
-            thread = threading.Thread(target=load_rag_engine, daemon=True)
-            thread.start()
-            print("🔄 RAG 引擎正在后台加载...")
+            # 触发异步任务
+            from apps.ai_assistant.tasks import init_chromadb_task
             
-            # 标记已加载
-            self._rag_loaded = True
+            # 延迟 5 秒执行，确保所有服务都已启动
+            init_chromadb_task.apply_async(countdown=5)
+            
+            print("🔄 ChromaDB 初始化任务已提交到 Celery")
+            print("   将在 5 秒后由 Celery worker 执行...")
+            
+            # 标记已触发
+            self._init_triggered = True
             
         except Exception as e:
-            print(f"⚠️ 预加载初始化失败: {e}")
+            print(f"⚠️ 触发异步初始化失败: {e}")
+            print("   将在首次请求时重试...")
             # 不抛出异常，允许应用继续启动
