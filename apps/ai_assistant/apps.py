@@ -24,11 +24,6 @@ class AIAssistantConfig(AppConfig):
             print("准备异步初始化 ChromaDB...")
             print("=" * 60)
             
-            # 只在主进程中触发（避免在 manage.py 命令中触发）
-            if os.environ.get('RUN_MAIN') != 'true':
-                print("⚠️ 非主进程，跳过初始化")
-                return
-            
             # 延迟导入，确保 Celery 已就绪
             from celery import current_app
             
