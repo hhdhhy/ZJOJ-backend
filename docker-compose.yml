@@ -81,6 +81,7 @@ services:
       - REDIS_PORT=6379
       - GO_JUDGE_URL=http://gojudge:5050
       - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
+      - HF_ENDPOINT=${HF_ENDPOINT:-https://hf-mirror.com}
       - DJANGO_SETTINGS_MODULE=ZJOJ.settings_production
       - PYTHONUNBUFFERED=1
     depends_on:
