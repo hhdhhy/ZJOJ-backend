@@ -25,7 +25,7 @@ class AIAssistantConfig(AppConfig):
             print("=" * 60)
             
             # 导入并初始化 RAG 引擎（触发模型加载）
-            from apps.ai_assistant.rag_engine import get_rag_engine
+            from apps.ai_assistant.views import get_rag_engine
             
             # 异步加载，不阻塞应用启动
             import threading
