@@ -15,8 +15,8 @@ class AIAssistantConfig(AppConfig):
         """
         import os
         
-        # 只在主进程中预加载（避免在 manage.py 命令中加载）
-        if os.environ.get('RUN_MAIN') != 'true':
+        # 检查是否已经预加载过（避免重复加载）
+        if hasattr(self, '_rag_loaded'):
             return
         
         try:
@@ -45,6 +45,9 @@ class AIAssistantConfig(AppConfig):
             thread = threading.Thread(target=load_rag_engine, daemon=True)
             thread.start()
             print("🔄 RAG 引擎正在后台加载...")
+            
+            # 标记已加载
+            self._rag_loaded = True
             
         except Exception as e:
             print(f"⚠️ 预加载初始化失败: {e}")
