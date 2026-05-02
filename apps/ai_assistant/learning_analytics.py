@@ -9,6 +9,7 @@ from apps.problem.models import Submission
 from apps.ai_assistant.llm_client import LLMClient
 from apps.ai_assistant.models import LearningReport
 from apps.ai_assistant.api_optimizer import APICallOptimizer
+from apps.ai_assistant.prompts import REPORT_SYSTEM_PROMPT
 
 
 class LearningAnalyticsService:
@@ -94,20 +95,52 @@ class LearningAnalyticsService:
         }
         
         # 生成AI总结
+        error_detail = '；'.join([
+            f"{err}: {cnt}次（占比{cnt/total_submissions*100:.1f}%）"
+            for err, cnt in common_errors
+        ]) if common_errors else '无错误记录'
+
+        # 构造已解决/未解决题目信息
+        solved_count = sum(1 for pid, stats in problem_stats.items() if stats['ac'])
+        attempted_pids = sorted(problem_stats.keys())
+        unsolved_detail = '、'.join(unsolved_problems) if unsolved_problems else '无'
+
         summary_prompt = f"""
-请根据以下学生的编程练习数据，生成一份简洁的学情分析报告（200字以内）：
+## 学生编程练习数据（近{days}天）
 
+### 整体统计
 - 总提交次数：{total_submissions}
-- AC次数：{ac_count}，通过率：{ac_rate}%
-- 未通过题目数：{len(unsolved_problems)}
-- 常见错误：{', '.join([f'{err}: {cnt}次' for err, cnt in common_errors])}
+- 通过次数：{ac_count}
+- 通过率：{ac_rate}%
+- 尝试题目数：{len(attempted_pids)} 道（{attempted_pids}）
+- 已解决：{solved_count} 道
+- 未解决：{len(unsolved_problems)} 道（{unsolved_detail}）
 
-请指出学生的优势和需要改进的地方。
+### 错误分布
+{error_detail}
+
+### 各题表现
 """
-        
+        for pid, stats in problem_stats.items():
+            status = '已通过' if stats['ac'] else '未通过'
+            attempts_str = ' → '.join(stats['attempts'])
+            summary_prompt += f"- {pid}：提交{stats['total']}次，{status}（{attempts_str}）\n"
+
+        summary_prompt += f"""
+请基于以上数据生成一份学情分析报告。要求：
+1. 先肯定学生的积极表现（如提交频率、尝试难度、坚持程度等）
+2. 诊断学习中的系统性问题（透过错误类型看本质，如「WA高发→逻辑严密性不足」）
+3. 针对每种高频错误类型给出1条具体的改进建议
+4. 如果尝试了多道题但均未通过，建议降低难度梯度
+5. 如果同一道题反复提交但未通过，建议暂停并重新理解题意
+"""
+
         try:
             llm = LLMClient()
-            messages = [{'role': 'user', 'content': summary_prompt}]
+            messages = [
+                {'role': 'system', 'content': REPORT_SYSTEM_PROMPT},
+                {'role': 'user', 'content': summary_prompt}
+            ]
             result = llm.chat(messages, temperature=0.7)
             summary = result['answer']
         except Exception as e:
@@ -234,19 +267,43 @@ class LearningAnalyticsService:
         
         # 生成AI总结
         summary_prompt = f"""
-请根据以下班级的编程练习数据，生成一份班级学情分析报告（300字以内）：
+请基于以下班级编程练习数据，生成一份班级学情分析报告。
 
-- 班级人数：{len(student_ids)}，活跃人数：{statistics['active_students']}
-- 总提交次数：{total_submissions}，整体通过率：{ac_rate}%
-- 共性难题：{len(hard_problems)}道
-- 主要错误类型：{', '.join([f'{k}: {v}次' for k, v in error_distribution.items() if v > 0])}
+## 数据概览
+- 班级总人数：{len(student_ids)}，活跃：{statistics['active_students']}人（活跃率{statistics['active_students']/len(student_ids)*100:.1f}%）
+- 总提交：{total_submissions}次，整体通过率：{ac_rate}%
+- 共性难题（通过率<50%且≥3人提交）：{len(hard_problems)}道
+- 错误分布：{', '.join([f'{k}:{v}次({v/total_submissions*100:.1f}%)' for k,v in sorted(error_distribution.items(),key=lambda x:x[1],reverse=True) if v>0])}
 
-请指出班级的整体水平、共性问题和教学建议。
+## 学生分层
+"""
+        for u, s in student_performance.items():
+            if s['submissions'] > 0:
+                summary_prompt += f"- {s.get('realname', u)}：提交{s['submissions']}次，通过率{s['ac_rate']}%\n"
+        summary_prompt += """
+## 共性难题详情
+"""
+        for p in hard_problems[:5]:
+            summary_prompt += f"- {p['problem_id']}：{p['submissions']}次提交，通过率{p['ac_rate']}%\n"
+        if not hard_problems:
+            summary_prompt += "无\n"
+
+        summary_prompt += """
+## 分析要求
+1. 评估班级整体学习阶段（入门/基础/进阶）
+2. 诊断最突出的1-2个共性问题，分析其深层原因
+3. 针对学生分层给出差异化教学策略
+4. 对共性难题给出课堂教学形式建议（专题讲解/分组讨论/代码走读）
+5. 给出可量化的改进目标（如\"未来2周内WA占比降至30%以下\"）
+6. 指出班级中需要个别辅导的学生及其问题
 """
         
         try:
             llm = LLMClient()
-            messages = [{'role': 'user', 'content': summary_prompt}]
+            messages = [
+                {'role': 'system', 'content': REPORT_SYSTEM_PROMPT},
+                {'role': 'user', 'content': summary_prompt}
+            ]
             result = llm.chat(messages, temperature=0.7)
             summary = result['answer']
         except Exception as e:

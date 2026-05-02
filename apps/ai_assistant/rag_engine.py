@@ -48,18 +48,30 @@ class RAGEngine:
         """
         # 1. 检索相关文档
         relevant_docs = self.vector_store.search(question, top_k=top_k)
-        
-        # 2. 组装上下文
+
+        # 2. 组装带元数据的上下文
         if relevant_docs:
-            context = '\n\n'.join([
-                f"【文档{i+1}】{doc['content']}" 
-                for i, doc in enumerate(relevant_docs)
-            ])
-            
+            context_parts = []
+            for i, doc in enumerate(relevant_docs):
+                title = doc.get('metadata', {}).get('title', '未知文档')
+                doc_type = doc.get('metadata', {}).get('type', '')
+                type_label = {
+                    'algorithm': '算法教程',
+                    'solution': '解题方案',
+                    'error_solution': '错误解决方案',
+                    'concept': '概念说明',
+                    'code_template': '代码模板',
+                }.get(doc_type, doc_type)
+                similarity = doc.get('similarity', 0)
+                context_parts.append(
+                    f"【文档{i+1}】{title}（类型：{type_label}，相关度：{similarity:.0%}）\n{doc['content']}"
+                )
+            context = '\n\n---\n\n'.join(context_parts)
+
             # 3. 构建 Prompt
             messages = [
                 {'role': 'system', 'content': RAG_PROMPT},
-                {'role': 'user', 'content': f'问题：{question}\n\n相关知识：\n{context}'}
+                {'role': 'user', 'content': f"## 用户问题\n{question}\n\n## 知识库检索结果\n{context}\n\n请基于以上知识库内容回答用户问题。引用知识库内容时标注文档标题。"}
             ]
         else:
             # 没有相关知识，直接让LLM回答
