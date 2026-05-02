@@ -39,6 +39,12 @@ db.sqlite3-journal
 *.db
 !docs/*.db
 
+# AI Data (Embedding models, vector databases)
+ai_data/
+chroma_db/
+*.safetensors
+*.bin
+
 # IDE
 .idea/
 .vscode/

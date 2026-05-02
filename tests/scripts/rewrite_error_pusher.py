@@ -1,4 +1,11 @@
+# -*- coding: utf-8 -*-
 """
+重写 error_pusher.py 文件，包含所有优化
+"""
+
+file_path = r'E:\learning file\ZJOJ\apps\ai_assistant\error_pusher.py'
+
+content = '''"""
 判题失败自动推送服务
 当学生提交代码评测失败时，自动从知识库检索相关解决方案并推送
 """
@@ -137,3 +144,14 @@ class ErrorSolutionPusher:
             return suggestions
         except Exception as e:
             return []
+'''
+
+with open(file_path, 'w', encoding='utf-8') as f:
+    f.write(content)
+
+print("✅ 文件重写完成！")
+print("\n主要改进：")
+print("1. ✅ 移除内容截断（返回完整内容）")
+print("2. ✅ 增加题目标签作为查询关键词")
+print("3. ✅ 按优先级构建5种查询策略")
+print("4. ✅ 添加通用错误类型兜底方案")

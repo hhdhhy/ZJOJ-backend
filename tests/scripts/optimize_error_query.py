@@ -1,28 +1,11 @@
+# -*- coding: utf-8 -*-
 """
-判题失败自动推送服务
-当学生提交代码评测失败时，自动从知识库检索相关解决方案并推送
+优化 error_pusher.py 的查询关键词构建策略
 """
-from apps.problem.models import Submission
-from apps.ai_assistant.rag_engine import RAGEngine
-from apps.ai_assistant.api_optimizer import APICallOptimizer
 
+file_path = r'E:\learning file\ZJOJ\apps\ai_assistant\error_pusher.py'
 
-class ErrorSolutionPusher:
-    """错误解决方案推送器"""
-    
-    @staticmethod
-    def push_on_judge_failure(submission_id):
-        """
-        在判题失败后推送解决方案
-        :param submission_id: 提交记录ID
-        :return: 解决方案列表
-        """
-        try:
-            submission = Submission.objects.select_related('problem').get(id=submission_id)
-        except Submission.DoesNotExist:
-            return []
-        
-        # 只对非AC的提交推送
+new_code = '''        # 只对非AC的提交推送
         if submission.result == 'AC':
             return []
         
@@ -95,45 +78,33 @@ class ErrorSolutionPusher:
                         'relevance_score': doc.get('score', 0),
                     })
             except Exception:
-                pass
-        
-        # 去重（基于标题）
-        seen_titles = set()
-        unique_solutions = []
-        for sol in solutions:
-            if sol['title'] not in seen_titles:
-                seen_titles.add(sol['title'])
-                unique_solutions.append(sol)
-        
-        return unique_solutions[:3]  # 最多返回3个
+                pass'''
+
+# 读取文件
+with open(file_path, 'r', encoding='utf-8') as f:
+    content = f.read()
+
+# 定位要替换的代码块
+old_block_start = "        # 只对非AC的提交推送\n        if submission.result == 'AC':"
+old_block_end = "        # 去重（基于标题）"
+
+start_idx = content.find(old_block_start)
+end_idx = content.find(old_block_end)
+
+if start_idx != -1 and end_idx != -1:
+    # 保留 "# 去重（基于标题）" 这一行
+    new_content = content[:start_idx] + new_code + '\n        \n' + content[end_idx:]
     
-    @staticmethod
-    def get_error_suggestions(problem_id, error_type, top_k=3):
-        """
-        获取特定题目和错误类型的建议
-        :param problem_id: 题目ID
-        :param error_type: 错误类型（WA/TLE/MLE/RE/CE）
-        :param top_k: 返回数量
-        :return: 建议列表
-        """
-        query = f"{problem_id} {error_type}"
-        
-        engine = RAGEngine()
-        try:
-            results = engine.search_knowledge_base(
-                query=query,
-                doc_type='error_solution',
-                top_k=top_k
-            )
-            
-            suggestions = []
-            for doc in results:
-                suggestions.append({
-                    'title': doc['title'],
-                    'content': doc['content'],  # 返回完整内容，前端通过滚动条展示
-                    'relevance_score': doc.get('score', 0),
-                })
-            
-            return suggestions
-        except Exception as e:
-            return []
+    # 写回文件
+    with open(file_path, 'w', encoding='utf-8') as f:
+        f.write(new_content)
+    
+    print("✅ 查询关键词优化完成！")
+    print("\n改进内容：")
+    print("1. ✅ 增加题目标签作为查询关键词")
+    print("2. ✅ 按优先级构建5种查询策略")
+    print("3. ✅ 添加通用错误类型兜底方案")
+    print("4. ✅ 保持内容完整性（已移除截断）")
+else:
+    print("❌ 未找到要替换的代码块")
+    print(f"start_idx: {start_idx}, end_idx: {end_idx}")
