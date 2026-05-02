@@ -57,9 +57,9 @@ class GoJudgeClient:
             test_cases = []
             for tc in test_cases_data:
                 try:
-                    with open(tc['input'], 'r', errors='ignore') as f:
+                    with open(tc['input'], 'r', encoding='utf-8') as f:
                         input_content = f.read()
-                    with open(tc['output'], 'r', errors='ignore') as f:
+                    with open(tc['output'], 'r', encoding='utf-8') as f:
                         output_content = f.read()
                     test_cases.append({
                         'input': input_content,

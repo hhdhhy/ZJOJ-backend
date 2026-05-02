@@ -107,7 +107,9 @@ class LearningAnalyticsService:
         
         try:
             llm = LLMClient()
-            summary = llm.chat(summary_prompt, temperature=0.7)
+            messages = [{'role': 'user', 'content': summary_prompt}]
+            result = llm.chat(messages, temperature=0.7)
+            summary = result['answer']
         except Exception as e:
             summary = f"学生在过去{days}天内提交了{total_submissions}次代码，通过率为{ac_rate}%。"
         
@@ -244,7 +246,9 @@ class LearningAnalyticsService:
         
         try:
             llm = LLMClient()
-            summary = llm.chat(summary_prompt, temperature=0.7)
+            messages = [{'role': 'user', 'content': summary_prompt}]
+            result = llm.chat(messages, temperature=0.7)
+            summary = result['answer']
         except Exception as e:
             summary = f"班级在过去{days}天内共有{total_submissions}次提交，整体通过率为{ac_rate}%。"
         
