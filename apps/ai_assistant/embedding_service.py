@@ -45,38 +45,38 @@ class EmbeddingService:
         print(f"Loading embedding model: {model_name}")
         print(f"Cache directory: {cache_dir}")
         
-        # 检查本地是否已有 ModelScope 下载的模型
-        modelscope_model_path = os.path.join(cache_dir, 'shibing624', 'text2vec-base-chinese')
-        if os.path.exists(modelscope_model_path):
-            print(f"✅ Found local model at: {modelscope_model_path}")
+        # 检查本地是否已有已下载的模型缓存
+        local_model_path = os.path.join(cache_dir, 'shibing624', 'text2vec-base-chinese')
+        if os.path.exists(local_model_path):
+            print(f"✅ Found local model at: {local_model_path}")
             try:
-                self.model = SentenceTransformer(modelscope_model_path)
+                self.model = SentenceTransformer(local_model_path)
                 self.dimension = self.model.get_sentence_embedding_dimension()
                 print(f"✅ Model loaded from local cache, dimension: {self.dimension}")
                 return
             except Exception as e:
                 print(f"⚠️ Failed to load from local cache: {e}, will try downloading...")
-        
-        # 尝试从 HuggingFace Mirror 下载
+
+        # 国内环境优先尝试 ModelScope
+        print("Trying ModelScope...")
         try:
-            self.model = SentenceTransformer(model_name, cache_folder=cache_dir)
+            from modelscope import snapshot_download
+            model_path = snapshot_download(
+                'shibing624/text2vec-base-chinese',
+                cache_dir=cache_dir
+            )
+            self.model = SentenceTransformer(model_path)
             self.dimension = self.model.get_sentence_embedding_dimension()
-            print(f"✅ Model loaded successfully, dimension: {self.dimension}")
+            print(f"✅ Model loaded from ModelScope, dimension: {self.dimension}")
         except Exception as e:
-            print(f"⚠️ Failed to load model from HuggingFace: {e}")
-            print("Trying ModelScope...")
-            # 如果 HuggingFace 失败，尝试使用 ModelScope
+            print(f"⚠️ Failed to load from ModelScope: {e}")
+            print("Trying HuggingFace mirror...")
             try:
-                from modelscope import snapshot_download
-                model_path = snapshot_download(
-                    'shibing624/text2vec-base-chinese',
-                    cache_dir=cache_dir
-                )
-                self.model = SentenceTransformer(model_path)
+                self.model = SentenceTransformer(model_name, cache_folder=cache_dir)
                 self.dimension = self.model.get_sentence_embedding_dimension()
-                print(f"✅ Model loaded from ModelScope, dimension: {self.dimension}")
+                print(f"✅ Model loaded from HuggingFace, dimension: {self.dimension}")
             except Exception as e2:
-                print(f"❌ Failed to load model from ModelScope: {e2}")
+                print(f"❌ Failed to load model from all sources: {e2}")
                 raise
     
     def encode(self, text: str) -> list:
