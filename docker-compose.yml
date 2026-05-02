@@ -69,6 +69,7 @@ services:
     volumes:
       - static_volume:/home/zjoj/staticfiles
       - media_volume:/home/zjoj/media
+      - ./ai_data:/home/zjoj/ai_data
     expose:
       - "8000"
     environment:
@@ -103,6 +104,7 @@ services:
       sh -c "celery -A ZJOJ worker --loglevel=info --concurrency=2"
     volumes:
       - media_volume:/home/zjoj/media
+      - ./ai_data:/home/zjoj/ai_data
     environment:
       - DB_NAME=ZJOJ
       - DB_USER=zjoj_user

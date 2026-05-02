@@ -111,9 +111,9 @@ LOGGING = {
 }
 
 # ==================== AI助手配置 ====================
-# 修改缓存路径为Linux路径
-EMBEDDING_CACHE_DIR = '/home/ubuntu/ai_models/cache'
-CHROMA_DB_PATH = '/home/ubuntu/ai_data/chroma_db'
+# AI数据存储路径（统一使用项目内的 ai_data 目录）
+EMBEDDING_CACHE_DIR = os.path.join(BASE_DIR, 'ai_data', 'embedding_models')
+CHROMA_DB_PATH = os.path.join(BASE_DIR, 'ai_data', 'chroma_db')
 
 # go-judge配置
 GO_JUDGE_URL = os.getenv('GO_JUDGE_URL', 'http://localhost:5050')
