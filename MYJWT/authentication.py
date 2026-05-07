@@ -10,7 +10,7 @@ from ZJOJ import settings
 from apps.ojauth.models import OJUser
 
 # TOKEN有效期（14天）
-TOKEN_EXPIRATION_SECONDS = 60 * 24 * 14
+TOKEN_EXPIRATION_SECONDS = 60 * 60 * 24 * 14
 
 
 def get_token(user):
