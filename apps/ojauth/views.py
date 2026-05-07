@@ -301,6 +301,7 @@ class ClassDetailView(APIView):
                 'coach': cls.coach.username if cls.coach else None,
                 'description': cls.description,
                 'create_time': cls.create_time,
+                'member_count': len(member_list),
                 'members': member_list
             }
         })
