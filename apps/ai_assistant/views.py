@@ -174,26 +174,59 @@ class ClearHistoryView(APIView):
 
 
 class StudentLearningReportView(APIView):
-    """学生个性化学情报告"""
+    """学生个性化学情报告（学生本人或教练查看）"""
     permission_classes = [IsAuthenticated]
-    
+
     def get(self, request):
         """获取学生学情报告"""
+        from apps.ojauth.models import OJUser, Class, ClassMember
+
         days = int(request.query_params.get('days', 7))
-        
-        # 检查权限：只有学生可以查看自己的报告
-        
+        student_id = request.query_params.get('student_id')
+
+        # 教练/管理员查看指定学生的报告
+        if student_id and (request.user.is_coach() or request.user.is_admin_user()):
+            try:
+                student = OJUser.objects.get(uid=student_id, role=1)
+            except OJUser.DoesNotExist:
+                return Response({
+                    'message': '学生不存在',
+                    'data': None
+                }, status=404)
+
+            # 检查该学生是否在教练管理的班级中
+            if request.user.is_coach():
+                coach_classes = Class.objects.filter(coach=request.user)
+                member_of = ClassMember.objects.filter(
+                    class_obj__in=coach_classes,
+                    user=student
+                ).exists()
+                if not member_of and not request.user.is_admin_user():
+                    return Response({
+                        'error': '无权查看此学生的报告'
+                    }, status=403)
+
+            target_user = student
+        elif request.user.role == 1:
+            # 学生查看自己的报告
+            target_user = request.user
+        else:
+            return Response({
+                'message': '教练用户请指定 student_id 查看学生报告，或使用班级报告接口。',
+                'data': None
+            })
+
         try:
             report = LearningAnalyticsService.get_or_generate_student_report(
-                request.user, days
+                target_user, days
             )
-            
+
             if not report:
                 return Response({
                     'message': '暂无学习数据',
                     'data': None
                 })
-            
+
             return Response({
                 'report_type': report.get_report_type_display(),
                 'period': f"{report.period_start} 至 {report.period_end}",
