@@ -31,14 +31,14 @@ class JudgeAdapter:
     def judge(self, code, language, test_cases, time_limit, memory_limit):
         """
         执行评测
-        
+
         Args:
             code: 源代码字符串
             language: 编程语言 (cpp/c/python/java)
             test_cases: 测试用例列表 [{'input': '...', 'output': '...'}]
             time_limit: 时间限制 (ms)
             memory_limit: 内存限制 (MB)
-            
+
         Returns:
             dict: {
                 'status': 'success/error',
@@ -50,51 +50,70 @@ class JudgeAdapter:
             }
         """
         if not test_cases:
-            return {
-                'status': 'error',
-                'error': 'No test cases provided'
-            }
-        
-        results = []
-        max_time = 0
-        max_memory = 0
-        total_score = 0
-        
-        # 遍历所有测试点
-        for i, test_case in enumerate(test_cases):
+            return {'status': 'error', 'error': 'No test cases provided'}
+
+        # 编译一次（如果需要），后续所有测试点复用 file_id
+        compile_cmd = self._get_compile_command(language)
+        file_id = None
+        if compile_cmd:
             try:
-                # 调用 go-judge
-                result = self._run_single_test(
-                    code, language, 
-                    test_case['input'], 
-                    test_case['output'],
-                    time_limit, memory_limit
-                )
-                
-                results.append(result)
-                
-                # 更新最大值
-                max_time = max(max_time, result.get('time', 0))
-                max_memory = max(max_memory, result.get('memory', 0))
-                total_score += result.get('score', 0)
-                
+                compile_result = self._compile_code(code, language, compile_cmd)
+                if compile_result['status'] == 'CE':
+                    return {
+                        'status': 'success',
+                        'result': 'CE',
+                        'score': 0,
+                        'time': 0,
+                        'memory': 0,
+                        'test_cases': [{
+                            'id': i + 1,
+                            'status': 'CE',
+                            'score': 0,
+                            'time': 0,
+                            'memory': 0,
+                            'stderr': compile_result.get('stderr', ''),
+                        } for i in range(len(test_cases))]
+                    }
+                file_id = compile_result.get('file_id')
             except Exception as e:
-                import traceback
-                error_traceback = traceback.format_exc()
-                print(f"ERROR in test case {i+1}: {str(e)}")
-                print(error_traceback)
-                results.append({
-                    'id': i + 1,
-                    'status': 'SE',
-                    'score': 0,
-                    'time': 0,
-                    'memory': 0,
-                    'error': f'{str(e)}\n{error_traceback}'
-                })
-        
-        # 确定最终结果（最差的评测状态）
+                return {
+                    'status': 'error',
+                    'error': f'Compilation error: {str(e)}'
+                }
+
+        try:
+            run_cmd = self._get_run_command(language)
+            results = []
+            max_time = 0
+            max_memory = 0
+            total_score = 0
+
+            for i, test_case in enumerate(test_cases):
+                try:
+                    result = self._run_single_test(
+                        run_cmd, language, file_id, code,
+                        test_case['input'], test_case['output'],
+                        time_limit, memory_limit
+                    )
+                    results.append(result)
+                    max_time = max(max_time, result.get('time', 0))
+                    max_memory = max(max_memory, result.get('memory', 0))
+                    total_score += result.get('score', 0)
+                except Exception as e:
+                    import traceback
+                    error_traceback = traceback.format_exc()
+                    print(f"ERROR in test case {i+1}: {str(e)}")
+                    print(error_traceback)
+                    results.append({
+                        'id': i + 1, 'status': 'SE', 'score': 0,
+                        'time': 0, 'memory': 0,
+                        'error': f'{str(e)}\n{error_traceback}'
+                    })
+        finally:
+            if file_id:
+                self._delete_cached_file(file_id)
+
         final_result = self._determine_final_result(results)
-        
         return {
             'status': 'success',
             'result': final_result,
@@ -103,77 +122,33 @@ class JudgeAdapter:
             'memory': max_memory,
             'test_cases': results
         }
-    
-    def _run_single_test(self, code, language, input_data, expected_output, time_limit, memory_limit):
-        """
-        运行单个测试点
-        
-        Args:
-            code: 源代码
-            language: 编程语言
-            input_data: 输入数据
-            expected_output: 预期输出
-            time_limit: 时间限制 (ms)
-            memory_limit: 内存限制 (MB)
-            
-        Returns:
-            dict: 测试结果
-        """
-        # 构建 go-judge 请求（编译 + 运行）
-        compile_cmd = self._get_compile_command(language)
-        run_cmd = self._get_run_command(language)
-        
-        # 如果需要编译，先编译并缓存
-        file_id = None
-        if compile_cmd:
-            try:
-                compile_result = self._compile_code(code, language, compile_cmd)
-                if compile_result['status'] == 'CE':
-                    return compile_result
-                file_id = compile_result.get('file_id')
-            except Exception as e:
-                return {
-                    'status': 'SE',
-                    'score': 0,
-                    'time': 0,
-                    'memory': 0,
-                    'error': f'Compilation error: {str(e)}'
-                }
-        
-        # 运行代码
-        try:
-            result = self._run_code(
-                run_cmd, language, input_data, time_limit, memory_limit, file_id, code
-            )
-        finally:
-            # 清理缓存文件
-            if file_id:
-                self._delete_cached_file(file_id)
-        
-        # 获取实际输出
+
+    def _run_single_test(self, run_cmd, language, file_id, code,
+                         input_data, expected_output, time_limit, memory_limit):
+        """运行单个测试点（编译已在 judge() 中完成）"""
+        result = self._run_code(
+            run_cmd, language, input_data, time_limit, memory_limit, file_id, code
+        )
+
         actual_output = result.get('stdout', '')
-        stderr_output = result.get('stderr', '')
-        
-        # 判断状态
         status = result.get('status', 'SE')
         time_ms = result.get('time', 0)
         memory_kb = result.get('memory', 0)
-        
-        # 如果 AC，比较输出
+
         score = 0
         if status == 'AC':
             if self._compare_output(actual_output, expected_output):
                 score = 10
             else:
                 status = 'WA'
-        
+
         return {
             'status': status,
             'score': score,
             'time': time_ms,
             'memory': memory_kb,
-            'stdout': actual_output[:500],  # 限制长度
-            'stderr': stderr_output[:500] if stderr_output else '',
+            'stdout': actual_output[:500],
+            'stderr': result.get('stderr', '')[:500] if result.get('stderr') else '',
         }
     
     def _judge_status(self, status_raw, exit_status, time_ms, memory_kb, time_limit, memory_limit):
